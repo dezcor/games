@@ -6,11 +6,11 @@
 - [x] Define project structure and constants (grid size, colors, piece shapes)
 
 ## Phase 2: Core Game Logic (Engine)
-- [ ] **Grid System**: Create a 2D array to represent the game board
+- [x] **Grid System**: Create a 2D array to represent the game board
 - [x] **Tetriminos**: Define shapes and colors for all 7 types (I, J, L, O, S, T, Z)
-- [ ] **Piece Movement**: Implement left, right, and down movement
-- [ ] **Collision Detection**: Logic to prevent pieces from moving outside boundaries or into other pieces
-- [ ] **Rotation Logic**: Implement SRS (Super Rotation System) or basic rotation logic
+- [x] **Piece Movement**: Implement left, right, and down movement
+- [x] **Collision Detection**: Logic to prevent pieces from moving outside boundaries or into other pieces
+- [x] **Rotation Logic**: Implement SRS (Super Rotation System) or basic rotation logic
 - [ ] **Hard Drop**: Implement immediate piece placement
 - [ ] **Line Clearing**: Logic to detect full rows, remove them, and shift rows above down
 
