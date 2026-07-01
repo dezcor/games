@@ -8,6 +8,9 @@ context.scale(BLOCK_SIZE, BLOCK_SIZE);
 
 const grid = createGrid();
 
+let gameOver = false;
+let dropInterval;
+
 function createGrid() {
     const arena = [];
     for (let row = 0; row < ROWS; row++) {
@@ -31,11 +34,9 @@ function collide(arena, player) {
     for (let y = 0; y < m.length; ++y) {
         for (let x = 0; x < m[y].length; ++x) {
             if (m[y][x] !== 0) {
-                // Check boundaries
                 if (o.y + y >= ROWS || o.x + x >= COLS || o.y + y < 0 || o.x + x < 0) {
                     return true;
                 }
-                // Check collision with arena pieces
                 if (arena[y + o.y] && arena[y + o.y][x + o.x] !== 0) {
                     return true;
                 }
@@ -75,6 +76,7 @@ function rotate(matrix, dir) {
 }
 
 function playerDrop() {
+    if (gameOver) return;
     player.pos.y++;
     if (collide(grid, player)) {
         player.pos.y--;
@@ -83,15 +85,14 @@ function playerDrop() {
         player.pos.y = 0;
         player.matrix = createPiece();
         if (collide(grid, player)) {
-            grid.forEach(row => row.fill(0));
-            player.score = 0;
-            alert('Game Over!');
+            handleGameOver();
         }
     }
     scoreUpdate();
 }
 
 function playerMove(dir) {
+    if (gameOver) return;
     player.pos.x += dir;
     if (collide(grid, player)) {
         player.pos.x -= dir;
@@ -99,6 +100,7 @@ function playerMove(dir) {
 }
 
 function playerRotate(dir) {
+    if (gameOver) return;
     const pos = player.pos.x;
     let offset = 1;
     rotate(player.matrix, dir);
@@ -116,7 +118,10 @@ function createPiece() {
     const pieces = 'IJLOSTZ';
     const type = pieces[pieces.length * Math.random() | 0];
     const piece = TETRIMINOS[type];
-    return piece.shape.map((row, y) => row.map((val, x) => (val !== 0 ? type : 0)));
+    const matrix = piece.shape.map((row, y) => row.map((val, x) => (val !== 0 ? type : 0)));
+    // Center the piece horizontally
+    player.pos.x = Math.floor((COLS - matrix[0].length) / 2);
+    return matrix;
 }
 
 function clearLines() {
@@ -135,19 +140,33 @@ function clearLines() {
     }
 }
 
+function handleGameOver() {
+    gameOver = true;
+    clearInterval(dropInterval);
+    alert('Game Over! Presiona R para reiniciar');
+}
+
+function resetGame() {
+    grid.forEach(row => row.fill(0));
+    player.pos.y = 0;
+    player.score = 0;
+    player.matrix = createPiece();
+    gameOver = false;
+    clearInterval(dropInterval);
+    dropInterval = setInterval(playerDrop, 1000);
+}
+
 function scoreUpdate() {
     // Logic for score updates can be added here
 }
 
 function draw() {
-    // Clear background (using grid dimensions, not pixel dimensions)
     context.fillStyle = '#000';
     context.fillRect(0, 0, COLS, ROWS);
 
     drawMatrix(grid, {x: 0, y: 0});
     drawMatrix(player.matrix, player.pos);
 
-    // Draw Score
     context.fillStyle = 'white';
     context.font = '1px Arial';
     context.fillText(`Puntos: ${player.score}`, 0.5, 1);
@@ -174,6 +193,11 @@ function drawMatrix(matrix, offset) {
 player.matrix = createPiece();
 
 document.addEventListener('keydown', (e) => {
+    if (e.key === 'r' || e.key === 'R') {
+        resetGame();
+        return;
+    }
+    if (gameOver) return;
     if (e.key === 'ArrowLeft') {
         playerMove(-1);
     } else if (e.key === 'ArrowRight') {
@@ -183,7 +207,6 @@ document.addEventListener('keydown', (e) => {
     } else if (e.key === 'ArrowUp') {
         playerRotate(1);
     } else if (e.key === ' ') {
-        // Hard Drop
         while (!collide(grid, player)) {
             player.pos.y++;
         }
@@ -192,14 +215,12 @@ document.addEventListener('keydown', (e) => {
         player.pos.y = 0;
         player.matrix = createPiece();
         if (collide(grid, player)) {
-            grid.forEach(row => row.fill(0));
-            player.score = 0;
-            alert('Game Over!');
+            handleGameOver();
         }
         clearLines();
     }
 });
 
 // Start game loop
-setInterval(playerDrop, 1000);
+dropInterval = setInterval(playerDrop, 1000);
 draw();
