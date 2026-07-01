@@ -11,8 +11,8 @@
 - [x] **Piece Movement**: Implement left, right, and down movement
 - [x] **Collision Detection**: Logic to prevent pieces from moving outside boundaries or into other pieces
 - [x] **Rotation Logic**: Implement SRS (Super Rotation System) or basic rotation logic
-- [ ] **Hard Drop**: Implement immediate piece placement
-- [ ] **Line Clearing**: Logic to detect full rows, remove them, and shift rows above down
+- [x] **Hard Drop**: Implement immediate piece placement
+- [x] **Line Clearing**: Logic to detect full rows, remove them, and shift rows above down
 
 ## Phase 3: Rendering & Graphics
 - [x] **Game Loop**: Create a consistent frame rate (e.g., 60 FPS)
@@ -25,10 +25,10 @@
 - [ ] **Input Buffer**: Handle rapid key presses correctly
 
 ## Phase 5: Game State & Scoring
-- [ ] **Score System**: Points for lines cleared and "Tetris" combos
+- [x] **Score System**: Points for lines cleared and "Tetris" combos
 - [ ] **Next Piece Preview**: Render a UI element showing the next shape
 - [ ] **Levels/Speed**: Increase gravity speed as the score increases
-- [ ] **Game Over State**: Detection and "Game Over" overlay
+- [x] **Game Over State**: Detection and "Game Over" overlay
 - [ ] **High Scores**: Persistent local storage for top scores
 
 ## Phase 6: Polish & Audio

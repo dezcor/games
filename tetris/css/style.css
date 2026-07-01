@@ -1,0 +1,29 @@
+# Tetris Game Styles
+
+body {
+    background: #202028;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    text-align: center;
+}
+
+canvas {
+    border: 2px solid #fff;
+    background-color: #000;
+}
+
+#ui {
+    margin-top: 10px;
+}
+
+#score {
+    font-size: 20px;
+}
