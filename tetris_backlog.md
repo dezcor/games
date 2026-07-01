@@ -1,13 +1,13 @@
 # Tetris Game Development Backlog
 
 ## Phase 1: Project Setup & Infrastructure
-- [ ] Initialize project repository (Git)
-- [ ] Select and set up tech stack (e.g., HTML5 Canvas/JavaScript, Python/Pygame, or Unity)
-- [ ] Define project structure and constants (grid size, colors, piece shapes)
+- [x] Initialize project repository (Git)
+- [x] Select and set up tech stack (HTML5 Canvas/JavaScript)
+- [x] Define project structure and constants (grid size, colors, piece shapes)
 
 ## Phase 2: Core Game Logic (Engine)
 - [ ] **Grid System**: Create a 2D array to represent the game board
-- [ ] **Tetriminos**: Define shapes and colors for all 7 types (I, J, L, O, S, T, Z)
+- [x] **Tetriminos**: Define shapes and colors for all 7 types (I, J, L, O, S, T, Z)
 - [ ] **Piece Movement**: Implement left, right, and down movement
 - [ ] **Collision Detection**: Logic to prevent pieces from moving outside boundaries or into other pieces
 - [ ] **Rotation Logic**: Implement SRS (Super Rotation System) or basic rotation logic
@@ -15,13 +15,13 @@
 - [ ] **Line Clearing**: Logic to detect full rows, remove them, and shift rows above down
 
 ## Phase 3: Rendering & Graphics
-- [ ] **Game Loop**: Create a consistent frame rate (e.g., 60 FPS)
-- [ ] **Draw Function**: Render the grid, current piece, and cleared lines
+- [x] **Game Loop**: Create a consistent frame rate (e.g., 60 FPS)
+- [x] **Draw Function**: Render the grid, current piece, and cleared lines
 - [ ] **Ghost Piece**: Render a "shadow" piece showing where it will land
 - [ ] **Animations**: Smooth transitions for movements and rotations
 
 ## Phase 4: Input & User Interaction
-- [ ] **Keyboard Listeners**: Map keys (Arrows, Space, etc.) to game actions
+- [x] **Keyboard Listeners**: Map keys (Arrows, Space, etc.) to game actions
 - [ ] **Input Buffer**: Handle rapid key presses correctly
 
 ## Phase 5: Game State & Scoring
