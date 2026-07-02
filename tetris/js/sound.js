@@ -123,7 +123,6 @@ const SoundManager = {
 };
 
 const MusicPlayer = {
-    audioCtx: null,
     isPlaying: false,
     schedulerTimer: null,
     currentStep: 0,
@@ -171,6 +170,8 @@ const MusicPlayer = {
     },
 
     scheduleNote(step, time) {
+        const ctx = SoundManager.audioCtx;
+        const master = SoundManager.masterGain;
         const beatDuration = 60 / this.tempo;
         const stepDuration = beatDuration / this.stepsPerBeat;
 
@@ -178,15 +179,15 @@ const MusicPlayer = {
         const melodySemitones = this.melodyPattern[melodyIndex];
         if (melodySemitones > 0) {
             const freq = this.noteToFreq(melodySemitones);
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.value = freq;
-            const vol = this.bgmMuted ? 0 : this.bgmVolume * 0.2;
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.2;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.5);
             osc.connect(gain);
-            gain.connect(this.audioCtx.destination);
+            gain.connect(master);
             osc.start(time);
             osc.stop(time + stepDuration * 1.5);
         }
@@ -195,55 +196,56 @@ const MusicPlayer = {
         const bassSemitones = this.bassPattern[bassIndex];
         if (bassSemitones > 0) {
             const freq = this.noteToFreq(bassSemitones);
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
             osc.type = 'sine';
             osc.frequency.value = freq;
-            const vol = this.bgmMuted ? 0 : this.bgmVolume * 0.3;
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.3;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 3);
             osc.connect(gain);
-            gain.connect(this.audioCtx.destination);
+            gain.connect(master);
             osc.start(time);
             osc.stop(time + stepDuration * 3);
         }
 
         if (this.kickPattern[step % this.kickPattern.length]) {
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(150, time);
             osc.frequency.exponentialRampToValueAtTime(30, time + 0.1);
-            const vol = this.bgmMuted ? 0 : this.bgmVolume * 0.25;
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.25;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
             osc.connect(gain);
-            gain.connect(this.audioCtx.destination);
+            gain.connect(master);
             osc.start(time);
             osc.stop(time + 0.1);
         }
 
         if (this.snarePattern[step % this.snarePattern.length]) {
-            const bufferSize = this.audioCtx.sampleRate * 0.1;
-            const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+            const bufferSize = ctx.sampleRate * 0.1;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
                 data[i] = Math.random() * 2 - 1;
             }
-            const noise = this.audioCtx.createBufferSource();
+            const noise = ctx.createBufferSource();
             noise.buffer = buffer;
-            const gain = this.audioCtx.createGain();
-            const vol = this.bgmMuted ? 0 : this.bgmVolume * 0.1;
+            const gain = ctx.createGain();
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.1;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
             noise.connect(gain);
-            gain.connect(this.audioCtx.destination);
+            gain.connect(master);
             noise.start(time);
         }
     },
 
     scheduler() {
-        while (this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime) {
+        const ctx = SoundManager.audioCtx;
+        while (this.nextNoteTime < ctx.currentTime + this.scheduleAheadTime) {
             this.scheduleNote(this.currentStep, this.nextNoteTime);
             const beatDuration = 60 / this.tempo;
             this.nextNoteTime += (beatDuration / this.stepsPerBeat);
@@ -253,15 +255,14 @@ const MusicPlayer = {
     },
 
     start() {
-        if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume().then(() => {
+        SoundManager.ensureAudio();
+        const ctx = SoundManager.audioCtx;
+        if (ctx.state === 'suspended') {
+            ctx.resume().then(() => {
                 if (this.isPlaying) return;
                 this.isPlaying = true;
                 this.currentStep = 0;
-                this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+                this.nextNoteTime = ctx.currentTime + 0.1;
                 this.scheduler();
             });
             return;
@@ -269,7 +270,7 @@ const MusicPlayer = {
         if (this.isPlaying) return;
         this.isPlaying = true;
         this.currentStep = 0;
-        this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+        this.nextNoteTime = ctx.currentTime + 0.1;
         this.scheduler();
     },
 
@@ -291,16 +292,17 @@ const MusicPlayer = {
 
     resume() {
         if (!this.isPlaying) {
-            if (this.audioCtx.state === 'suspended') {
-                this.audioCtx.resume().then(() => {
+            const ctx = SoundManager.audioCtx;
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(() => {
                     this.isPlaying = true;
-                    this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+                    this.nextNoteTime = ctx.currentTime + 0.1;
                     this.scheduler();
                 });
                 return;
             }
             this.isPlaying = true;
-            this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+            this.nextNoteTime = ctx.currentTime + 0.1;
             this.scheduler();
         }
     },
@@ -312,8 +314,7 @@ const MusicPlayer = {
         const stepTime = (duration * 1000) / steps;
         for (let i = 1; i <= steps; i++) {
             setTimeout(() => {
-                const vol = this.bgmVolume * (1 - i / steps) * 0.2;
-                const mutedVol = this.bgmMuted ? 0 : vol;
+                this.isPlaying = false;
             }, stepTime * i);
         }
         setTimeout(() => this.stop(), duration * 1000);
