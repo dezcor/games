@@ -722,3 +722,4 @@ function resetGame() {
 previousBestScore = getBestScore();
 updateBestScoreDisplay();
 draw();
+SoundManager.startBgm();
