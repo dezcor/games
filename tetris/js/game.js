@@ -325,6 +325,7 @@ function handleGameOver() {
     renderHighScoresTable();
     
     SoundManager.playGameOver();
+    MusicPlayer.fadeOut(0.8);
     alert('Game Over! Presiona R para reiniciar');
 }
 
@@ -521,6 +522,11 @@ function togglePause() {
     if (overlay) {
         overlay.style.display = isPaused ? 'flex' : 'none';
     }
+    if (isPaused) {
+        MusicPlayer.pause();
+    } else {
+        MusicPlayer.resume();
+    }
 }
 
 document.addEventListener('keydown', (e) => {
@@ -587,8 +593,22 @@ if (volumeSlider) {
     });
 }
 
-SoundManager.setVolume(0.7);
+ SoundManager.setVolume(0.7);
 updateMuteIcon();
+
+const bgmMuteBtn = document.getElementById('bgm-mute-btn');
+if (bgmMuteBtn) {
+    bgmMuteBtn.addEventListener('click', () => {
+        MusicPlayer.toggleMute();
+        updateMusicIcon();
+    });
+}
+
+function updateMusicIcon() {
+    if (bgmMuteBtn) {
+        bgmMuteBtn.textContent = MusicPlayer.getBgmMuteState() ? '🔇' : '🎵';
+    }
+}
 
 // Touch controls
 function setupTouchButton(selector, onStart, onEnd) {
@@ -694,6 +714,8 @@ function resetGame() {
     }
     
     updateBestScoreDisplay();
+    
+    SoundManager.startBgm();
 }
 
 // Start game loop

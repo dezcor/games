@@ -92,6 +92,21 @@ canvas {
     border-color: #fff;
 }
 
+#bgm-mute-btn {
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #444;
+    border: 2px solid #555;
+    border-radius: 5px;
+    line-height: 1;
+}
+
+#bgm-mute-btn:hover {
+    background-color: #666;
+    border-color: #fff;
+}
+
 #volume-slider {
     -webkit-appearance: none;
     appearance: none;

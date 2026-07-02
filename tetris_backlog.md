@@ -33,5 +33,5 @@
 
 ## Phase 6: Polish & Audio
 - [x] **Sound Effects**: Move, rotate, line clear, and game over sounds
-- [ ] **Background Music**: Loopable track
+- [x] **Background Music**: Loopable track
 - [x] **UI Polish**: Menu screens, "Pause" functionality, and styled fonts
