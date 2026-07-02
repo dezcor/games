@@ -456,6 +456,79 @@ if (pauseBtn) {
     pauseBtn.addEventListener('click', togglePause);
 }
 
+// Touch controls
+function setupTouchButton(selector, onStart, onEnd) {
+    const btn = document.querySelector(selector);
+    if (!btn) return;
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        if (onStart) onStart();
+    }, { passive: false });
+    btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    }, { passive: false });
+    btn.addEventListener('touchcancel', (e) => {
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+    btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        if (onStart) onStart();
+    });
+    btn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+    btn.addEventListener('mouseleave', (e) => {
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+}
+
+setupTouchButton('[data-action="left"]',
+    () => { keys['ArrowLeft'] = true; playerMove(-1); },
+    () => { keys['ArrowLeft'] = false; }
+);
+setupTouchButton('[data-action="right"]',
+    () => { keys['ArrowRight'] = true; playerMove(1); },
+    () => { keys['ArrowRight'] = false; }
+);
+setupTouchButton('[data-action="down"]',
+    () => { keys['ArrowDown'] = true; playerDrop(); },
+    () => { keys['ArrowDown'] = false; }
+);
+setupTouchButton('[data-action="rotate"]',
+    () => {
+        if (!gameOver && !isPaused && rotationQueue.length < 3) {
+            rotationQueue.push({ type: 'rotate', dir: 1 });
+        }
+    }
+);
+setupTouchButton('[data-action="drop"]',
+    () => {
+        if (gameOver || isPaused) return;
+        while (!collide(grid, player)) {
+            player.pos.y++;
+        }
+        player.pos.y--;
+        merge(grid, player);
+        clearLines();
+        scoreUpdate();
+        player.matrix = spawnPiece();
+        player.currentPos.x = player.pos.x;
+        player.currentPos.y = player.pos.y;
+        if (collide(grid, player)) {
+            handleGameOver();
+        }
+    }
+);
+setupTouchButton('[data-action="restart"]', resetGame);
+
 function resetGame() {
     grid.forEach(row => row.fill(0));
     player.score = 0;

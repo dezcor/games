@@ -2,31 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Tetris Game</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="game-container">
-        <canvas id="tetris" width="240" height="400"></canvas>
-        <div id="ui">
+        <div id="top-ui">
             <div id="score">Puntos: 0</div>
             <div id="level">Nivel: 1</div>
             <div id="next-piece-container">
                 <span>Siguiente:</span>
                 <canvas id="next-canvas" width="80" height="80"></canvas>
             </div>
-            <div id="controls">
-                <span>← → : Mover</span>
-                <span>↑ : Rotar</span>
-                <span>↓ : Caer</span>
-                <span>Espacio : Hard Drop</span>
-                <span>P : Pausa / R : Reiniciar</span>
-            </div>
             <button id="pause-btn">Pausa</button>
         </div>
-        <div id="pause-overlay">
-            <h1>PAUSA</h1>
+        <div id="board-wrapper">
+            <canvas id="tetris" width="240" height="400"></canvas>
+            <div id="pause-overlay">
+                <h1>PAUSA</h1>
+            </div>
+        </div>
+        <div id="touch-controls">
+            <button class="touch-btn" data-action="left">←</button>
+            <button class="touch-btn" data-action="rotate">↻</button>
+            <button class="touch-btn" data-action="right">→</button>
+            <button class="touch-btn" data-action="down">↓</button>
+            <button class="touch-btn" data-action="drop">⬇⬇</button>
+            <button class="touch-btn" data-action="restart">R</button>
         </div>
     </div>
     <script src="js/constants.js"></script>

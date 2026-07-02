@@ -1,4 +1,9 @@
-# Tetris Game Styles
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+}
 
 body {
     background: #202028;
@@ -9,11 +14,33 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    overflow: hidden;
 }
 
 #game-container {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 420px;
+    width: 100%;
+    padding: 0 8px;
+}
+
+#top-ui {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+#board-wrapper {
     position: relative;
+    width: 100%;
+    max-width: 240px;
 }
 
 canvas {
@@ -21,35 +48,34 @@ canvas {
     background-color: #000;
 }
 
-#ui {
-    margin-top: 10px;
-}
-
-#score {
-    font-size: 20px;
-}
-
-#level {
-    font-size: 20px;
-    margin-top: 4px;
-}
-
-#next-piece-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+#tetris {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 #next-canvas {
     border: 1px solid #fff;
     background-color: #000;
+    width: 40px;
+    height: 40px;
+}
+
+#score, #level {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+#next-piece-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
 }
 
 #pause-btn {
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 6px 14px;
+    font-size: 14px;
     cursor: pointer;
     background-color: #444;
     color: white;
@@ -65,14 +91,16 @@ canvas {
     position: absolute;
     top: 0;
     left: 0;
-    width: 240px;
-    height: 400px;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
     display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 10;
+    border: 2px solid #fff;
+    border-radius: 4px;
 }
 
 #pause-overlay h1 {
@@ -80,20 +108,79 @@ canvas {
     margin: 0;
 }
 
-#controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    margin-top: 10px;
-    padding: 8px;
-    border: 1px solid #444;
-    border-radius: 4px;
-    background-color: #181820;
-    font-size: 12px;
-    color: #aaa;
+#touch-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 8px;
+    padding: 0 4px;
 }
 
-#controls span {
-    line-height: 1.4;
+.touch-btn {
+    padding: 16px 0;
+    font-size: 28px;
+    background-color: #333;
+    color: white;
+    border: 2px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background-color 0.1s;
+}
+
+.touch-btn:active, .touch-btn.pressed {
+    background-color: #666;
+    border-color: #fff;
+}
+
+.touch-btn[data-action="left"],
+.touch-btn[data-action="right"] {
+    background-color: #2a3a5a;
+}
+
+.touch-btn[data-action="rotate"] {
+    background-color: #5a3a2a;
+}
+
+.touch-btn[data-action="down"] {
+    background-color: #2a5a3a;
+}
+
+.touch-btn[data-action="drop"] {
+    background-color: #5a2a2a;
+}
+
+.touch-btn[data-action="restart"] {
+    background-color: #444;
+    font-size: 22px;
+}
+
+@media (min-width: 500px) {
+    #game-container {
+        max-width: 500px;
+    }
+    #touch-controls {
+        max-width: 340px;
+    }
+    .touch-btn {
+        padding: 20px 0;
+        font-size: 32px;
+    }
+}
+
+@media (max-height: 600px) {
+    #touch-controls {
+        gap: 4px;
+    }
+    .touch-btn {
+        padding: 10px 0;
+        font-size: 22px;
+    }
+    #top-ui {
+        margin-bottom: 4px;
+    }
 }
