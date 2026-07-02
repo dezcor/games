@@ -131,7 +131,7 @@ const MusicPlayer = {
     lookahead: 25,
     scheduleAheadTime: 0.1,
     bgmMuted: false,
-    bgmVolume: 0.5,
+    bgmVolume: 0.15,
     stepsPerBeat: 4,
     totalSteps: 64,
 
@@ -183,7 +183,7 @@ const MusicPlayer = {
             const gain = ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.35;
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.1;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.5);
             osc.connect(gain);
