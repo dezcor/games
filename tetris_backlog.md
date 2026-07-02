@@ -29,7 +29,7 @@
 - [x] **Next Piece Preview**: Render a UI element showing the next shape
 - [x] **Levels/Speed**: Increase gravity speed as the score increases
 - [x] **Game Over State**: Detection and "Game Over" overlay
-- [ ] **High Scores**: Persistent local storage for top scores
+- [x] **High Scores**: Persistent local storage for top scores
 
 ## Phase 6: Polish & Audio
 - [ ] **Sound Effects**: Move, rotate, line clear, and game over sounds
