@@ -183,7 +183,7 @@ const MusicPlayer = {
             const gain = ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.2;
+            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.35;
             gain.gain.setValueAtTime(vol, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.5);
             osc.connect(gain);
