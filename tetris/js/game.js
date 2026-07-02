@@ -2,7 +2,11 @@ const lerp = (start, end, t) => start + (end - start) * t;
 const ANIMATION_SPEED = 0.15;
 let rowsToClear = [];
 let gravityTimer = 0;
-const GRAVITY_INTERVAL = 60; // frames between gravity drops (60 frames ≈ 1 second at 60fps)
+
+function getGravityInterval() {
+    const speeds = [60, 50, 40, 30, 20, 15, 10, 5];
+    return speeds[Math.min(player.level - 1, speeds.length - 1)] || 5;
+}
 
 // DAS (Delayed Auto Shift) constants
 const DAS_DELAY = 10;  // ~170ms at 60fps
@@ -45,6 +49,8 @@ const player = {
     currentPos: {x: 0, y: 0},
     matrix: null,
     score: 0,
+    level: 1,
+    linesCleared: 0,
     state: 'idle',
     oldMatrix: null,
     rotationProgress: 0,
@@ -188,13 +194,15 @@ function clearLines() {
     
     if (fullRows.length > 0) {
         player.score += fullRows.length * 100;
+        player.linesCleared += fullRows.length;
+        player.level = Math.floor(player.linesCleared / 10) + 1;
         
         // Save row data for animation before removing
         fullRows.forEach(y => {
             rowsToClear.push({ y, data: [...grid[y]], alpha: 1.0 });
         });
         
-        // Remove all full rows from bottom to top (without unshift)
+        // Remove all full rows from bottom to top
         fullRows.sort((a, b) => b - a).forEach(y => {
             grid.splice(y, 1);
         });
@@ -222,6 +230,10 @@ function scoreUpdate() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) {
         scoreElement.textContent = `Puntos: ${player.score}`;
+    }
+    const levelElement = document.getElementById('level');
+    if (levelElement) {
+        levelElement.textContent = `Nivel: ${player.level}`;
     }
 }
 
@@ -292,13 +304,14 @@ function draw() {
     // Handle Gravity (timer-based)
     if (!isPaused && !gameOver) {
         gravityTimer++;
-        if (gravityTimer >= GRAVITY_INTERVAL) {
+        if (gravityTimer >= getGravityInterval()) {
             gravityTimer = 0;
             if (!collide(grid, { pos: {x: player.pos.x, y: player.pos.y + 1}, matrix: player.matrix })) {
                 player.pos.y++;
             } else {
                 merge(grid, player);
                 clearLines();
+                scoreUpdate();
                 player.pos.y = 0;
                 player.currentPos.y = 0;
                 player.matrix = nextMatrix;
@@ -375,6 +388,7 @@ function draw() {
     context.fillStyle = 'white';
     context.font = '1px Arial';
     context.fillText(`Puntos: ${player.score}`, 0.5, 1);
+    context.fillText(`Nivel: ${player.level}`, 0.5, 2);
 
     requestAnimationFrame(draw);
 }
@@ -427,6 +441,7 @@ document.addEventListener('keydown', (e) => {
         player.pos.y--;
         merge(grid, player);
         clearLines();
+        scoreUpdate();
         player.matrix = spawnPiece();
         player.currentPos.x = player.pos.x;
         player.currentPos.y = player.pos.y;
@@ -441,15 +456,91 @@ if (pauseBtn) {
     pauseBtn.addEventListener('click', togglePause);
 }
 
+// Touch controls
+function setupTouchButton(selector, onStart, onEnd) {
+    const btn = document.querySelector(selector);
+    if (!btn) return;
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        if (onStart) onStart();
+    }, { passive: false });
+    btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    }, { passive: false });
+    btn.addEventListener('touchcancel', (e) => {
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+    btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        if (onStart) onStart();
+    });
+    btn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+    btn.addEventListener('mouseleave', (e) => {
+        btn.classList.remove('pressed');
+        if (onEnd) onEnd();
+    });
+}
+
+setupTouchButton('[data-action="left"]',
+    () => { keys['ArrowLeft'] = true; },
+    () => { keys['ArrowLeft'] = false; }
+);
+setupTouchButton('[data-action="right"]',
+    () => { keys['ArrowRight'] = true; },
+    () => { keys['ArrowRight'] = false; }
+);
+setupTouchButton('[data-action="down"]',
+    () => { keys['ArrowDown'] = true; },
+    () => { keys['ArrowDown'] = false; }
+);
+setupTouchButton('[data-action="rotate"]',
+    () => {
+        if (!gameOver && !isPaused && rotationQueue.length < 3) {
+            rotationQueue.push({ type: 'rotate', dir: 1 });
+        }
+    }
+);
+setupTouchButton('[data-action="drop"]',
+    () => {
+        if (gameOver || isPaused) return;
+        while (!collide(grid, player)) {
+            player.pos.y++;
+        }
+        player.pos.y--;
+        merge(grid, player);
+        clearLines();
+        scoreUpdate();
+        player.matrix = spawnPiece();
+        player.currentPos.x = player.pos.x;
+        player.currentPos.y = player.pos.y;
+        if (collide(grid, player)) {
+            handleGameOver();
+        }
+    }
+);
+setupTouchButton('[data-action="restart"]', resetGame);
+
 function resetGame() {
     grid.forEach(row => row.fill(0));
     player.score = 0;
+    player.level = 1;
+    player.linesCleared = 0;
     player.matrix = spawnPiece();
     gameOver = false;
     isPaused = false;
     dasStates = { left: 'idle', right: 'idle', down: 'idle' };
     dasTimers = { left: 0, right: 0, down: 0 };
     rotationQueue = [];
+    rowsToClear = [];
     const overlay = document.getElementById('pause-overlay');
     if (overlay) {
         overlay.style.display = 'none';
