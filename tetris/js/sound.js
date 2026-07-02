@@ -107,6 +107,18 @@ const SoundManager = {
 
     getMuteState() {
         return this.isMuted;
+    },
+
+    startBgm() {
+        MusicPlayer.start();
+    },
+
+    pauseBgm() {
+        MusicPlayer.pause();
+    },
+
+    resumeBgm() {
+        MusicPlayer.resume();
     }
 };
 
@@ -302,7 +314,7 @@ const MusicPlayer = {
             setTimeout(() => {
                 const vol = this.bgmVolume * (1 - i / steps) * 0.2;
                 const mutedVol = this.bgmMuted ? 0 : vol;
-            }.bind(this), stepTime * i);
+            }, stepTime * i);
         }
         setTimeout(() => this.stop(), duration * 1000);
     },
