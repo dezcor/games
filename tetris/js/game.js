@@ -130,6 +130,9 @@ function movePlayer(dx, dy) {
         }
     }
     scoreUpdate();
+    if (dx !== 0) {
+        SoundManager.playMove();
+    }
 }
 
 function playerDrop() {
@@ -164,6 +167,7 @@ function playerRotate(dir) {
         }
     }
     player.currentPos.x = player.pos.x;
+    SoundManager.playRotate();
 }
 
 function createPiece() {
@@ -216,6 +220,8 @@ function clearLines() {
             updateBestScoreDisplay();
             showNewHighScoreNotice();
         }
+        
+        SoundManager.playLineClear(fullRows.length);
     }
 }
 
@@ -304,7 +310,7 @@ function handleGameOver() {
     dasStates = { left: 'idle', right: 'idle', down: 'idle' };
     dasTimers = { left: 0, right: 0, down: 0 };
     rotationQueue = [];
-    
+
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     if (overlay) {
@@ -318,6 +324,7 @@ function handleGameOver() {
     saveHighScore(player.score);
     renderHighScoresTable();
     
+    SoundManager.playGameOver();
     alert('Game Over! Presiona R para reiniciar');
 }
 
@@ -538,6 +545,7 @@ document.addEventListener('keydown', (e) => {
         merge(grid, player);
         clearLines();
         scoreUpdate();
+        SoundManager.playHardDrop();
         player.matrix = spawnPiece();
         player.currentPos.x = player.pos.x;
         player.currentPos.y = player.pos.y;
@@ -551,6 +559,36 @@ const pauseBtn = document.getElementById('pause-btn');
 if (pauseBtn) {
     pauseBtn.addEventListener('click', togglePause);
 }
+
+const muteBtn = document.getElementById('mute-btn');
+const volumeSlider = document.getElementById('volume-slider');
+
+function updateMuteIcon() {
+    if (muteBtn) {
+        if (SoundManager.getMuteState() || SoundManager.getVolume() === 0) {
+            muteBtn.textContent = '🔇';
+        } else {
+            muteBtn.textContent = '🔊';
+        }
+    }
+}
+
+if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+        SoundManager.toggleMute();
+        updateMuteIcon();
+    });
+}
+
+if (volumeSlider) {
+    volumeSlider.addEventListener('input', (e) => {
+        SoundManager.setVolume(parseFloat(e.target.value));
+        updateMuteIcon();
+    });
+}
+
+SoundManager.setVolume(0.7);
+updateMuteIcon();
 
 // Touch controls
 function setupTouchButton(selector, onStart, onEnd) {
@@ -615,6 +653,7 @@ setupTouchButton('[data-action="drop"]',
         merge(grid, player);
         clearLines();
         scoreUpdate();
+        SoundManager.playHardDrop();
         player.matrix = spawnPiece();
         player.currentPos.x = player.pos.x;
         player.currentPos.y = player.pos.y;
