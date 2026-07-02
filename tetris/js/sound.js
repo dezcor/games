@@ -251,7 +251,7 @@ const MusicPlayer = {
             this.nextNoteTime += (beatDuration / this.stepsPerBeat);
             this.currentStep = (this.currentStep + 1) % this.totalSteps;
         }
-        this.schedulerTimer = setTimeout(() => this.scheduler.bind(this)(), this.lookahead);
+        this.schedulerTimer = setTimeout(this.scheduler.bind(this), this.lookahead);
     },
 
     start() {
