@@ -491,15 +491,15 @@ function setupTouchButton(selector, onStart, onEnd) {
 }
 
 setupTouchButton('[data-action="left"]',
-    () => { keys['ArrowLeft'] = true; playerMove(-1); },
+    () => { keys['ArrowLeft'] = true; },
     () => { keys['ArrowLeft'] = false; }
 );
 setupTouchButton('[data-action="right"]',
-    () => { keys['ArrowRight'] = true; playerMove(1); },
+    () => { keys['ArrowRight'] = true; },
     () => { keys['ArrowRight'] = false; }
 );
 setupTouchButton('[data-action="down"]',
-    () => { keys['ArrowDown'] = true; playerDrop(); },
+    () => { keys['ArrowDown'] = true; },
     () => { keys['ArrowDown'] = false; }
 );
 setupTouchButton('[data-action="rotate"]',
