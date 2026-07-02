@@ -1,3 +1,16 @@
+const lerp = (start, end, t) => start + (end - start) * t;
+const ANIMATION_SPEED = 0.15;
+let rowsToClear = [];
+let gravityTimer = 0;
+const GRAVITY_INTERVAL = 60; // frames between gravity drops (60 frames ≈ 1 second at 60fps)
+
+// DAS (Delayed Auto Shift) constants
+const DAS_DELAY = 10;  // ~170ms at 60fps
+const ARR_RATE = 3;    // ~50ms at 60fps
+let dasTimers = { left: 0, right: 0, down: 0 };
+let dasStates = { left: 'idle', right: 'idle', down: 'idle' };
+let rotationQueue = [];
+
 const canvas = document.getElementById('tetris');
 const context = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -12,8 +25,8 @@ nextContext.scale(BLOCK_SIZE, BLOCK_SIZE);
 const grid = createGrid();
 
 let gameOver = false;
-let dropInterval;
 let isPaused = false;
+
 
 function createGrid() {
     const arena = [];
@@ -29,8 +42,12 @@ function createGrid() {
 
 const player = {
     pos: {x: 0, y: 0},
+    currentPos: {x: 0, y: 0},
     matrix: null,
     score: 0,
+    state: 'idle',
+    oldMatrix: null,
+    rotationProgress: 0,
 };
 
 let nextMatrix = null;
@@ -81,35 +98,51 @@ function rotate(matrix, dir) {
     }
 }
 
-function playerDrop() {
+function movePlayer(dx, dy) {
     if (gameOver || isPaused) return;
-    player.pos.y++;
+    player.pos.x += dx;
+    player.pos.y += dy;
     if (collide(grid, player)) {
-        player.pos.y--;
-        merge(grid, player);
-        clearLines();
-        player.pos.y = 0;
-        player.matrix = nextMatrix;
-        nextMatrix = createPiece();
-        player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
-        player.pos.y = 0;
-        if (collide(grid, player)) {
-            handleGameOver();
+        player.pos.x -= dx;
+        player.pos.y -= dy;
+        if (dy > 0) {
+            merge(grid, player);
+            clearLines();
+            player.pos.y = 0;
+            player.currentPos.y = 0;
+            player.matrix = nextMatrix;
+            player.rotationProgress = 0;
+            player.oldMatrix = null;
+            nextMatrix = createPiece();
+            player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+            player.currentPos.x = player.pos.x;
+            if (collide(grid, player)) {
+                handleGameOver();
+            }
         }
     }
     scoreUpdate();
 }
 
-function playerMove(dir) {
-    if (gameOver || isPaused) return;
-    player.pos.x += dir;
-    if (collide(grid, player)) {
-        player.pos.x -= dir;
-    }
+function playerDrop() {
+    movePlayer(0, 1);
 }
+
+
+
+function playerMove(dir) {
+    movePlayer(dir, 0);
+}
+
+
 
 function playerRotate(dir) {
     if (gameOver || isPaused) return;
+    
+    // Save old matrix for rotation animation
+    player.oldMatrix = player.matrix.map(row => [...row]);
+    player.rotationProgress = 1;
+    
     const pos = player.pos.x;
     let offset = 1;
     rotate(player.matrix, dir);
@@ -119,8 +152,10 @@ function playerRotate(dir) {
         if (offset > player.matrix.length) {
             rotate(player.matrix, -dir);
             player.pos.x = pos;
+            return;
         }
     }
+    player.currentPos.x = player.pos.x;
 }
 
 function createPiece() {
@@ -136,40 +171,169 @@ function spawnPiece() {
     nextMatrix = createPiece();
     player.pos.x = Math.floor((COLS - matrix[0].length) / 2);
     player.pos.y = 0;
+    player.currentPos.x = player.pos.x;
+    player.currentPos.y = player.pos.y;
+    player.rotationProgress = 0;
+    player.oldMatrix = null;
     return matrix;
 }
 
 function clearLines() {
-    let rowsCleared = 0;
+    const fullRows = [];
     for (let y = ROWS - 1; y >= 0; y--) {
-        const row = grid[y];
-        if (row.every(value => value !== 0)) {
-            grid.splice(y, 1);
-            grid.unshift(new Array(COLS).fill(0));
-            rowsCleared++;
-            y++;
+        if (grid[y].every(value => value !== 0)) {
+            fullRows.push(y);
         }
     }
-    if (rowsCleared > 0) {
-        player.score += rowsCleared * 100;
+    
+    if (fullRows.length > 0) {
+        player.score += fullRows.length * 100;
+        
+        // Save row data for animation before removing
+        fullRows.forEach(y => {
+            rowsToClear.push({ y, data: [...grid[y]], alpha: 1.0 });
+        });
+        
+        // Remove all full rows from bottom to top (without unshift)
+        fullRows.sort((a, b) => b - a).forEach(y => {
+            grid.splice(y, 1);
+        });
+        
+        // Add empty rows at the top
+        for (let i = 0; i < fullRows.length; i++) {
+            grid.unshift(new Array(COLS).fill(0));
+        }
     }
 }
 
+
+
+
 function handleGameOver() {
     gameOver = true;
-    clearInterval(dropInterval);
+    isPaused = true;
+    dasStates = { left: 'idle', right: 'idle', down: 'idle' };
+    dasTimers = { left: 0, right: 0, down: 0 };
+    rotationQueue = [];
     alert('Game Over! Presiona R para reiniciar');
 }
 
 function scoreUpdate() {
-    // Logic for score updates can be added here
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) {
+        scoreElement.textContent = `Puntos: ${player.score}`;
+    }
+}
+
+function handleDAS(direction, action) {
+    const keyCode = direction === 'left' ? 'ArrowLeft' : direction === 'right' ? 'ArrowRight' : 'ArrowDown';
+    const isDown = keys[keyCode];
+    const state = dasStates[direction];
+
+    if (isDown) {
+        if (state === 'idle') {
+            action();
+            dasStates[direction] = 'das_wait';
+            dasTimers[direction] = 0;
+        } else if (state === 'das_wait') {
+            dasTimers[direction]++;
+            if (dasTimers[direction] >= DAS_DELAY) {
+                action();
+                dasStates[direction] = 'arr';
+                dasTimers[direction] = 0;
+            }
+        } else if (state === 'arr') {
+            dasTimers[direction]++;
+            if (dasTimers[direction] >= ARR_RATE) {
+                action();
+                dasTimers[direction] = 0;
+            }
+        }
+    } else {
+        dasStates[direction] = 'idle';
+        dasTimers[direction] = 0;
+    }
+}
+
+function handleInput() {
+    if (isPaused || gameOver) return;
+
+    handleDAS('left', () => playerMove(-1));
+    handleDAS('right', () => playerMove(1));
+    handleDAS('down', () => playerDrop());
+
+    if (rotationQueue.length > 0) {
+        const event = rotationQueue.shift();
+        if (event.type === 'rotate') {
+            playerRotate(event.dir);
+        }
+    }
 }
 
 function draw() {
+    handleInput();
+
     context.fillStyle = '#000';
     context.fillRect(0, 0, COLS, ROWS);
 
+    // Smoothly interpolate currentPos towards pos
+    player.currentPos.x = lerp(player.currentPos.x, player.pos.x, ANIMATION_SPEED);
+    player.currentPos.y = lerp(player.currentPos.y, player.pos.y, ANIMATION_SPEED);
+    
+    // Handle rotation animation
+    if (player.rotationProgress > 0) {
+        player.rotationProgress -= 0.08;
+        if (player.rotationProgress < 0) {
+            player.rotationProgress = 0;
+            player.oldMatrix = null;
+        }
+    }
+
+    // Handle Gravity (timer-based)
+    if (!isPaused && !gameOver) {
+        gravityTimer++;
+        if (gravityTimer >= GRAVITY_INTERVAL) {
+            gravityTimer = 0;
+            if (!collide(grid, { pos: {x: player.pos.x, y: player.pos.y + 1}, matrix: player.matrix })) {
+                player.pos.y++;
+            } else {
+                merge(grid, player);
+                clearLines();
+                player.pos.y = 0;
+                player.currentPos.y = 0;
+                player.matrix = nextMatrix;
+                player.rotationProgress = 0;
+                player.oldMatrix = null;
+                nextMatrix = createPiece();
+                player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+                player.currentPos.x = player.pos.x;
+                if (collide(grid, player)) {
+                    handleGameOver();
+                }
+            }
+        }
+    }
+
     drawMatrix(grid, {x: 0, y: 0});
+
+    // Render Clearing Rows Animation (single flash frame)
+    if (rowsToClear.length > 0) {
+        for (let i = rowsToClear.length - 1; i >= 0; i--) {
+            const rowObj = rowsToClear[i];
+            rowObj.alpha -= 0.2;
+
+            if (rowObj.alpha > 0) {
+                context.globalAlpha = rowObj.alpha > 0.5 ? 1.0 : rowObj.alpha * 2;
+                context.fillStyle = '#fff';
+                context.fillRect(0, rowObj.y, COLS, 1);
+                context.globalAlpha = 1.0;
+            }
+
+            if (rowObj.alpha <= 0) {
+                rowsToClear.splice(i, 1);
+            }
+        }
+    }
 
     // Ghost Piece logic
     const ghostPos = { ...player.pos };
@@ -182,7 +346,22 @@ function draw() {
     drawMatrix(player.matrix, ghostPos);
     context.globalAlpha = 1.0;
 
-    drawMatrix(player.matrix, player.pos);
+    // Draw player piece with rotation animation
+    if (player.rotationProgress > 0 && player.oldMatrix) {
+        const cols = player.oldMatrix[0].length;
+        const rows = player.oldMatrix.length;
+        const centerX = player.currentPos.x + cols / 2;
+        const centerY = player.currentPos.y + rows / 2;
+        const angle = (1 - player.rotationProgress) * Math.PI / 2;
+
+        context.save();
+        context.translate(centerX, centerY);
+        context.rotate(angle);
+        drawMatrix(player.oldMatrix, {x: -cols / 2, y: -rows / 2});
+        context.restore();
+    } else {
+        drawMatrix(player.matrix, player.currentPos);
+    }
 
     // Draw Next Piece Preview
     nextContext.fillStyle = '#000';
@@ -199,6 +378,7 @@ function draw() {
 
     requestAnimationFrame(draw);
 }
+
 
 function drawMatrix(matrix, offset, ctx = context) {
     matrix.forEach((row, y) => {
@@ -236,14 +416,10 @@ document.addEventListener('keydown', (e) => {
         togglePause();
         return;
     }
-    if (e.key === 'ArrowLeft') {
-        playerMove(-1);
-    } else if (e.key === 'ArrowRight') {
-        playerMove(1);
-    } else if (e.key === 'ArrowDown') {
-        playerDrop();
-    } else if (e.key === 'ArrowUp') {
-        playerRotate(1);
+    if (e.key === 'ArrowUp') {
+        if (rotationQueue.length < 3) {
+            rotationQueue.push({ type: 'rotate', dir: 1 });
+        }
     } else if (e.key === ' ') {
         while (!collide(grid, player)) {
             player.pos.y++;
@@ -252,6 +428,8 @@ document.addEventListener('keydown', (e) => {
         merge(grid, player);
         clearLines();
         player.matrix = spawnPiece();
+        player.currentPos.x = player.pos.x;
+        player.currentPos.y = player.pos.y;
         if (collide(grid, player)) {
             handleGameOver();
         }
@@ -269,14 +447,14 @@ function resetGame() {
     player.matrix = spawnPiece();
     gameOver = false;
     isPaused = false;
+    dasStates = { left: 'idle', right: 'idle', down: 'idle' };
+    dasTimers = { left: 0, right: 0, down: 0 };
+    rotationQueue = [];
     const overlay = document.getElementById('pause-overlay');
     if (overlay) {
         overlay.style.display = 'none';
     }
-    clearInterval(dropInterval);
-    dropInterval = setInterval(playerDrop, 1000);
 }
 
 // Start game loop
-dropInterval = setInterval(playerDrop, 1000);
 draw();
