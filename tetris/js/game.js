@@ -87,9 +87,10 @@ function playerDrop() {
         player.pos.y--;
         merge(grid, player);
         clearLines();
-        player.pos.y = 0;
         player.matrix = nextMatrix;
         nextMatrix = createPiece();
+        player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+        player.pos.y = 0;
         if (collide(grid, player)) {
             handleGameOver();
         }
