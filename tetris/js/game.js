@@ -13,6 +13,7 @@ const grid = createGrid();
 
 let gameOver = false;
 let dropInterval;
+let isPaused = false;
 
 function createGrid() {
     const arena = [];
@@ -81,12 +82,13 @@ function rotate(matrix, dir) {
 }
 
 function playerDrop() {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
     player.pos.y++;
     if (collide(grid, player)) {
         player.pos.y--;
         merge(grid, player);
         clearLines();
+        player.pos.y = 0;
         player.matrix = nextMatrix;
         nextMatrix = createPiece();
         player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
@@ -99,7 +101,7 @@ function playerDrop() {
 }
 
 function playerMove(dir) {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
     player.pos.x += dir;
     if (collide(grid, player)) {
         player.pos.x -= dir;
@@ -107,7 +109,7 @@ function playerMove(dir) {
 }
 
 function playerRotate(dir) {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
     const pos = player.pos.x;
     let offset = 1;
     rotate(player.matrix, dir);
@@ -216,12 +218,24 @@ function drawMatrix(matrix, offset, ctx = context) {
 // Initialize
 player.matrix = spawnPiece();
 
+function togglePause() {
+    isPaused = !isPaused;
+    const overlay = document.getElementById('pause-overlay');
+    if (overlay) {
+        overlay.style.display = isPaused ? 'flex' : 'none';
+    }
+}
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'r' || e.key === 'R') {
         resetGame();
         return;
     }
     if (gameOver) return;
+    if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+        togglePause();
+        return;
+    }
     if (e.key === 'ArrowLeft') {
         playerMove(-1);
     } else if (e.key === 'ArrowRight') {
@@ -244,11 +258,21 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+const pauseBtn = document.getElementById('pause-btn');
+if (pauseBtn) {
+    pauseBtn.addEventListener('click', togglePause);
+}
+
 function resetGame() {
     grid.forEach(row => row.fill(0));
     player.score = 0;
     player.matrix = spawnPiece();
     gameOver = false;
+    isPaused = false;
+    const overlay = document.getElementById('pause-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
     clearInterval(dropInterval);
     dropInterval = setInterval(playerDrop, 1000);
 }
