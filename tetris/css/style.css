@@ -29,6 +29,11 @@ canvas {
     font-size: 20px;
 }
 
+#level {
+    font-size: 20px;
+    margin-top: 4px;
+}
+
 #next-piece-container {
     display: flex;
     align-items: center;

@@ -18,16 +18,16 @@
 - [x] **Game Loop**: Create a consistent frame rate (e.g., 60 FPS)
 - [x] **Draw Function**: Render the grid, current piece, and cleared lines
 - [x] **Ghost Piece**: Render a "shadow" piece showing where it will land
-- [ ] **Animations**: Smooth transitions for movements and rotations
+- [x] **Animations**: Smooth transitions for movements and rotations
 
 ## Phase 4: Input & User Interaction
 - [x] **Keyboard Listeners**: Map keys (Arrows, Space, etc.) to game actions
-- [ ] **Input Buffer**: Handle rapid key presses correctly
+- [x] **Input Buffer**: Handle rapid key presses correctly (DAS/ARR system)
 
 ## Phase 5: Game State & Scoring
 - [x] **Score System**: Points for lines cleared and "Tetris" combos
 - [x] **Next Piece Preview**: Render a UI element showing the next shape
-- [ ] **Levels/Speed**: Increase gravity speed as the score increases
+- [x] **Levels/Speed**: Increase gravity speed as the score increases
 - [x] **Game Over State**: Detection and "Game Over" overlay
 - [ ] **High Scores**: Persistent local storage for top scores
 
