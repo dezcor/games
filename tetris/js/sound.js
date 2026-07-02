@@ -162,7 +162,6 @@ const MusicPlayer = {
         const beatDuration = 60 / this.tempo;
         const stepDuration = beatDuration / this.stepsPerBeat;
 
-        // Melody
         const melodyIndex = step % this.melodyPattern.length;
         const melodySemitones = this.melodyPattern[melodyIndex];
         if (melodySemitones > 0) {
@@ -180,7 +179,6 @@ const MusicPlayer = {
             osc.stop(time + stepDuration * 1.5);
         }
 
-        // Bass
         const bassIndex = step % this.bassPattern.length;
         const bassSemitones = this.bassPattern[bassIndex];
         if (bassSemitones > 0) {
@@ -198,7 +196,6 @@ const MusicPlayer = {
             osc.stop(time + stepDuration * 3);
         }
 
-        // Kick drum
         if (this.kickPattern[step % this.kickPattern.length]) {
             const osc = this.audioCtx.createOscillator();
             const gain = this.audioCtx.createGain();
@@ -214,7 +211,6 @@ const MusicPlayer = {
             osc.stop(time + 0.1);
         }
 
-        // Snare
         if (this.snarePattern[step % this.snarePattern.length]) {
             const bufferSize = this.audioCtx.sampleRate * 0.1;
             const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
@@ -241,7 +237,7 @@ const MusicPlayer = {
             this.nextNoteTime += (beatDuration / this.stepsPerBeat);
             this.currentStep = (this.currentStep + 1) % this.totalSteps;
         }
-        this.schedulerTimer = setTimeout(() => this.scheduler(), this.lookahead);
+        this.schedulerTimer = setTimeout(() => this.scheduler.bind(this)(), this.lookahead);
     },
 
     start() {
@@ -249,7 +245,14 @@ const MusicPlayer = {
             this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
+            this.audioCtx.resume().then(() => {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.currentStep = 0;
+                this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+                this.scheduler();
+            });
+            return;
         }
         if (this.isPlaying) return;
         this.isPlaying = true;
@@ -276,6 +279,14 @@ const MusicPlayer = {
 
     resume() {
         if (!this.isPlaying) {
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume().then(() => {
+                    this.isPlaying = true;
+                    this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+                    this.scheduler();
+                });
+                return;
+            }
             this.isPlaying = true;
             this.nextNoteTime = this.audioCtx.currentTime + 0.1;
             this.scheduler();
@@ -291,10 +302,7 @@ const MusicPlayer = {
             setTimeout(() => {
                 const vol = this.bgmVolume * (1 - i / steps) * 0.2;
                 const mutedVol = this.bgmMuted ? 0 : vol;
-                if (this.audioCtx) {
-                    this.audioCtx.destination.channelCount = 1;
-                }
-            }, stepTime * i);
+            }.bind(this), stepTime * i);
         }
         setTimeout(() => this.stop(), duration * 1000);
     },
