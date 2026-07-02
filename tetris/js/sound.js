@@ -254,6 +254,10 @@ const MusicPlayer = {
         this.schedulerTimer = setTimeout(this.scheduler.bind(this), this.lookahead);
     },
 
+    getBgmMuteState() {
+        return this.bgmMuted;
+    },
+
     start() {
         SoundManager.ensureAudio();
         const ctx = SoundManager.audioCtx;
