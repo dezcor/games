@@ -473,7 +473,6 @@ function resetGame() {
         overlay.style.display = 'none';
     }
 }
-}
 
 // Start game loop
 draw();
