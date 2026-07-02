@@ -12,6 +12,10 @@
             <div id="score">Puntos: 0</div>
             <div id="level">Nivel: 1</div>
             <div id="best-score">Mejor: <span id="best-score-value">0</span></div>
+            <div id="sound-controls">
+                <button id="mute-btn" title="Mute">🔊</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+            </div>
             <div id="next-piece-container">
                 <span>Siguiente:</span>
                 <canvas id="next-canvas" width="80" height="80"></canvas>
@@ -40,6 +44,7 @@
     <script src="js/constants.js"></script>
     <script src="js/tetriminos.js"></script>
     <script src="js/input.js"></script>
+    <script src="js/sound.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>

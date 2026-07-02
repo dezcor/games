@@ -32,6 +32,6 @@
 - [x] **High Scores**: Persistent local storage for top scores
 
 ## Phase 6: Polish & Audio
-- [ ] **Sound Effects**: Move, rotate, line clear, and game over sounds
+- [x] **Sound Effects**: Move, rotate, line clear, and game over sounds
 - [ ] **Background Music**: Loopable track
 - [x] **UI Polish**: Menu screens, "Pause" functionality, and styled fonts
