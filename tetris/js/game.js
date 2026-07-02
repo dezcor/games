@@ -30,6 +30,8 @@ const grid = createGrid();
 
 let gameOver = false;
 let isPaused = false;
+const STORAGE_KEY = 'tetris_highscores';
+let previousBestScore = 0;
 
 
 function createGrid() {
@@ -197,21 +199,100 @@ function clearLines() {
         player.linesCleared += fullRows.length;
         player.level = Math.floor(player.linesCleared / 10) + 1;
         
-        // Save row data for animation before removing
         fullRows.forEach(y => {
             rowsToClear.push({ y, data: [...grid[y]], alpha: 1.0 });
         });
         
-        // Remove all full rows from bottom to top
         fullRows.sort((a, b) => b - a).forEach(y => {
             grid.splice(y, 1);
         });
         
-        // Add empty rows at the top
         for (let i = 0; i < fullRows.length; i++) {
             grid.unshift(new Array(COLS).fill(0));
         }
+        
+        if (player.score > previousBestScore) {
+            previousBestScore = player.score;
+            updateBestScoreDisplay();
+            showNewHighScoreNotice();
+        }
     }
+}
+
+function getHighScores() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveHighScore(score) {
+    const highScores = getHighScores();
+    const now = new Date();
+    const entry = {
+        score: score,
+        date: now.toLocaleDateString('es-ES')
+    };
+    highScores.push(entry);
+    highScores.sort((a, b) => b.score - a.score);
+    const top5 = highScores.slice(0, 5);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(top5));
+}
+
+function getBestScore() {
+    const highScores = getHighScores();
+    return highScores.length > 0 ? highScores[0].score : 0;
+}
+
+function updateBestScoreDisplay() {
+    const bestScoreEl = document.getElementById('best-score-value');
+    if (bestScoreEl) {
+        bestScoreEl.textContent = getBestScore();
+    }
+}
+
+function renderHighScoresTable() {
+    const highScores = getHighScores();
+    const tableContainer = document.getElementById('high-scores-table');
+    const table = document.getElementById('high-scores-list');
+    
+    if (!tableContainer || !table || highScores.length === 0) {
+        return;
+    }
+    
+    table.innerHTML = '';
+    const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
+    
+    highScores.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.className = `hs-row hs-row-${index + 1}`;
+        row.innerHTML = `
+            <td class="hs-rank">${medals[index]}</td>
+            <td class="hs-score">${entry.score}</td>
+            <td class="hs-date">${entry.date}</td>
+        `;
+        table.appendChild(row);
+    });
+    
+    tableContainer.style.display = 'block';
+}
+
+function showNewHighScoreNotice() {
+    const existing = document.getElementById('new-highscore-notice');
+    if (existing) {
+        existing.remove();
+    }
+    
+    const notice = document.createElement('div');
+    notice.id = 'new-highscore-notice';
+    notice.textContent = '¡NUEVO RECORD!';
+    canvas.parentElement.appendChild(notice);
+    
+    setTimeout(() => {
+        notice.remove();
+    }, 2500);
 }
 
 
@@ -223,6 +304,20 @@ function handleGameOver() {
     dasStates = { left: 'idle', right: 'idle', down: 'idle' };
     dasTimers = { left: 0, right: 0, down: 0 };
     rotationQueue = [];
+    
+    const overlay = document.getElementById('pause-overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+    if (overlayTitle) {
+        overlayTitle.textContent = 'GAME OVER';
+    }
+    
+    updateBestScoreDisplay();
+    saveHighScore(player.score);
+    renderHighScoresTable();
+    
     alert('Game Over! Presiona R para reiniciar');
 }
 
@@ -235,6 +330,7 @@ function scoreUpdate() {
     if (levelElement) {
         levelElement.textContent = `Nivel: ${player.level}`;
     }
+    updateBestScoreDisplay();
 }
 
 function handleDAS(direction, action) {
@@ -541,11 +637,27 @@ function resetGame() {
     dasTimers = { left: 0, right: 0, down: 0 };
     rotationQueue = [];
     rowsToClear = [];
+    previousBestScore = getBestScore();
+    
     const overlay = document.getElementById('pause-overlay');
     if (overlay) {
         overlay.style.display = 'none';
     }
+    
+    const overlayTitle = document.getElementById('overlay-title');
+    if (overlayTitle) {
+        overlayTitle.textContent = 'PAUSA';
+    }
+    
+    const highScoresTable = document.getElementById('high-scores-table');
+    if (highScoresTable) {
+        highScoresTable.style.display = 'none';
+    }
+    
+    updateBestScoreDisplay();
 }
 
 // Start game loop
+previousBestScore = getBestScore();
+updateBestScoreDisplay();
 draw();

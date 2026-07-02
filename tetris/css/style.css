@@ -61,9 +61,14 @@ canvas {
     height: 40px;
 }
 
-#score, #level {
+#score, #level, #best-score {
     font-size: 14px;
     white-space: nowrap;
+}
+
+#best-score-value {
+    color: #f0c419;
+    font-weight: bold;
 }
 
 #next-piece-container {
@@ -183,4 +188,86 @@ canvas {
     #top-ui {
         margin-bottom: 4px;
     }
+}
+
+#high-scores-table {
+    margin-top: 20px;
+}
+
+#high-scores-table h3 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+    color: #f0c419;
+}
+
+#high-scores-list {
+    border-collapse: collapse;
+    width: 80%;
+    max-width: 200px;
+}
+
+#high-scores-list td {
+    padding: 6px 10px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.hs-rank {
+    font-weight: bold;
+    width: 40px;
+}
+
+.hs-score {
+    font-weight: bold;
+    color: #fff;
+    text-align: right;
+}
+
+.hs-date {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.hs-row-1 .hs-score {
+    color: #f0c419;
+}
+
+.hs-row-2 .hs-score {
+    color: #c0c0c0;
+}
+
+.hs-row-3 .hs-score {
+    color: #cd7f32;
+}
+
+#new-highscore-notice {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f0c419;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 20;
+    pointer-events: none;
+    animation: pulse-glow 0.5s ease-in-out infinite, fade-out 2.5s ease-out forwards;
+    text-shadow: 0 0 10px #f0c419, 0 0 20px #f0c419;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 10px #f0c419, 0 0 20px #f0c419;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.15);
+        box-shadow: 0 0 20px #f0c419, 0 0 40px #f0c419, 0 0 60px #f0c419;
+    }
+}
+
+@keyframes fade-out {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
 }

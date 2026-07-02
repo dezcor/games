@@ -11,6 +11,7 @@
         <div id="top-ui">
             <div id="score">Puntos: 0</div>
             <div id="level">Nivel: 1</div>
+            <div id="best-score">Mejor: <span id="best-score-value">0</span></div>
             <div id="next-piece-container">
                 <span>Siguiente:</span>
                 <canvas id="next-canvas" width="80" height="80"></canvas>
@@ -20,7 +21,11 @@
         <div id="board-wrapper">
             <canvas id="tetris" width="240" height="400"></canvas>
             <div id="pause-overlay">
-                <h1>PAUSA</h1>
+                <h1 id="overlay-title">PAUSA</h1>
+                <div id="high-scores-table" style="display:none;">
+                    <h3>Top 5 Records</h3>
+                    <table id="high-scores-list"></table>
+                </div>
             </div>
         </div>
         <div id="touch-controls">
