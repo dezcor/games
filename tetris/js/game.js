@@ -1,10 +1,13 @@
 const canvas = document.getElementById('tetris');
 const context = canvas.getContext('2d');
+const nextCanvas = document.getElementById('next-canvas');
+const nextContext = nextCanvas.getContext('2d');
 
 canvas.width = COLS * BLOCK_SIZE;
 canvas.height = ROWS * BLOCK_SIZE;
 
 context.scale(BLOCK_SIZE, BLOCK_SIZE);
+nextContext.scale(BLOCK_SIZE, BLOCK_SIZE);
 
 const grid = createGrid();
 
@@ -28,6 +31,8 @@ const player = {
     matrix: null,
     score: 0,
 };
+
+let nextMatrix = null;
 
 function collide(arena, player) {
     const [m, o] = [player.matrix, player.pos];
@@ -83,7 +88,8 @@ function playerDrop() {
         merge(grid, player);
         clearLines();
         player.pos.y = 0;
-        player.matrix = createPiece();
+        player.matrix = nextMatrix;
+        nextMatrix = createPiece();
         if (collide(grid, player)) {
             handleGameOver();
         }
@@ -119,8 +125,14 @@ function createPiece() {
     const type = pieces[pieces.length * Math.random() | 0];
     const piece = TETRIMINOS[type];
     const matrix = piece.shape.map((row, y) => row.map((val, x) => (val !== 0 ? type : 0)));
-    // Center the piece horizontally
+    return matrix;
+}
+
+function spawnPiece() {
+    const matrix = nextMatrix || createPiece();
+    nextMatrix = createPiece();
     player.pos.x = Math.floor((COLS - matrix[0].length) / 2);
+    player.pos.y = 0;
     return matrix;
 }
 
@@ -146,16 +158,6 @@ function handleGameOver() {
     alert('Game Over! Presiona R para reiniciar');
 }
 
-function resetGame() {
-    grid.forEach(row => row.fill(0));
-    player.pos.y = 0;
-    player.score = 0;
-    player.matrix = createPiece();
-    gameOver = false;
-    clearInterval(dropInterval);
-    dropInterval = setInterval(playerDrop, 1000);
-}
-
 function scoreUpdate() {
     // Logic for score updates can be added here
 }
@@ -165,7 +167,28 @@ function draw() {
     context.fillRect(0, 0, COLS, ROWS);
 
     drawMatrix(grid, {x: 0, y: 0});
+
+    // Ghost Piece logic
+    const ghostPos = { ...player.pos };
+    while (!collide(grid, { pos: ghostPos, matrix: player.matrix })) {
+        ghostPos.y++;
+    }
+    ghostPos.y--;
+
+    context.globalAlpha = 0.3;
+    drawMatrix(player.matrix, ghostPos);
+    context.globalAlpha = 1.0;
+
     drawMatrix(player.matrix, player.pos);
+
+    // Draw Next Piece Preview
+    nextContext.fillStyle = '#000';
+    nextContext.fillRect(0, 0, 4, 4);
+    if (nextMatrix) {
+        const offsetX = Math.floor((4 - nextMatrix[0].length) / 2);
+        const offsetY = Math.floor((4 - nextMatrix.length) / 2);
+        drawMatrix(nextMatrix, {x: offsetX, y: offsetY}, nextContext);
+    }
 
     context.fillStyle = 'white';
     context.font = '1px Arial';
@@ -174,23 +197,23 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-function drawMatrix(matrix, offset) {
+function drawMatrix(matrix, offset, ctx = context) {
     matrix.forEach((row, y) => {
         row.forEach((value, x) => {
             if (value !== 0) {
-                context.fillStyle = COLORS[value] || '#fff';
-                context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                ctx.fillStyle = COLORS[value] || '#fff';
+                ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
             } else {
-                context.strokeStyle = '#111';
-                context.lineWidth = 0.05;
-                context.strokeRect(x + offset.x, y + offset.y, 1, 1);
+                ctx.strokeStyle = '#111';
+                ctx.lineWidth = 0.05;
+                ctx.strokeRect(x + offset.x, y + offset.y, 1, 1);
             }
         });
     });
 }
 
-// Initialize player
-player.matrix = createPiece();
+// Initialize
+player.matrix = spawnPiece();
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'r' || e.key === 'R') {
@@ -212,14 +235,22 @@ document.addEventListener('keydown', (e) => {
         }
         player.pos.y--;
         merge(grid, player);
-        player.pos.y = 0;
-        player.matrix = createPiece();
+        clearLines();
+        player.matrix = spawnPiece();
         if (collide(grid, player)) {
             handleGameOver();
         }
-        clearLines();
     }
 });
+
+function resetGame() {
+    grid.forEach(row => row.fill(0));
+    player.score = 0;
+    player.matrix = spawnPiece();
+    gameOver = false;
+    clearInterval(dropInterval);
+    dropInterval = setInterval(playerDrop, 1000);
+}
 
 // Start game loop
 dropInterval = setInterval(playerDrop, 1000);
