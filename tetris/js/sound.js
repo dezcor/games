@@ -184,7 +184,8 @@ const MusicPlayer = {
             osc.type = 'triangle';
             osc.frequency.value = freq;
             const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.1;
-            gain.gain.setValueAtTime(vol, time);
+            gain.gain.setValueAtTime(0.001, time);
+            gain.gain.linearRampToValueAtTime(vol, time + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.5);
             osc.connect(gain);
             gain.connect(master);
@@ -201,7 +202,8 @@ const MusicPlayer = {
             osc.type = 'sine';
             osc.frequency.value = freq;
             const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.3;
-            gain.gain.setValueAtTime(vol, time);
+            gain.gain.setValueAtTime(0.001, time);
+            gain.gain.linearRampToValueAtTime(vol, time + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 3);
             osc.connect(gain);
             gain.connect(master);
@@ -216,7 +218,8 @@ const MusicPlayer = {
             osc.frequency.setValueAtTime(150, time);
             osc.frequency.exponentialRampToValueAtTime(30, time + 0.1);
             const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.25;
-            gain.gain.setValueAtTime(vol, time);
+            gain.gain.setValueAtTime(0.001, time);
+            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
             osc.connect(gain);
             gain.connect(master);
@@ -229,15 +232,20 @@ const MusicPlayer = {
             const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
+                data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / bufferSize);
             }
             const noise = ctx.createBufferSource();
             noise.buffer = buffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 3000;
             const gain = ctx.createGain();
             const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.1;
-            gain.gain.setValueAtTime(vol, time);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-            noise.connect(gain);
+            gain.gain.setValueAtTime(0.001, time);
+            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+            noise.connect(filter);
+            filter.connect(gain);
             gain.connect(master);
             noise.start(time);
         }
