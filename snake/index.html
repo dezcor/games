@@ -2,23 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Snake Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
-        <div id="score">Score: 0</div>
-        <div id="highScore">High Score: 0</div>
-        <div class="controls">
-            <p>Controles: <kbd>W</kbd>, <kbd>A</kbd>, <kbd>S</kbd>, <kbd>D</kbd> o Flechas para mover | <kbd>Espacio</kbd> para reiniciar</p>
+        <a href="../index.html" id="menu-btn">← Menú</a>
+        <div class="score-row">
+            <div id="score">Score: 0</div>
+            <div id="highScore">High Score: 0</div>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div id="game-over" class="hidden">
-            <h1>Game Over</h1>
-            <button onclick="resetGame()">Restart</button>
+        <div id="controls-row">
+            <div id="sound-controls">
+                <button id="mute-btn" title="Mute">🔊</button>
+                <button id="bgm-mute-btn" title="Mute Music">🎵</button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+            </div>
+        </div>
+        <div class="board-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="game-over" class="hidden">
+                <h1>Game Over</h1>
+                <button class="restart-btn" onclick="window.resetGame()">Restart</button>
+            </div>
+        </div>
+        <div id="touch-controls">
+            <button class="touch-btn" data-action="up">↑</button>
+            <button class="touch-btn" data-action="left">←</button>
+            <button class="touch-btn" data-action="down">↓</button>
+            <button class="touch-btn" data-action="right">→</button>
+            <button class="touch-btn restart-btn" data-action="restart">R</button>
         </div>
     </div>
+    <script src="sound.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
