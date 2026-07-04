@@ -382,3 +382,75 @@ canvas {
     70% { opacity: 1; }
     100% { opacity: 0; }
 }
+
+/* North Theme — Jon Snow Easter Egg */
+body.north-theme {
+    background: #141a28;
+}
+
+body.north-theme canvas {
+    border-color: #6699bb;
+}
+
+body.north-theme #best-score-value {
+    color: #88ccff;
+}
+
+body.north-theme #high-scores-table h3 {
+    color: #88ccff;
+}
+
+body.north-theme #player-name:focus {
+    border-color: #88ccff;
+}
+
+body.north-theme #volume-slider::-webkit-slider-thumb {
+    background: #88ccff;
+}
+
+body.north-theme #volume-slider::-moz-range-thumb {
+    background: #88ccff;
+}
+
+body.north-theme .hs-row-1 .hs-score {
+    color: #88ccff;
+}
+
+body.north-theme #pause-overlay {
+    background-color: rgba(10, 15, 30, 0.85);
+    border-color: #88ccff;
+}
+
+body.north-theme #new-highscore-notice {
+    color: #88ccff;
+    text-shadow: 0 0 10px #88ccff, 0 0 20px #4488aa, 0 0 40px #4488aa;
+    animation: north-pulse-glow 0.5s ease-in-out infinite, fade-out 2.5s ease-out forwards;
+}
+
+@keyframes north-pulse-glow {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 10px #88ccff, 0 0 20px #4488aa;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.15);
+        box-shadow: 0 0 20px #88ccff, 0 0 40px #4488aa, 0 0 60px #224466;
+    }
+}
+
+body.north-theme .touch-btn[data-action="left"],
+body.north-theme .touch-btn[data-action="right"] {
+    background-color: #1a2a4a;
+}
+
+body.north-theme .touch-btn[data-action="rotate"] {
+    background-color: #1a2a3a;
+}
+
+body.north-theme .touch-btn[data-action="down"] {
+    background-color: #1a2a3a;
+}
+
+body.north-theme .touch-btn[data-action="drop"] {
+    background-color: #2a1a3a;
+}

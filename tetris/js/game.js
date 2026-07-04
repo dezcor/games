@@ -34,6 +34,34 @@ const STORAGE_KEY = 'tetris_highscores';
 const PLAYER_NAME_STORAGE = 'tetris_player_name';
 let previousBestScore = 0;
 
+function isJonSnow() {
+    const nameInput = document.getElementById('player-name');
+    if (!nameInput) return false;
+    const name = nameInput.value.trim().toLowerCase().replace(/\s+/g, '');
+    return name === 'jonsnow' || name === 'jon' || name === 'jsnow';
+}
+
+const northernGameOverPhrases = [
+    'The North Remembers',
+    'Winter is Coming',
+    'You Know Nothing, Jon Snow',
+    'The King in the North',
+    'For the Watch',
+    'The Night is Dark and Full of Terrors',
+    'Valar Morghulis',
+    'The Long Night Has Come',
+];
+
+const northernRecordPhrases = [
+    'The North Remembers Your Score',
+    'The King in the North Approves',
+    'Winter Has Come for the Records',
+    'The Wall Stands Tall',
+    'First of His Name',
+    'The Stark Score Stands',
+    'A Score This High Must Be Guarded',
+];
+
 
 function createGrid() {
     const arena = [];
@@ -302,7 +330,12 @@ function showNewHighScoreNotice() {
     
     const notice = document.createElement('div');
     notice.id = 'new-highscore-notice';
-    notice.textContent = '¡NUEVO RECORD!';
+    if (isJonSnow()) {
+        const index = Math.floor(Math.random() * northernRecordPhrases.length);
+        notice.textContent = northernRecordPhrases[index];
+    } else {
+        notice.textContent = '¡NUEVO RECORD!';
+    }
     canvas.parentElement.appendChild(notice);
     
     setTimeout(() => {
@@ -326,7 +359,12 @@ function handleGameOver() {
         overlay.style.display = 'flex';
     }
     if (overlayTitle) {
-        overlayTitle.textContent = 'GAME OVER';
+        if (isJonSnow()) {
+            const index = Math.floor(Math.random() * northernGameOverPhrases.length);
+            overlayTitle.textContent = northernGameOverPhrases[index];
+        } else {
+            overlayTitle.textContent = 'GAME OVER';
+        }
     }
     
     updateBestScoreDisplay();
@@ -731,8 +769,16 @@ const playerNameInput = document.getElementById('player-name');
 if (playerNameInput) {
     const savedName = getSavedName();
     playerNameInput.value = savedName;
+
+    function applyNorthTheme() {
+        document.body.classList.toggle('north-theme', isJonSnow());
+    }
+
+    applyNorthTheme();
+
     playerNameInput.addEventListener('input', () => {
         localStorage.setItem(PLAYER_NAME_STORAGE, playerNameInput.value);
+        applyNorthTheme();
     });
 }
 
