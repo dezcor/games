@@ -9,19 +9,26 @@
 <body>
     <div id="game-container">
         <div id="top-ui">
-            <div id="score">Puntos: 0</div>
-            <div id="level">Nivel: 1</div>
-            <div id="best-score">Mejor: <span id="best-score-value">0</span></div>
-            <div id="sound-controls">
-                <button id="mute-btn" title="Mute">🔊</button>
-                <button id="bgm-mute-btn" title="Mute Music">🎵</button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+            <div id="info-row">
+                <div id="score">Puntos: 0</div>
+                <div id="level">Nivel: 1</div>
+                <div id="best-score">Mejor: <span id="best-score-value">0</span></div>
+                <div id="name-input-container">
+                    <input type="text" id="player-name" maxlength="12" placeholder="Nombre">
+                </div>
             </div>
-            <div id="next-piece-container">
-                <span>Siguiente:</span>
-                <canvas id="next-canvas" width="80" height="80"></canvas>
+            <div id="controls-row">
+                <div id="sound-controls">
+                    <button id="mute-btn" title="Mute">🔊</button>
+                    <button id="bgm-mute-btn" title="Mute Music">🎵</button>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+                </div>
+                <div id="next-piece-container">
+                    <span>Siguiente:</span>
+                    <canvas id="next-canvas" width="80" height="80"></canvas>
+                </div>
+                <button id="pause-btn">Pausa</button>
             </div>
-            <button id="pause-btn">Pausa</button>
         </div>
         <div id="board-wrapper">
             <canvas id="tetris" width="240" height="400"></canvas>
