@@ -1,21 +1,9 @@
-/**
- * Interface Game
- * @interface
- * @description Defines the structure for a game, requiring a start method.
- */
 class Game {
-    /**
-     * Starts the game loop.
-     */
     start() {
         throw new Error("Method 'start()' must be implemented.");
     }
 }
 
-/**
- * SnakeGame Implementation
- * @extends Game
- */
 class SnakeGame extends Game {
     constructor(canvasId, scoreId, gameOverId) {
         super();
@@ -25,7 +13,6 @@ class SnakeGame extends Game {
         this.highScoreElement = document.getElementById('highScore');
         this.gameOverScreen = document.getElementById(gameOverId);
 
-
         this.gridSize = 20;
         this.tileCount = this.canvas.width / this.gridSize;
 
@@ -34,7 +21,6 @@ class SnakeGame extends Game {
         this.highScoreElement.innerText = `High Score: ${this.highScore}`;
         this.dx = 1;
         this.dy = 0;
-
 
         this.snake = [
             { x: 10, y: 10 },
@@ -52,9 +38,12 @@ class SnakeGame extends Game {
     init() {
         this.generateFood();
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        this.setupTouchButtons();
+        this.setupSwipe();
     }
 
     start() {
+        SoundManager.startBgm();
         requestAnimationFrame((currentTime) => this.main(currentTime));
     }
 
@@ -72,12 +61,10 @@ class SnakeGame extends Game {
     update() {
         const head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
 
-        // Wall Collision
         if (head.x < 0 || head.x >= this.tileCount || head.y < 0 || head.y >= this.tileCount) {
             return this.endGame();
         }
 
-        // Self Collision
         for (let i = 0; i < this.snake.length; i++) {
             if (head.x === this.snake[i].x && head.y === this.snake[i].y) {
                 return this.endGame();
@@ -86,7 +73,6 @@ class SnakeGame extends Game {
 
         this.snake.unshift(head);
 
-        // Food Collision
         if (head.x === this.food.x && head.y === this.food.y) {
             this.score++;
             this.scoreElement.innerText = `Score: ${this.score}`;
@@ -94,11 +80,13 @@ class SnakeGame extends Game {
                 this.highScore = this.score;
                 localStorage.setItem('snakeHighScore', this.highScore);
                 this.highScoreElement.innerText = `High Score: ${this.highScore}`;
+                SoundManager.playNewHighScore();
+            } else {
+                SoundManager.playEat();
             }
             this.generateFood();
             if (this.gameSpeed > 50) this.gameSpeed -= 2;
         } else {
-
             this.snake.pop();
         }
     }
@@ -130,6 +118,7 @@ class SnakeGame extends Game {
     endGame() {
         this.isGameOver = true;
         this.gameOverScreen.classList.remove('hidden');
+        SoundManager.playGameOver();
     }
 
     resetGame() {
@@ -148,26 +137,35 @@ class SnakeGame extends Game {
         this.gameOverScreen.classList.add('hidden');
         this.generateFood();
         this.lastTime = performance.now();
+        SoundManager.startBgm();
         requestAnimationFrame((t) => this.main(t));
+    }
+
+    setDirection(dx, dy) {
+        if (this.isGameOver) return;
+        if (this.dx === -dx && this.dy === -dy) return;
+        this.dx = dx;
+        this.dy = dy;
+        SoundManager.playMove();
     }
 
     handleKeyDown(e) {
         switch (e.key) {
             case 'ArrowUp':
             case 'w':
-                if (this.dy !== 1) { this.dy = -1; this.dx = 0; }
+                this.setDirection(0, -1);
                 break;
             case 'ArrowDown':
             case 's':
-                if (this.dy !== -1) { this.dy = 1; this.dx = 0; }
+                this.setDirection(0, 1);
                 break;
             case 'ArrowLeft':
             case 'a':
-                if (this.dx !== 1) { this.dx = -1; this.dy = 0; }
+                this.setDirection(-1, 0);
                 break;
             case 'ArrowRight':
             case 'd':
-                if (this.dx !== -1) { this.dx = 1; this.dy = 0; }
+                this.setDirection(1, 0);
                 break;
             case ' ':
                 if (this.isGameOver) {
@@ -177,12 +175,129 @@ class SnakeGame extends Game {
         }
     }
 
+    setupTouchButtons() {
+        const dirMap = {
+            'up': [0, -1],
+            'down': [0, 1],
+            'left': [-1, 0],
+            'right': [1, 0],
+        };
+
+        document.querySelectorAll('.touch-btn').forEach(btn => {
+            const action = btn.dataset.action;
+
+            const onStart = () => {
+                btn.classList.add('pressed');
+                if (dirMap[action]) {
+                    this.setDirection(dirMap[action][0], dirMap[action][1]);
+                } else if (action === 'restart') {
+                    this.resetGame();
+                }
+            };
+
+            const onEnd = () => {
+                btn.classList.remove('pressed');
+            };
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                onStart();
+            }, { passive: false });
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                onEnd();
+            }, { passive: false });
+
+            btn.addEventListener('touchcancel', () => {
+                onEnd();
+            });
+
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                onStart();
+            });
+
+            btn.addEventListener('mouseup', () => {
+                onEnd();
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                onEnd();
+            });
+        });
+    }
+
+    setupSwipe() {
+        let startX = 0;
+        let startY = 0;
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            const touch = e.changedTouches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const minSwipe = 20;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (Math.abs(deltaX) > minSwipe) {
+                    this.setDirection(deltaX > 0 ? 1 : -1, 0);
+                }
+            } else {
+                if (Math.abs(deltaY) > minSwipe) {
+                    this.setDirection(0, deltaY > 0 ? 1 : -1);
+                }
+            }
+        }, { passive: true });
+    }
 }
 
-// Instantiate and start the game
+const muteBtn = document.getElementById('mute-btn');
+const bgmMuteBtn = document.getElementById('bgm-mute-btn');
+const volumeSlider = document.getElementById('volume-slider');
+
+function updateMuteIcon() {
+    if (muteBtn) {
+        muteBtn.textContent = SoundManager.getMuteState() || SoundManager.getVolume() === 0 ? '🔇' : '🔊';
+    }
+}
+
+function updateMusicIcon() {
+    if (bgmMuteBtn) {
+        bgmMuteBtn.textContent = MusicPlayer.getBgmMuteState() ? '🔇' : '🎵';
+    }
+}
+
+if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+        SoundManager.toggleMute();
+        updateMuteIcon();
+    });
+}
+
+if (bgmMuteBtn) {
+    bgmMuteBtn.addEventListener('click', () => {
+        MusicPlayer.toggleMute();
+        updateMusicIcon();
+    });
+}
+
+if (volumeSlider) {
+    volumeSlider.addEventListener('input', (e) => {
+        SoundManager.setVolume(parseFloat(e.target.value));
+        updateMuteIcon();
+    });
+}
+
+SoundManager.setVolume(0.7);
+updateMuteIcon();
+
 const game = new SnakeGame('gameCanvas', 'score', 'game-over');
 game.start();
 
-// Expose resetGame for the button in index.html
 window.resetGame = game.resetGame.bind(game);
-

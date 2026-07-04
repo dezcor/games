@@ -29,7 +29,8 @@ nextContext.scale(BLOCK_SIZE, BLOCK_SIZE);
 const grid = createGrid();
 
 let gameOver = false;
-let isPaused = false;
+let isPaused = true;
+let gameStarted = false;
 const STORAGE_KEY = 'tetris_highscores';
 const PLAYER_NAME_STORAGE = 'tetris_player_name';
 let previousBestScore = 0;
@@ -355,8 +356,12 @@ function handleGameOver() {
 
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
+    const startBtn = document.getElementById('start-btn');
     if (overlay) {
         overlay.style.display = 'flex';
+    }
+    if (startBtn) {
+        startBtn.style.display = 'none';
     }
     if (overlayTitle) {
         if (isJonSnow()) {
@@ -564,10 +569,15 @@ function drawMatrix(matrix, offset, ctx = context) {
 player.matrix = spawnPiece();
 
 function togglePause() {
+    if (!gameStarted) return;
     isPaused = !isPaused;
     const overlay = document.getElementById('pause-overlay');
+    const startBtn = document.getElementById('start-btn');
     if (overlay) {
         overlay.style.display = isPaused ? 'flex' : 'none';
+    }
+    if (startBtn) {
+        startBtn.style.display = 'none';
     }
     if (isPaused) {
         MusicPlayer.pause();
@@ -577,6 +587,12 @@ function togglePause() {
 }
 
 document.addEventListener('keydown', (e) => {
+    if (!gameStarted) {
+        if (e.key === 'Enter') {
+            startGame();
+        }
+        return;
+    }
     if (e.key === 'r' || e.key === 'R') {
         resetGame();
         return;
@@ -732,6 +748,7 @@ setupTouchButton('[data-action="drop"]',
 setupTouchButton('[data-action="restart"]', resetGame);
 
 function resetGame() {
+    if (!gameStarted) return;
     grid.forEach(row => row.fill(0));
     player.score = 0;
     player.level = 1;
@@ -786,4 +803,25 @@ if (playerNameInput) {
 previousBestScore = getBestScore();
 updateBestScoreDisplay();
 draw();
-SoundManager.startBgm();
+
+// Show start screen
+const overlay = document.getElementById('pause-overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const startBtn = document.getElementById('start-btn');
+if (overlay) overlay.style.display = 'flex';
+if (overlayTitle) overlayTitle.textContent = 'TETRIS';
+if (startBtn) startBtn.style.display = 'block';
+
+function startGame() {
+    gameStarted = true;
+    isPaused = false;
+    const overlay = document.getElementById('pause-overlay');
+    const startBtn = document.getElementById('start-btn');
+    if (overlay) overlay.style.display = 'none';
+    if (startBtn) startBtn.style.display = 'none';
+    SoundManager.startBgm();
+}
+
+if (startBtn) {
+    startBtn.addEventListener('click', startGame);
+}
