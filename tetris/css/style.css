@@ -29,12 +29,20 @@ body {
 
 #top-ui {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+#info-row, #controls-row {
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 8px;
     width: 100%;
-    margin-bottom: 6px;
 }
 
 #board-wrapper {
@@ -110,29 +118,27 @@ canvas {
 #volume-slider {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 60px;
+    width: 80px;
+    height: 6px;
     background: #333;
     border: 1px solid #555;
     border-radius: 3px;
     outline: none;
-    writing-mode: vertical-lr;
-    direction: rtl;
 }
 
 #volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 12px;
+    width: 12px;
+    height: 20px;
     background: #f0c419;
     cursor: pointer;
     border-radius: 2px;
 }
 
 #volume-slider::-moz-range-thumb {
-    width: 20px;
-    height: 12px;
+    width: 12px;
+    height: 20px;
     background: #f0c419;
     cursor: pointer;
     border-radius: 2px;
@@ -158,6 +164,33 @@ canvas {
 
 #pause-btn:hover {
     background-color: #666;
+}
+
+#name-input-container {
+    display: flex;
+    align-items: center;
+}
+
+#player-name {
+    padding: 4px 8px;
+    font-size: 14px;
+    background-color: #333;
+    color: #fff;
+    border: 2px solid #555;
+    border-radius: 5px;
+    width: 100px;
+    text-align: center;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#player-name::placeholder {
+    color: #888;
+}
+
+#player-name:focus {
+    border-color: #f0c419;
 }
 
 #pause-overlay {
@@ -283,6 +316,16 @@ canvas {
 .hs-rank {
     font-weight: bold;
     width: 40px;
+}
+
+.hs-name {
+    color: #aaa;
+    font-style: italic;
+    text-align: left;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hs-score {

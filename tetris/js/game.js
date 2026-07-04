@@ -31,6 +31,7 @@ const grid = createGrid();
 let gameOver = false;
 let isPaused = false;
 const STORAGE_KEY = 'tetris_highscores';
+const PLAYER_NAME_STORAGE = 'tetris_player_name';
 let previousBestScore = 0;
 
 
@@ -234,11 +235,18 @@ function getHighScores() {
     }
 }
 
+function getSavedName() {
+    return localStorage.getItem(PLAYER_NAME_STORAGE) || '';
+}
+
 function saveHighScore(score) {
     const highScores = getHighScores();
     const now = new Date();
+    const nameInput = document.getElementById('player-name');
+    const playerName = nameInput ? nameInput.value.trim() : '';
     const entry = {
         score: score,
+        name: playerName || 'Anónimo',
         date: now.toLocaleDateString('es-ES')
     };
     highScores.push(entry);
@@ -276,6 +284,7 @@ function renderHighScoresTable() {
         row.className = `hs-row hs-row-${index + 1}`;
         row.innerHTML = `
             <td class="hs-rank">${medals[index]}</td>
+            <td class="hs-name">${entry.name}</td>
             <td class="hs-score">${entry.score}</td>
             <td class="hs-date">${entry.date}</td>
         `;
@@ -716,6 +725,15 @@ function resetGame() {
     updateBestScoreDisplay();
     
     SoundManager.startBgm();
+}
+
+const playerNameInput = document.getElementById('player-name');
+if (playerNameInput) {
+    const savedName = getSavedName();
+    playerNameInput.value = savedName;
+    playerNameInput.addEventListener('input', () => {
+        localStorage.setItem(PLAYER_NAME_STORAGE, playerNameInput.value);
+    });
 }
 
 // Start game loop
