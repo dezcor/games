@@ -1,0 +1,14 @@
+# Claude Code local settings
+.claude/settings.local.json
+
+# Playwright CLI local settings
+.playwright/settings.local.json
+.playwright/cli.config.json
+
+# Screenshots from testing
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.pdf

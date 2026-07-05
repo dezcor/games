@@ -314,6 +314,102 @@ body.north-theme #start-btn:hover {
     font-size: 22px;
 }
 
+@media (max-width: 400px) {
+    #info-row {
+        gap: 6px;
+    }
+    #score, #level, #best-score {
+        font-size: 12px;
+    }
+    #player-name {
+        width: 70px;
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+    #next-piece-container {
+        font-size: 10px;
+    }
+    #next-canvas {
+        width: 32px;
+        height: 32px;
+    }
+    #pause-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+    #mute-btn,
+    #bgm-mute-btn {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+    #volume-slider {
+        width: 50px;
+    }
+    #pause-overlay h1 {
+        font-size: 28px;
+    }
+    #start-btn {
+        padding: 10px 24px;
+        font-size: 16px;
+    }
+    #high-scores-table h3 {
+        font-size: 16px;
+    }
+    #high-scores-list td {
+        padding: 4px 6px;
+        font-size: 12px;
+    }
+    #new-highscore-notice {
+        font-size: 18px;
+    }
+}
+
+@media (max-height: 600px) {
+    #touch-controls {
+        gap: 4px;
+    }
+    .touch-btn {
+        padding: 10px 0;
+        font-size: 22px;
+    }
+    #top-ui {
+        margin-bottom: 4px;
+    }
+    #info-row {
+        gap: 4px;
+    }
+    #score, #level, #best-score {
+        font-size: 11px;
+    }
+    #player-name {
+        width: 60px;
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+    #pause-overlay h1 {
+        font-size: 22px;
+    }
+    #start-btn {
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+    #mute-btn,
+    #bgm-mute-btn {
+        padding: 3px 6px;
+        font-size: 12px;
+    }
+    #volume-slider {
+        width: 40px;
+    }
+    #next-piece-container {
+        font-size: 9px;
+    }
+    #next-canvas {
+        width: 28px;
+        height: 28px;
+    }
+}
+
 @media (min-width: 500px) {
     #game-container {
         max-width: 500px;
