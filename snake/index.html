@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Snake Game</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
-        <a href="../index.html" id="menu-btn">← Menú</a>
+        <a href="../index.html" id="menu-btn">← Menu</a>
         <div class="score-row">
-            <div id="score">Score: 0</div>
-            <div id="highScore">High Score: 0</div>
+            <div id="score">0</div>
+            <div id="highScore">BEST: 0</div>
         </div>
         <div id="controls-row">
             <div id="sound-controls">
@@ -23,16 +27,25 @@
         <div class="board-wrapper">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
             <div id="game-over" class="hidden">
-                <h1>Game Over</h1>
-                <button class="restart-btn" onclick="window.resetGame()">Restart</button>
+                <h1>GAME OVER</h1>
+                <div class="final-score" id="final-score-text">Score: 0</div>
+                <button class="restart-btn" onclick="window.resetGame()">RESTART</button>
             </div>
         </div>
         <div id="touch-controls">
-            <button class="touch-btn" data-action="up">↑</button>
-            <button class="touch-btn" data-action="left">←</button>
-            <button class="touch-btn" data-action="down">↓</button>
-            <button class="touch-btn" data-action="right">→</button>
-            <button class="touch-btn restart-btn" data-action="restart">R</button>
+            <button class="touch-btn" data-action="up">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 4L16 14H4L10 4Z" fill="#38bdf8"/></svg>
+            </button>
+            <button class="touch-btn" data-action="left">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10L14 16V4L4 10Z" fill="#818cf8"/></svg>
+            </button>
+            <button class="touch-btn" data-action="down">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 16L4 6H16L10 16Z" fill="#4ade80"/></svg>
+            </button>
+            <button class="touch-btn" data-action="right">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#fbbf24"/></svg>
+            </button>
+            <button class="touch-btn" data-action="restart">↻ RESTART</button>
         </div>
     </div>
     <script src="sound.js"></script>

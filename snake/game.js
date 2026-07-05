@@ -18,7 +18,7 @@ class SnakeGame extends Game {
 
         this.score = 0;
         this.highScore = parseInt(localStorage.getItem('snakeHighScore')) || 0;
-        this.highScoreElement.innerText = `High Score: ${this.highScore}`;
+        this.highScoreElement.innerText = `BEST: ${this.highScore}`;
         this.dx = 1;
         this.dy = 0;
 
@@ -75,11 +75,11 @@ class SnakeGame extends Game {
 
         if (head.x === this.food.x && head.y === this.food.y) {
             this.score++;
-            this.scoreElement.innerText = `Score: ${this.score}`;
+            this.scoreElement.innerText = this.score;
             if (this.score > this.highScore) {
                 this.highScore = this.score;
                 localStorage.setItem('snakeHighScore', this.highScore);
-                this.highScoreElement.innerText = `High Score: ${this.highScore}`;
+                this.highScoreElement.innerText = `BEST: ${this.highScore}`;
                 SoundManager.playNewHighScore();
             } else {
                 SoundManager.playEat();
@@ -118,6 +118,10 @@ class SnakeGame extends Game {
     endGame() {
         this.isGameOver = true;
         this.gameOverScreen.classList.remove('hidden');
+        const finalScoreEl = document.getElementById('final-score-text');
+        if (finalScoreEl) {
+            finalScoreEl.textContent = `Score: ${this.score}`;
+        }
         SoundManager.playGameOver();
     }
 
@@ -133,7 +137,7 @@ class SnakeGame extends Game {
         this.food = { x: 15, y: 15 };
         this.gameSpeed = 100;
         this.isGameOver = false;
-        this.scoreElement.innerText = `Score: ${this.score}`;
+        this.scoreElement.innerText = this.score;
         this.gameOverScreen.classList.add('hidden');
         this.generateFood();
         this.lastTime = performance.now();
@@ -200,12 +204,12 @@ class SnakeGame extends Game {
             };
 
             btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 onStart();
             }, { passive: false });
 
             btn.addEventListener('touchend', (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 onEnd();
             }, { passive: false });
 

@@ -1,21 +1,25 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris Game</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="game-container">
-        <a href="../index.html" id="menu-btn">← Menú</a>
+        <a href="../index.html" id="menu-btn">← Menu</a>
         <div id="top-ui">
             <div id="info-row">
-                <div id="score">Puntos: 0</div>
-                <div id="level">Nivel: 1</div>
-                <div id="best-score">Mejor: <span id="best-score-value">0</span></div>
+                <div id="score">Score: 0</div>
+                <div id="level">Level: 1</div>
+                <div id="best-score">Best: <span id="best-score-value">0</span></div>
                 <div id="name-input-container">
-                    <input type="text" id="player-name" maxlength="12" placeholder="Nombre">
+                    <input type="text" id="player-name" maxlength="12" placeholder="Name">
                 </div>
             </div>
             <div id="controls-row">
@@ -25,10 +29,10 @@
                     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
                 </div>
                 <div id="next-piece-container">
-                    <span>Siguiente:</span>
+                    <span>Next:</span>
                     <canvas id="next-canvas" width="80" height="80"></canvas>
                 </div>
-                <button id="pause-btn">Pausa</button>
+                <button id="pause-btn">Pause</button>
             </div>
         </div>
         <div id="board-wrapper">
@@ -43,12 +47,22 @@
             </div>
         </div>
         <div id="touch-controls">
-            <button class="touch-btn" data-action="left">←</button>
-            <button class="touch-btn" data-action="rotate">↻</button>
-            <button class="touch-btn" data-action="right">→</button>
-            <button class="touch-btn" data-action="down">↓</button>
-            <button class="touch-btn" data-action="drop">⬇⬇</button>
-            <button class="touch-btn" data-action="restart">R</button>
+            <button class="touch-btn" data-action="left" title="Left">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10L14 16V4L4 10Z" fill="#38bdf8"/></svg>
+            </button>
+            <button class="touch-btn" data-action="rotate" title="Rotate">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M6 14A6 6 0 1 1 16 10" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round"/><path d="M16 10l-3-2v4z" fill="#c084fc"/></svg>
+            </button>
+            <button class="touch-btn" data-action="right" title="Right">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#38bdf8"/></svg>
+            </button>
+            <button class="touch-btn" data-action="down" title="Down">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 16L4 6H16L10 16Z" fill="#4ade80"/></svg>
+            </button>
+            <button class="touch-btn" data-action="drop" title="Hard Drop">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 16L4 8h5V2h2v6h5z" fill="#fbbf24"/><path d="M2 18h16" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <button class="touch-btn" data-action="restart" title="Restart">↻</button>
         </div>
     </div>
     <script src="js/constants.js"></script>
