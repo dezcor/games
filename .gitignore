@@ -12,3 +12,4 @@
 *.gif
 *.webp
 *.pdf
+.playwright-cli/
