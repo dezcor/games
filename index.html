@@ -1,117 +1,316 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games Hub</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
+        /* ── Reset ── */
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
+        /* ── Base ── */
         body {
-            background: #202028;
+            background: #1a1028;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 107, 138, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 100%, rgba(74, 222, 128, 0.06) 0%, transparent 50%);
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
+            overflow-x: hidden;
+            position: relative;
         }
+
+        /* CRT scanline overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* ── Container ── */
         .container {
             text-align: center;
-            padding: 40px 20px;
+            padding: 48px 24px 40px;
+            max-width: 640px;
+            width: 100%;
+            animation: fadeUp 0.6s ease-out;
         }
-        h1 {
-            font-size: 48px;
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Title ── */
+        .logo {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 1px;
             margin-bottom: 8px;
-            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ff6b8a, #fbbf24, #4ade80, #38bdf8);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 6s ease infinite;
         }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+
         .subtitle {
-            color: #888;
-            font-size: 16px;
-            margin-bottom: 40px;
+            color: #a78bba;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 44px;
+            letter-spacing: 0.2px;
         }
+
+        /* ── Games Grid ── */
         .games-grid {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
         }
+
+        /* ── Game Card ── */
         .game-card {
-            background: #2a2a35;
-            border: 2px solid #444;
-            border-radius: 12px;
-            padding: 32px;
-            width: 260px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 36px 28px 28px;
+            width: 270px;
             text-decoration: none;
             color: #fff;
-            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            overflow: hidden;
         }
+
+        /* Gradient border glow on hover */
+        .game-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 20px;
+            padding: 1px;
+            background: var(--card-glow);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .game-card:hover::before {
+            opacity: 1;
+        }
+
         .game-card:hover {
-            transform: translateY(-6px);
-            border-color: #f0c419;
-            box-shadow: 0 8px 24px rgba(240, 196, 25, 0.15);
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 12px 40px var(--card-shadow);
         }
+
+        .game-card:active {
+            transform: translateY(-2px);
+        }
+
+        /* Tetris card accent */
+        .game-card.tetris {
+            --card-glow: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            --card-shadow: rgba(56, 189, 248, 0.12);
+        }
+
+        /* Snake card accent */
+        .game-card.snake {
+            --card-glow: linear-gradient(135deg, #4ade80, #22d3ee, #38bdf8);
+            --card-shadow: rgba(74, 222, 128, 0.12);
+        }
+
+        /* ── Icon ── */
         .game-icon {
-            font-size: 64px;
+            font-size: 56px;
             line-height: 1;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            transition: transform 0.25s ease;
         }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1) rotate(-3deg);
+        }
+
+        /* ── Title ── */
         .game-title {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .game-desc {
-            color: #aaa;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        .play-btn {
-            margin-top: 8px;
-            padding: 8px 24px;
-            background: #f0c419;
-            color: #202028;
-            border: none;
-            border-radius: 6px;
+            font-family: 'Press Start 2P', monospace;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Description ── */
+        .game-desc {
+            color: #c4b5d4;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.55;
+            max-width: 220px;
+        }
+
+        /* ── Play Button ── */
+        .play-btn {
+            margin-top: 6px;
+            padding: 10px 32px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            font-weight: 400;
+            color: #1a1028;
+            border: none;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            letter-spacing: 0.5px;
         }
+
         .game-card:hover .play-btn {
-            background: #ffd633;
+            transform: scale(1.05);
         }
+
+        .play-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Tetris play button */
+        .game-card.tetris .play-btn {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+        }
+        .game-card.tetris .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Snake play button */
+        .game-card.snake .play-btn {
+            background: linear-gradient(135deg, #4ade80, #22d3ee);
+            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.25);
+        }
+        .game-card.snake .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+        }
+
+        /* ── Footer ── */
         footer {
             margin-top: 48px;
-            color: #555;
+            color: #5a4a6a;
             font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .games-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+            .game-card {
+                width: 88%;
+                max-width: 320px;
+                padding: 28px 24px 24px;
+            }
+            .logo {
+                font-size: 22px;
+            }
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 32px;
+            }
+            .game-icon {
+                font-size: 48px;
+            }
+            .game-title {
+                font-size: 14px;
+            }
+            .game-desc {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .logo {
+                font-size: 18px;
+            }
+            .container {
+                padding: 32px 16px 28px;
+            }
+            .game-card {
+                padding: 24px 20px 20px;
+            }
+        }
+
+        /* ── Reduced motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ── Focus visible for keyboard ── */
+        .game-card:focus-visible {
+            outline: 2px solid #fbbf24;
+            outline-offset: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Games Hub</h1>
-        <p class="subtitle">Seleccioná un juego para empezar</p>
+        <h1 class="logo">GAMES HUB</h1>
+        <p class="subtitle">Select a game to start</p>
 
         <div class="games-grid">
-            <a class="game-card" href="tetris/index.html">
+            <a class="game-card tetris" href="tetris/index.html">
                 <div class="game-icon">🧱</div>
                 <div class="game-title">Tetris</div>
-                <div class="game-desc">El clásico juego de bloques. Apilá, completá líneas y alcanzá el puntaje más alto.</div>
-                <span class="play-btn">Jugar</span>
+                <div class="game-desc">Stack blocks, clear lines, beat your record.</div>
+                <span class="play-btn">PLAY</span>
             </a>
 
-            <a class="game-card" href="snake/index.html">
+            <a class="game-card snake" href="snake/index.html">
                 <div class="game-icon">🐍</div>
                 <div class="game-title">Snake</div>
-                <div class="game-desc">Controlá la serpiente, comé comida y crecé sin chocarte contra vos mismo.</div>
-                <span class="play-btn">Jugar</span>
+                <div class="game-desc">Eat, grow, dodge. How far can you go?</div>
+                <span class="play-btn">PLAY</span>
             </a>
         </div>
 

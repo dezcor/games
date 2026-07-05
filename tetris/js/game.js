@@ -275,8 +275,8 @@ function saveHighScore(score) {
     const playerName = nameInput ? nameInput.value.trim() : '';
     const entry = {
         score: score,
-        name: playerName || 'Anónimo',
-        date: now.toLocaleDateString('es-ES')
+        name: playerName || 'Anonymous',
+        date: now.toLocaleDateString('en-US')
     };
     highScores.push(entry);
     highScores.sort((a, b) => b.score - a.score);
@@ -335,7 +335,7 @@ function showNewHighScoreNotice() {
         const index = Math.floor(Math.random() * northernRecordPhrases.length);
         notice.textContent = northernRecordPhrases[index];
     } else {
-        notice.textContent = '¡NUEVO RECORD!';
+        notice.textContent = 'NEW HIGH SCORE!';
     }
     canvas.parentElement.appendChild(notice);
     
@@ -378,17 +378,17 @@ function handleGameOver() {
     
     SoundManager.playGameOver();
     MusicPlayer.fadeOut(0.8);
-    alert('Game Over! Presiona R para reiniciar');
+    alert('Game Over! Press R to restart');
 }
 
 function scoreUpdate() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) {
-        scoreElement.textContent = `Puntos: ${player.score}`;
+        scoreElement.textContent = `Score: ${player.score}`;
     }
     const levelElement = document.getElementById('level');
     if (levelElement) {
-        levelElement.textContent = `Nivel: ${player.level}`;
+        levelElement.textContent = `Level: ${player.level}`;
     }
     updateBestScoreDisplay();
 }
@@ -536,15 +536,10 @@ function draw() {
     nextContext.fillStyle = '#000';
     nextContext.fillRect(0, 0, 4, 4);
     if (nextMatrix) {
-        const offsetX = Math.floor((4 - nextMatrix[0].length) / 2);
-        const offsetY = Math.floor((4 - nextMatrix.length) / 2);
+        const offsetX = Math.round((4 - nextMatrix[0].length) / 2);
+        const offsetY = Math.round((4 - nextMatrix.length) / 2);
         drawMatrix(nextMatrix, {x: offsetX, y: offsetY}, nextContext);
     }
-
-    context.fillStyle = 'white';
-    context.font = '1px Arial';
-    context.fillText(`Puntos: ${player.score}`, 0.5, 1);
-    context.fillText(`Nivel: ${player.level}`, 0.5, 2);
 
     requestAnimationFrame(draw);
 }
@@ -678,12 +673,12 @@ function setupTouchButton(selector, onStart, onEnd) {
     const btn = document.querySelector(selector);
     if (!btn) return;
     btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         btn.classList.add('pressed');
         if (onStart) onStart();
     }, { passive: false });
     btn.addEventListener('touchend', (e) => {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         btn.classList.remove('pressed');
         if (onEnd) onEnd();
     }, { passive: false });
@@ -769,7 +764,7 @@ function resetGame() {
     
     const overlayTitle = document.getElementById('overlay-title');
     if (overlayTitle) {
-        overlayTitle.textContent = 'PAUSA';
+        overlayTitle.textContent = 'PAUSE';
     }
     
     const highScoresTable = document.getElementById('high-scores-table');
