@@ -215,12 +215,14 @@ function handleLevelComplete() {
     powerUpSpawnQueue = [];
     particles = [];
 
+    isPaused = true;
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     if (overlay) overlay.style.display = 'flex';
     if (overlayTitle) overlayTitle.textContent = `LEVEL ${level}`;
 
     SoundManager.playLevelComplete();
+    MusicPlayer.pause();
 }
 
 function spawnPowerUp(x, y, type) {
@@ -603,8 +605,12 @@ function togglePause() {
     if (!gameStarted) return;
     isPaused = !isPaused;
     const overlay = document.getElementById('pause-overlay');
+    const overlayTitle = document.getElementById('overlay-title');
     if (overlay) {
         overlay.style.display = isPaused ? 'flex' : 'none';
+    }
+    if (!isPaused && overlayTitle) {
+        overlayTitle.textContent = 'ARKANOID';
     }
     if (isPaused) {
         MusicPlayer.pause();
