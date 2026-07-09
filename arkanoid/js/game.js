@@ -27,6 +27,11 @@ function initGame() {
         height: PADDLE_HEIGHT,
     };
 
+    level = 1;
+    gameOver = false;
+    isPaused = true;
+    gameStarted = false;
+
     balls = [];
     spawnBall();
 
@@ -37,21 +42,20 @@ function initGame() {
 
     score = 0;
     lives = 3;
-    level = 1;
-    gameOver = false;
-    isPaused = true;
-    gameStarted = false;
 
     loadLevel(level);
     updateUI();
 }
 
 function spawnBall() {
+    const sx = canvas.width / 2;
+    const sy = canvas.height - 50;
+    const sd = BASE_SPEED + (level - 1) * 0.2;
     balls.push({
-        x: canvas.width / 2,
-        y: canvas.height - 50,
-        dx: (Math.random() > 0.5 ? 1 : -1) * (BASE_SPEED + (level - 1) * 0.2),
-        dy: -(BASE_SPEED + (level - 1) * 0.2),
+        x: sx,
+        y: sy,
+        dx: (Math.random() > 0.5 ? 1 : -1) * sd,
+        dy: -sd,
         radius: BALL_RADIUS,
     });
 }
@@ -209,6 +213,7 @@ function handleLevelComplete() {
 
     level++;
     loadLevel(level);
+    paddle.x = (canvas.width - PADDLE_WIDTH) / 2;
     balls = [];
     spawnBall();
     powerUps = [];
@@ -303,6 +308,15 @@ function updateBalls() {
         ball.x += ball.dx;
         ball.y += ball.dy;
 
+        // NaN safety guard
+        if (isNaN(ball.x) || isNaN(ball.y) || isNaN(ball.dx) || isNaN(ball.dy)) {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 50;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * (BASE_SPEED + (level - 1) * 0.2);
+            ball.dy = -(BASE_SPEED + (level - 1) * 0.2);
+            continue;
+        }
+
         // Wall collisions
         if (ball.x - ball.radius <= 0) {
             ball.x = ball.radius;
@@ -331,13 +345,7 @@ function updateBalls() {
                     return;
                 } else {
                     SoundManager.playLoseLife();
-                    balls.push({
-                        x: canvas.width / 2,
-                        y: canvas.height - 50,
-                        dx: (Math.random() > 0.5 ? 1 : -1) * (BASE_SPEED + (level - 1) * 0.3),
-                        dy: -(BASE_SPEED + (level - 1) * 0.3),
-                        radius: BALL_RADIUS,
-                    });
+                    spawnBall();
                 }
             }
         }
@@ -520,7 +528,7 @@ function drawPowerUps() {
 }
 
 function handleDAS(direction, action) {
-    const keyCode = direction === 'left' ? 'ArrowLeft' : 'ArrowRight';
+    const keyCode = direction.key;
     const isDown = keys[keyCode];
 
     if (isDown) {
@@ -550,8 +558,8 @@ function handleDAS(direction, action) {
     }
 }
 
-let dasLeft = { _pressed: false, _timer: 0, _state: 'idle' };
-let dasRight = { _pressed: false, _timer: 0, _state: 'idle' };
+let dasLeft = { _pressed: false, _timer: 0, _state: 'idle', key: 'ArrowLeft' };
+let dasRight = { _pressed: false, _timer: 0, _state: 'idle', key: 'ArrowRight' };
 
 function handleInput() {
     if (isPaused || gameOver) return;

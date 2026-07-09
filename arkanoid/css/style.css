@@ -295,9 +295,9 @@ body::after {
 #pause-overlay {
     position: absolute;
     inset: 0;
-    background-color: rgba(26, 16, 40, 0.35);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background-color: rgba(26, 16, 40, 0.3);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     display: none;
     flex-direction: column;
     justify-content: center;
@@ -305,6 +305,13 @@ body::after {
     z-index: 10;
     border-radius: 12px;
     gap: 16px;
+    pointer-events: none;
+}
+
+#pause-overlay h1,
+#pause-overlay button,
+#high-scores-table {
+    pointer-events: auto;
 }
 
 #pause-overlay h1 {
