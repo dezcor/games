@@ -157,6 +157,12 @@
             --card-shadow: rgba(74, 222, 128, 0.12);
         }
 
+        /* Arkanoid card accent */
+        .game-card.arkanoid {
+            --card-glow: linear-gradient(135deg, #22d3ee, #06b6d4, #22d3ee);
+            --card-shadow: rgba(34, 211, 238, 0.12);
+        }
+
         /* ── Icon ── */
         .game-icon {
             font-size: 56px;
@@ -225,6 +231,15 @@
         }
         .game-card.snake .play-btn:hover {
             box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+        }
+
+        /* Arkanoid play button */
+        .game-card.arkanoid .play-btn {
+            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+        }
+        .game-card.arkanoid .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4);
         }
 
         /* ── Footer ── */
@@ -310,6 +325,13 @@
                 <div class="game-icon">🐍</div>
                 <div class="game-title">Snake</div>
                 <div class="game-desc">Eat, grow, dodge. How far can you go?</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+
+            <a class="game-card arkanoid" href="arkanoid/index.html">
+                <div class="game-icon">🕹️</div>
+                <div class="game-title">Arkanoid</div>
+                <div class="game-desc">Break bricks, catch power-ups, conquer 3 levels.</div>
                 <span class="play-btn">PLAY</span>
             </a>
         </div>
