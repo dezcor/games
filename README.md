@@ -25,6 +25,16 @@ Tetris completo con sistema DAS/ARR, ghost piece, vista previa de la siguiente p
 - Top 5 high scores persistentes con nombre de jugador
 - **Easter egg:** ingresá "Jon Snow" como nombre para activar el tema "North" (Game of Thrones)
 
+### 🕹️ Arkanoid
+
+Breakout/Arkanoid con 3 niveles, power-ups y bricks especiales.
+
+- 3 niveles con layouts crecientes (más filas, pelota más rápida)
+- Bricks especiales amarillos (3 HP) que sueltan power-ups
+- Power-ups: multi-ball (divide la pelota en 3) y extra life
+- Controles: teclado, mouse o botones táctiles para la paleta
+- Top 5 high scores persistentes con nombre de jugador
+
 ## Controles
 
 ### Snake
@@ -45,6 +55,15 @@ Tetris completo con sistema DAS/ARR, ghost piece, vista previa de la siguiente p
 | Espacio | Hard drop |
 | P / Escape | Pausa |
 | R | Reiniciar |
+| Enter | Empezar partida |
+
+### Arkanoid
+| Tecla | Acción |
+|-------|--------|
+| ← → | Mover paleta |
+| Mouse | Mover paleta |
+| R | Reiniciar |
+| P / Escape | Pausa |
 | Enter | Empezar partida |
 
 ## Servir localmente
@@ -72,6 +91,16 @@ Ambos juegos generan sonido y música sintetizada mediante Web Audio API (oscila
 │   ├── game.js         # Lógica del juego (clase SnakeGame)
 │   ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
 │   └── style.css
+├── arkanoid/
+│   ├── index.html
+│   ├── favicon.svg
+│   ├── css/style.css
+│   └── js/
+│       ├── constants.js    # Constantes (tamaño, colores, power-ups)
+│       ├── bricks.js       # Layouts de niveles y bricks especiales
+│       ├── input.js        # Captura de teclado
+│       ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
+│       └── game.js         # Lógica del juego
 └── tetris/
     ├── index.html
     ├── css/style.css
