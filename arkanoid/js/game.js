@@ -781,8 +781,10 @@ function startGame() {
     gameStarted = true;
     isPaused = false;
     const overlay = document.getElementById('pause-overlay');
+    const overlayTitle = document.getElementById('overlay-title');
     const startBtn = document.getElementById('start-btn');
     if (overlay) overlay.style.display = 'none';
+    if (overlayTitle) overlayTitle.textContent = 'ARKANOID';
     if (startBtn) startBtn.style.display = 'none';
     SoundManager.startBgm();
 }
