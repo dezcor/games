@@ -625,6 +625,12 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     if (gameOver) return;
+    if (isPaused && e.key === 'Enter') {
+        togglePause();
+        const overlayTitle = document.getElementById('overlay-title');
+        if (overlayTitle) overlayTitle.textContent = 'ARKANOID';
+        return;
+    }
     if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
         togglePause();
         return;
@@ -643,6 +649,10 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('click', () => {
     if (!gameStarted) {
         startGame();
+    } else if (isPaused && !gameOver) {
+        togglePause();
+        const overlayTitle = document.getElementById('overlay-title');
+        if (overlayTitle) overlayTitle.textContent = 'ARKANOID';
     }
 });
 
