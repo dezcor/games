@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Arkanoid Game</title>
+    <title>Space Invaders</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,6 @@
         <div id="top-ui">
             <div id="info-row">
                 <div id="score">Score: 0</div>
-                <div id="level">Level: 1</div>
                 <div id="lives">Lives: 3</div>
                 <div id="best-score">Best: <span id="best-score-value">0</span></div>
                 <div id="name-input-container">
@@ -33,9 +32,9 @@
             </div>
         </div>
         <div id="board-wrapper">
-            <canvas id="arkanoid" width="480" height="400"></canvas>
+            <canvas id="invaders" width="240" height="400"></canvas>
             <div id="pause-overlay">
-                <h1 id="overlay-title">ARKANOID</h1>
+                <h1 id="overlay-title">SPACE INVADERS</h1>
                 <button id="start-btn">START</button>
                 <div id="high-scores-table" style="display:none;">
                     <h3>Top 5 Records</h3>
@@ -47,14 +46,16 @@
             <button class="touch-btn" data-action="left" title="Left">
                 <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10L14 16V4L4 10Z" fill="#22d3ee"/></svg>
             </button>
+            <button class="touch-btn" data-action="shoot" title="Shoot">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2v6l3-3 2 2-5 5-5-5 2-2 3 3V2h4z" fill="#fbbf24"/></svg>
+            </button>
             <button class="touch-btn" data-action="right" title="Right">
                 <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#22d3ee"/></svg>
             </button>
-            <button class="touch-btn" data-action="restart" title="Restart">↻ RESTART</button>
+            <button class="touch-btn" data-action="restart" title="Restart">↻</button>
         </div>
     </div>
     <script src="js/constants.js"></script>
-    <script src="js/bricks.js"></script>
     <script src="js/input.js"></script>
     <script src="js/sound.js"></script>
     <script src="js/game.js"></script>
