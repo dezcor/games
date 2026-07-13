@@ -151,6 +151,12 @@
             --card-shadow: rgba(56, 189, 248, 0.12);
         }
 
+        /* Space Invaders card accent */
+        .game-card.spaceinvaders {
+            --card-glow: linear-gradient(135deg, #4ade80, #ff6b8a, #fbbf24);
+            --card-shadow: rgba(74, 222, 128, 0.12);
+        }
+
         /* Snake card accent */
         .game-card.snake {
             --card-glow: linear-gradient(135deg, #4ade80, #22d3ee, #38bdf8);
@@ -159,7 +165,7 @@
 
         /* Arkanoid card accent */
         .game-card.arkanoid {
-            --card-glow: linear-gradient(135deg, #22d3ee, #06b6d4, #22d3ee);
+            --card-glow: linear-gradient(135deg, #22d3ee, #818cf8, #c084fc);
             --card-shadow: rgba(34, 211, 238, 0.12);
         }
 
@@ -216,11 +222,21 @@
         }
 
         /* Tetris play button */
+        .game-card.spaceinvaders .play-btn {
+            background: linear-gradient(135deg, #4ade80, #ff6b8a);
+            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.25);
+        }
+        .game-card.spaceinvaders .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+        }
         .game-card.tetris .play-btn {
             background: linear-gradient(135deg, #38bdf8, #818cf8);
             box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
         }
-        .game-card.tetris .play-btn:hover {
+        .game-card.spaceinvaders .play-btn:hover {
+    box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
+}
+.game-card.tetris .play-btn:hover {
             box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
         }
 
@@ -235,11 +251,11 @@
 
         /* Arkanoid play button */
         .game-card.arkanoid .play-btn {
-            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            background: linear-gradient(135deg, #22d3ee, #818cf8);
             box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
         }
         .game-card.arkanoid .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4);
+            box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4), 0 6px 24px rgba(129, 140, 248, 0.2);
         }
 
         /* ── Footer ── */
@@ -315,9 +331,16 @@
 
         <div class="games-grid">
             <a class="game-card tetris" href="tetris/index.html">
-                <div class="game-icon">🧱</div>
-                <div class="game-title">Tetris</div>
-                <div class="game-desc">Stack blocks, clear lines, beat your record.</div>
+            <div class="game-icon">🧱</div>
+            <div class="game-title">Tetris</div>
+            <div class="game-desc">Stack blocks, clear lines, beat your record.</div>
+            <span class="play-btn">PLAY</span>
+            </a>
+
+            <a class="game-card spaceinvaders" href="space-invaders/index.html">
+                <div class="game-icon">👾</div>
+                <div class="game-title">Space Invaders</div>
+                <div class="game-desc">Shoot alien fleet.</div>
                 <span class="play-btn">PLAY</span>
             </a>
 

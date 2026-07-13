@@ -10,7 +10,7 @@
 body {
     background: #1a1028;
     background-image:
-        radial-gradient(ellipse 70% 50% at 30% 0%, rgba(34, 211, 238, 0.06) 0%, transparent 60%);
+        radial-gradient(ellipse 70% 50% at 30% 0%, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
     color: #fff;
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
@@ -44,7 +44,7 @@ body::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 500px;
+    max-width: 280px;
     width: 100%;
     padding: 0 12px;
     animation: fadeUp 0.5s ease-out;
@@ -107,21 +107,16 @@ body::after {
     width: 100%;
 }
 
-/* ── Score / Level / Lives / Best ── */
-#score, #level, #lives, #best-score {
+/* ── Score / Lives / Best ── */
+#score, #lives, #best-score {
     font-family: 'Press Start 2P', monospace;
     font-size: 11px;
     white-space: nowrap;
 }
 
 #score {
-    color: #22d3ee;
-    text-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
-}
-
-#level {
-    color: #a78bba;
-    text-shadow: 0 0 12px rgba(167, 139, 186, 0.3);
+    color: #ff6b8a;
+    text-shadow: 0 0 12px rgba(255, 107, 138, 0.3);
 }
 
 #lives {
@@ -168,8 +163,8 @@ body::after {
 }
 
 #player-name:focus {
-    border-color: #22d3ee;
-    background: rgba(34, 211, 238, 0.08);
+    border-color: #4ade80;
+    background: rgba(74, 222, 128, 0.08);
 }
 
 /* ── Sound Controls ── */
@@ -221,10 +216,10 @@ body::after {
     appearance: none;
     width: 14px;
     height: 14px;
-    background: #22d3ee;
+    background: #4ade80;
     cursor: pointer;
     border-radius: 50%;
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
     transition: transform 0.15s ease;
 }
 
@@ -235,11 +230,11 @@ body::after {
 #volume-slider::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: #22d3ee;
+    background: #4ade80;
     cursor: pointer;
     border-radius: 50%;
     border: none;
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
 }
 
 /* ── Pause Button ── */
@@ -276,18 +271,18 @@ body::after {
 #board-wrapper {
     position: relative;
     width: 100%;
-    max-width: 480px;
+    max-width: 240px;
 }
 
-#arkanoid {
+#invaders {
     width: 100%;
     height: auto;
     display: block;
-    border: 2px solid rgba(34, 211, 238, 0.2);
+    border: 2px solid rgba(74, 222, 128, 0.2);
     border-radius: 12px;
     background-color: #0d0714;
     box-shadow:
-        0 0 20px rgba(34, 211, 238, 0.05),
+        0 0 20px rgba(74, 222, 128, 0.05),
         inset 0 0 32px rgba(0, 0, 0, 0.4);
 }
 
@@ -316,11 +311,11 @@ body::after {
 
 #pause-overlay h1 {
     font-family: 'Press Start 2P', monospace;
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 400;
     margin: 0;
-    color: #22d3ee;
-    text-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+    color: #4ade80;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
     letter-spacing: 1px;
 }
 
@@ -331,18 +326,18 @@ body::after {
     font-family: 'Press Start 2P', monospace;
     font-weight: 400;
     cursor: pointer;
-    background: linear-gradient(135deg, #22d3ee, #818cf8);
+    background: linear-gradient(135deg, #4ade80, #22d3ee);
     color: #1a1028;
     border: none;
     border-radius: 50px;
     letter-spacing: 1px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 20px rgba(34, 211, 238, 0.25);
+    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.25);
 }
 
 #start-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 28px rgba(34, 211, 238, 0.4), 0 6px 28px rgba(129, 140, 248, 0.2);
+    box-shadow: 0 6px 28px rgba(74, 222, 128, 0.4), 0 6px 28px rgba(34, 211, 238, 0.2);
 }
 
 #start-btn:active {
@@ -431,15 +426,15 @@ body::after {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #22d3ee;
+    color: #4ade80;
     font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 400;
     text-align: center;
     z-index: 20;
     pointer-events: none;
     animation: pulseGlow 0.5s ease-in-out infinite, fadeOut 2.5s ease-out forwards;
-    text-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee;
+    text-shadow: 0 0 10px #4ade80, 0 0 20px #4ade80;
     letter-spacing: 0.5px;
 }
 
@@ -468,21 +463,6 @@ body::after {
     max-width: 220px;
     margin-top: 10px;
     padding: 0 4px;
-}
-
-.touch-btn[data-action="left"] {
-    grid-column: 1;
-    grid-row: 1;
-}
-
-.touch-btn[data-action="right"] {
-    grid-column: 3;
-    grid-row: 1;
-}
-
-.touch-btn[data-action="restart"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
 }
 
 .touch-btn {
@@ -531,6 +511,18 @@ body::after {
     border-color: rgba(34, 211, 238, 0.4);
 }
 
+.touch-btn[data-action="shoot"] {
+    background: rgba(251, 191, 36, 0.12);
+    border-color: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.touch-btn[data-action="shoot"]:active,
+.touch-btn[data-action="shoot"].pressed {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
 .touch-btn[data-action="restart"] {
     background: rgba(255, 255, 255, 0.04);
     font-size: 20px;
@@ -544,11 +536,11 @@ body::after {
 }
 
 /* ── Responsive: narrow ── */
-@media (max-width: 500px) {
+@media (max-width: 280px) {
     #info-row {
         gap: 6px;
     }
-    #score, #level, #lives, #best-score {
+    #score, #lives, #best-score {
         font-size: 9px;
     }
     #player-name {
@@ -569,7 +561,7 @@ body::after {
         width: 50px;
     }
     #pause-overlay h1 {
-        font-size: 18px;
+        font-size: 14px;
     }
     #start-btn {
         padding: 12px 28px;
@@ -583,7 +575,7 @@ body::after {
         font-size: 11px;
     }
     #new-highscore-notice {
-        font-size: 11px;
+        font-size: 10px;
     }
 }
 
@@ -603,7 +595,7 @@ body::after {
     #info-row {
         gap: 4px;
     }
-    #score, #level, #lives, #best-score {
+    #score, #lives, #best-score {
         font-size: 8px;
     }
     #player-name {
@@ -612,7 +604,7 @@ body::after {
         padding: 3px 6px;
     }
     #pause-overlay h1 {
-        font-size: 16px;
+        font-size: 12px;
     }
     #start-btn {
         padding: 10px 22px;
@@ -628,20 +620,6 @@ body::after {
     }
     .touch-btn[data-action="restart"] {
         font-size: 18px;
-    }
-}
-
-/* ── Responsive: desktop ── */
-@media (min-width: 500px) {
-    #game-container {
-        max-width: 520px;
-    }
-    #touch-controls {
-        max-width: 220px;
-    }
-    .touch-btn {
-        padding: 16px 0;
-        font-size: 22px;
     }
 }
 
