@@ -13,3 +13,4 @@
 *.webp
 *.pdf
 .playwright-cli/
+node_modules/
