@@ -77,8 +77,14 @@ const SoundManager = {
         this.playOscillator(220, 0.06, 'sine', 0.08);
     },
 
-    playAlienShoot() {
-        this.playSweep(600, 150, 0.3, 'sawtooth', 0.08);
+    playAlienShoot(alienType) {
+        const presets = {
+            'TYPE_1': { startFreq: 400, endFreq: 100, duration: 0.25, type: 'sawtooth' },
+            'TYPE_2': { startFreq: 600, endFreq: 150, duration: 0.3, type: 'sawtooth' },
+            'TYPE_3': { startFreq: 800, endFreq: 200, duration: 0.35, type: 'square' },
+        };
+        const preset = presets[alienType] || presets['TYPE_2'];
+        this.playSweep(preset.startFreq, preset.endFreq, preset.duration, preset.type, 0.08);
         this.playNoise(0.1, 0.06);
     },
 

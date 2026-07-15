@@ -35,6 +35,21 @@ Breakout/Arkanoid con 3 niveles, power-ups y bricks especiales.
 - Controles: teclado, mouse o botones táctiles para la paleta
 - Top 5 high scores persistentes con nombre de jugador
 
+### 👾 Space Invaders
+
+Shooter retro con aliens que disparan, UFO bonus, niveles de dificultad y pantalla de game over enriquecida.
+
+- 3 tipos de aliens con diferentes formas y puntuaciones
+- Aliens que disparan con sonido variado por tipo
+- Naves UFO bonus (50-300 pts) que cruzan la pantalla
+- 4 niveles de dificultad (Easy/Normal/Hard/Insane) con persistencia
+- Volumen SFX y BGM persistentes
+- Niveles progresivos con bonificación por completar
+- Animaciones de entrada/salida de nivel y flash de score
+- Pantalla de game over con score final, nivel alcanzado y reinicio rápido
+- Controles táctiles con botón de pausa incluido
+- Top 5 high scores persistentes con nombre de jugador
+
 ## Controles
 
 ### Snake
@@ -66,6 +81,15 @@ Breakout/Arkanoid con 3 niveles, power-ups y bricks especiales.
 | P / Escape | Pausa |
 | Enter | Empezar partida |
 
+### Space Invaders
+| Tecla | Acción |
+|-------|--------|
+| ← → / A / D | Mover |
+| Espacio / Enter | Disparar |
+| P / Escape | Pausa |
+| R | Reiniciar |
+| Touch | Botones en pantalla (incluye pausa y reinicio) |
+
 ## Servir localmente
 
 ```sh
@@ -78,14 +102,15 @@ Luego abrí `http://localhost:8000` en el navegador.
 
 ## Audio
 
-Ambos juegos generan sonido y música sintetizada mediante Web Audio API (osciladores). No requieren archivos de audio externos. El audio necesita una interacción del usuario para activarse (política de autoplay del navegador).
+Todos los juegos generan sonido y música sintetizada mediante Web Audio API (osciladores). No requieren archivos de audio externos. El audio necesita una interacción del usuario para activarse (política de autoplay del navegador). La configuración de volumen y silencio se persiste por juego.
 
 ## Estructura del proyecto
 
 ```
 ├── index.html          # Hub principal
 ├── AGENTS.md           # Instrucciones para OpenCode
-├── tetris_backlog.md   # Backlog de desarrollo
+├── tetris_backlog.md   # Backlog de Tetris
+├── space-invaders-backlog.md   # Backlog de Space Invaders
 ├── snake/
 │   ├── index.html
 │   ├── game.js         # Lógica del juego (clase SnakeGame)
@@ -108,6 +133,15 @@ Ambos juegos generan sonido y música sintetizada mediante Web Audio API (oscila
         ├── constants.js    # Constantes (tamaño, colores)
         ├── tetriminos.js   # Definición de piezas
         ├── input.js        # Captura de teclado
+        ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
+        └── game.js         # Lógica del juego
+└── space-invaders/
+    ├── index.html
+    ├── favicon.svg
+    ├── css/style.css
+    └── js/
+        ├── constants.js    # Constantes (tablero, dificultad, partículas)
+        ├── input.js        # Captura de teclado + touch buttons
         ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
         └── game.js         # Lógica del juego
 ```

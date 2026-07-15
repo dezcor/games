@@ -36,6 +36,24 @@ function getSavedName() {
     return localStorage.getItem(PLAYER_NAME_STORAGE) || '';
 }
 
+function getSavedAudioVolume() {
+    const saved = localStorage.getItem(AUDIO_VOLUME_STORAGE);
+    return saved !== null ? parseFloat(saved) : 0.7;
+}
+
+function getSavedBgmVolume() {
+    const saved = localStorage.getItem(BGM_VOLUME_STORAGE);
+    return saved !== null ? parseFloat(saved) : 0.1;
+}
+
+function saveAudioVolume(vol) {
+    localStorage.setItem(AUDIO_VOLUME_STORAGE, vol.toString());
+}
+
+function saveBgmVolume(vol) {
+    localStorage.setItem(BGM_VOLUME_STORAGE, vol.toString());
+}
+
 function saveHighScore(sc) {
     const highScores = getHighScores();
     const now = new Date();
@@ -186,6 +204,28 @@ function updateUI() {
     updateBestScoreDisplay();
 }
 
+function showLevelBanner(text, color) {
+    const banner = document.getElementById('level-banner');
+    if (!banner) return;
+    banner.textContent = text;
+    banner.style.color = color || '#4ade80';
+    banner.style.textShadow = `0 0 16px ${color || '#4ade80'}80, 0 0 32px ${color || '#4ade80'}40`;
+    banner.style.display = 'block';
+    banner.style.animation = 'none';
+    banner.offsetHeight;
+    banner.style.animation = 'bannerPop 1.8s ease-out forwards';
+    setTimeout(() => { banner.style.display = 'none'; }, 1800);
+}
+
+function flashScore() {
+    const scoreEl = document.getElementById('score');
+    if (!scoreEl) return;
+    scoreEl.classList.remove('score-flash');
+    scoreEl.offsetHeight;
+    scoreEl.classList.add('score-flash');
+    setTimeout(() => scoreEl.classList.remove('score-flash'), 400);
+}
+
 function resetAliens() {
     initAliens();
     alienDirection = 1;
@@ -197,6 +237,7 @@ function resetAliens() {
         levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
         score += levelBonus;
         updateUI();
+        flashScore();
     }
 }
 
@@ -234,7 +275,7 @@ function spawnAlienShots(delta) {
                 y: shooter.y + ALIEN_HEIGHT,
                 speed: diff.alienBulletSpeed,
             });
-            SoundManager.playAlienShoot();
+            SoundManager.playAlienShoot(shooter.type);
         }
     }
 }
@@ -467,7 +508,15 @@ function update(delta) {
 
     // Check level complete
     if (aliens.every(a => !a.alive)) {
-        level++;
+        const newLevel = level + 1;
+        showLevelBanner(`LEVEL ${newLevel}`, '#4ade80');
+        const boardWrapper = document.getElementById('board-wrapper');
+        if (boardWrapper) {
+            boardWrapper.classList.remove('level-complete');
+            boardWrapper.offsetHeight;
+            boardWrapper.classList.add('level-complete');
+        }
+        level = newLevel;
         if (level > 1) {
             levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
             score += levelBonus;
@@ -616,9 +665,19 @@ function handleGameOver() {
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     const startBtn = document.getElementById('start-btn');
+    const gameOverStats = document.getElementById('game-over-stats');
+    const finalScore = document.getElementById('final-score');
+    const finalLevel = document.getElementById('final-level');
+    const quickRestartBtn = document.getElementById('quick-restart-btn');
+
     if (overlay) overlay.style.display = 'flex';
     if (startBtn) startBtn.style.display = 'none';
     if (overlayTitle) overlayTitle.textContent = 'GAME OVER';
+
+    if (finalScore) finalScore.textContent = `Score: ${score}`;
+    if (finalLevel) finalLevel.textContent = `Level: ${level}`;
+    if (gameOverStats) gameOverStats.style.display = 'flex';
+    if (quickRestartBtn) quickRestartBtn.style.display = 'block';
 
     updateBestScoreDisplay();
 
@@ -639,7 +698,7 @@ function handleGameOver() {
 // ── Pause ──
 
 function togglePause() {
-    if (!gameStarted) return;
+    if (!gameStarted || gameOver) return;
     isPaused = !isPaused;
     particles = [];
     const overlay = document.getElementById('pause-overlay');
@@ -673,6 +732,12 @@ function resetGame() {
 
     const highScoresTable = document.getElementById('high-scores-table');
     if (highScoresTable) highScoresTable.style.display = 'none';
+
+    const gameOverStats = document.getElementById('game-over-stats');
+    if (gameOverStats) gameOverStats.style.display = 'none';
+
+    const quickRestartBtn = document.getElementById('quick-restart-btn');
+    if (quickRestartBtn) quickRestartBtn.style.display = 'none';
 
     previousBestScore = getBestScore();
     updateBestScoreDisplay();
@@ -715,19 +780,28 @@ if (muteBtn) {
 }
 
 if (volumeSlider) {
+    const savedVol = getSavedAudioVolume();
+    volumeSlider.value = savedVol;
     volumeSlider.addEventListener('input', (e) => {
-        SoundManager.setVolume(parseFloat(e.target.value));
+        const vol = parseFloat(e.target.value);
+        SoundManager.setVolume(vol);
+        saveAudioVolume(vol);
         updateMuteIcon();
     });
 }
 
-SoundManager.setVolume(0.7);
+SoundManager.setVolume(getSavedAudioVolume());
 updateMuteIcon();
 
 const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 if (bgmMuteBtn) {
+    const savedBgmMute = localStorage.getItem('si_bgm_muted') === 'true';
+    if (savedBgmMute) {
+        MusicPlayer.bgmMuted = true;
+    }
     bgmMuteBtn.addEventListener('click', () => {
         MusicPlayer.toggleMute();
+        localStorage.setItem('si_bgm_muted', MusicPlayer.bgmMuted.toString());
     });
 }
 
@@ -815,9 +889,21 @@ function startGame() {
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     const startBtn = document.getElementById('start-btn');
+    const gameOverStats = document.getElementById('game-over-stats');
+    const quickRestartBtn = document.getElementById('quick-restart-btn');
+    const highScoresTable = document.getElementById('high-scores-table');
     if (overlay) overlay.style.display = 'none';
     if (overlayTitle) overlayTitle.textContent = 'SPACE INVADERS';
     if (startBtn) startBtn.style.display = 'none';
+    if (gameOverStats) gameOverStats.style.display = 'none';
+    if (quickRestartBtn) quickRestartBtn.style.display = 'none';
+    if (highScoresTable) highScoresTable.style.display = 'none';
+    const boardWrapper = document.getElementById('board-wrapper');
+    if (boardWrapper) {
+        boardWrapper.classList.remove('level-enter');
+        boardWrapper.offsetHeight;
+        boardWrapper.classList.add('level-enter');
+    }
     SoundManager.startBgm();
 }
 
@@ -826,11 +912,14 @@ if (startBtn) {
     startBtn.addEventListener('click', startGame);
 }
 
-// Restart touch button
-setupTouchButton('[data-action="restart"]',
-    () => { resetGame(); },
-    () => {}
-);
+const quickRestartBtn = document.getElementById('quick-restart-btn');
+if (quickRestartBtn) {
+    quickRestartBtn.addEventListener('click', () => {
+        if (gameOver) {
+            resetGame();
+        }
+    });
+}
 
 // ── Initialize ──
 
