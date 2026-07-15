@@ -503,7 +503,7 @@ function showUfoScore(score) {
     setTimeout(() => popup.remove(), 1500);
 
     // Add keyframe if not exists
-    const style = document.getElementById('ufo-popup-style');
+    let style = document.getElementById('ufo-popup-style');
     if (!style) {
         style = document.createElement('style');
         style.id = 'ufo-popup-style';
