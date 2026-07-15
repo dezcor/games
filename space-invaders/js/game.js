@@ -1,8 +1,11 @@
 const canvas = document.getElementById('invaders');
 const ctx = canvas.getContext('2d');
 
+// Global variables
 let score, lives, gameOver, isPaused, gameStarted;
+let alienColors = ['#ff6b8a', '#ff8fa3', '#ff2060', '#ff4080', '#ff6090'];
 let bullets = [];
+let particles = [];
 let playerX;
 let aliens = [];
 let alienDirection = 1;
@@ -13,6 +16,7 @@ let lastTime = 0;
 let shootCooldown = 0;
 let previousBestScore = 0;
 let level = 1;
+let levelBonus = 0;
 
 function getHighScores() {
     try {
@@ -103,9 +107,43 @@ function initAliens() {
                 y: ALIEN_START_Y + r * (ALIEN_HEIGHT + ALIEN_Y_GAP),
                 alive: true,
                 row: r,
+                type: r < 2 ? 'TYPE_1' : r < 4 ? 'TYPE_2' : 'TYPE_3',
+                baseSpeed: r < 2 ? 0.5 : r < 4 ? 0.6 : 0.7
             });
         }
     }
+}
+
+function createExplosion(x, y, color) {
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+            x: x + ALIEN_WIDTH / 2,
+            y: y + ALIEN_HEIGHT / 2,
+            vx: (Math.random() - 0.5) * PARTICLE_SPEED * 4,
+            vy: (Math.random() - 0.5) * PARTICLE_SPEED * 4,
+            life: PARTICLE_LIFETIME,
+            color: color,
+            size: Math.random() * 4 + 2
+        });
+    }
+}
+
+function updateParticles(delta) {
+    particles = particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= delta;
+        return p.life > 0;
+    });
+}
+
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life / PARTICLE_LIFETIME;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    ctx.globalAlpha = 1;
 }
 
 function initGame() {
@@ -121,6 +159,10 @@ function initGame() {
     alienMoveInterval = 600;
     alienSpeed = ALIEN_BASE_SPEED;
     shootCooldown = 0;
+    previousBestScore = 0;
+    level = 1;
+    levelBonus = 0;
+    particles = [];
     playerX = canvas.width / 2 - PLAYER_WIDTH / 2;
 
     initAliens();
@@ -140,6 +182,11 @@ function resetAliens() {
     alienDirection = 1;
     alienMoveInterval = Math.max(150, 600 - (level - 1) * 100);
     alienSpeed = ALIEN_BASE_SPEED + (level - 1) * 0.3;
+    if (level > 1) {
+        levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
+        score += levelBonus;
+        updateUI();
+    }
 }
 
 function update(delta) {
@@ -181,7 +228,7 @@ function update(delta) {
         let moveDown = false;
         aliens.forEach(a => {
             if (!a.alive) return;
-            a.x += alienSpeed * alienDirection * 8;
+            a.x += alienSpeed * alienDirection * 8 * (a.baseSpeed / ALIEN_BASE_SPEED);
             if (a.x <= 2 || a.x + ALIEN_WIDTH >= canvas.width - 2) {
                 moveDown = true;
             }
@@ -208,6 +255,7 @@ function update(delta) {
                 score += points;
                 updateUI();
                 SoundManager.playExplosion();
+                createExplosion(a.x + ALIEN_WIDTH / 2, a.y + ALIEN_HEIGHT / 2, alienColors[a.row]);
                 break;
             }
         }
@@ -229,6 +277,11 @@ function update(delta) {
     // Check level complete
     if (aliens.every(a => !a.alive)) {
         level++;
+        if (level > 1) {
+            levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
+            score += levelBonus;
+            updateUI();
+        }
         resetAliens();
         bullets = [];
     }
@@ -262,17 +315,34 @@ function draw() {
     // Draw aliens
     aliens.forEach(a => {
         if (!a.alive) return;
-        const alienColors = ['#ff6b8a', '#ff8fa3', '#ff2060', '#ff4080', '#ff6090'];
         ctx.fillStyle = alienColors[a.row] || '#ff6b8a';
         ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 4;
-        ctx.fillRect(a.x, a.y, ALIEN_WIDTH, ALIEN_HEIGHT);
-        ctx.shadowBlur = 0;
 
-        // Alien eyes
-        ctx.fillStyle = '#0d0714';
-        ctx.fillRect(a.x + 4, a.y + 3, 3, 3);
-        ctx.fillRect(a.x + ALIEN_WIDTH - 7, a.y + 3, 3, 3);
+        // Draw alien based on type
+        if (a.type === 'TYPE_3') {
+            // Large alien (3 rows)
+            ctx.fillRect(a.x, a.y + 4, ALIEN_WIDTH, ALIEN_HEIGHT - 8);
+            // Large eyes
+            ctx.fillStyle = '#0d0714';
+            ctx.fillRect(a.x + 5, a.y + 6, 8, 8);
+            ctx.fillRect(a.x + ALIEN_WIDTH - 13, a.y + 6, 8, 8);
+        } else if (a.type === 'TYPE_2') {
+            // Medium alien (2 rows)
+            ctx.fillRect(a.x, a.y + 3, ALIEN_WIDTH, ALIEN_HEIGHT - 6);
+            // Medium eyes
+            ctx.fillStyle = '#0d0714';
+            ctx.fillRect(a.x + 6, a.y + 4, 6, 6);
+            ctx.fillRect(a.x + ALIEN_WIDTH - 12, a.y + 4, 6, 6);
+        } else {
+            // Small alien (1 row)
+            ctx.fillRect(a.x, a.y + 5, ALIEN_WIDTH, ALIEN_HEIGHT - 10);
+            // Small eyes
+            ctx.fillStyle = '#0d0714';
+            ctx.fillRect(a.x + 7, a.y + 6, 4, 4);
+            ctx.fillRect(a.x + ALIEN_WIDTH - 11, a.y + 6, 4, 4);
+        }
+        ctx.shadowBlur = 0;
     });
 
     // Draw bullets
@@ -290,14 +360,17 @@ function loop(timestamp) {
     lastTime = timestamp;
     if (delta < 100) {
         update(delta);
+        updateParticles(delta);
     }
     draw();
+    drawParticles();
     requestAnimationFrame(loop);
 }
 
 function handleGameOver() {
     gameOver = true;
     isPaused = true;
+    particles = [];
 
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
@@ -325,6 +398,7 @@ function handleGameOver() {
 function togglePause() {
     if (!gameStarted) return;
     isPaused = !isPaused;
+    particles = [];
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     if (overlay) {
@@ -452,6 +526,7 @@ canvas.addEventListener('click', () => {
 function startGame() {
     gameStarted = true;
     isPaused = false;
+    particles = [];
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     const startBtn = document.getElementById('start-btn');
