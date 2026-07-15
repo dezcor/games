@@ -39,9 +39,15 @@
         </div>
         <div id="board-wrapper">
             <canvas id="invaders" width="240" height="400"></canvas>
+            <div id="level-banner" style="display:none;"></div>
             <div id="pause-overlay">
                 <h1 id="overlay-title">SPACE INVADERS</h1>
+                <div id="game-over-stats" style="display:none;">
+                    <div id="final-score">Score: 0</div>
+                    <div id="final-level">Level: 1</div>
+                </div>
                 <button id="start-btn">START</button>
+                <button id="quick-restart-btn" style="display:none;">PLAY AGAIN</button>
                 <div id="high-scores-table" style="display:none;">
                     <h3>Top 5 Records</h3>
                     <table id="high-scores-list"></table>
@@ -58,6 +64,7 @@
             <button class="touch-btn" data-action="right" title="Right">
                 <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#22d3ee"/></svg>
             </button>
+            <button class="touch-btn" data-action="pause" title="Pause">⏸</button>
             <button class="touch-btn" data-action="restart" title="Restart">↻</button>
         </div>
     </div>

@@ -92,3 +92,13 @@ setupTouchButton('[data-action="shoot"]',
     () => { keys['Space'] = true; },
     () => { keys['Space'] = false; }
 );
+
+setupTouchButton('[data-action="pause"]',
+    () => { if (typeof togglePause === 'function' && gameStarted && !gameOver) togglePause(); },
+    () => {}
+);
+
+setupTouchButton('[data-action="restart"]',
+    () => { if (typeof resetGame === 'function' && gameStarted) resetGame(); },
+    () => {}
+);

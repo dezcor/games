@@ -257,13 +257,13 @@
 5. ✅ Naves UFO intermedias
 6. ✅ Opciones de dificultad
 
-### Sprint 3 (Prioridad Baja) — PENDIENTE
-7. ⏳ Persistencia de configuración (parcialmente hecho: difficulty)
-8. ⏳ Audio de disparo de aliens
-9. ⏳ Efecto de sonido de UFO
-10. ⏳ Controles mejorados para móvil
-11. ⏳ Animaciones de entrada/salida
-12. ⏳ Pantalla de game over más completa
+### ✅ Sprint 3 (Prioridad Baja) — COMPLETADO
+7. ✅ Persistencia de configuración (volumen SFX/BGM agregado)
+8. ✅ Audio de disparo de aliens (variado por tipo de alien)
+9. ✅ Efecto de sonido de UFO (ya implementado)
+10. ✅ Controles mejorados para móvil (botón pause agregado)
+11. ✅ Animaciones de entrada/salida (level enter/complete, score flash)
+12. ✅ Pantalla de game over más completa (score final, level, quick restart)
 
 ---
 
@@ -273,8 +273,8 @@
 |--------|--------|-------|---|
 | Sprint 1 | ✅ Completado | 3/3 | 100% |
 | Sprint 2 | ✅ Completado | 3/3 | 100% |
-| Sprint 3 | ⏳ Pendiente | 0/6 | 0% |
-| **Total** | **66%** | **6/12** | **50%** |
+| Sprint 3 | ✅ Completado | 6/6 | 100% |
+| **Total** | **100%** | **12/12** | **100%** |
 
 ---
 
