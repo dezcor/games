@@ -69,6 +69,8 @@ const SoundManager = {
 
     playExplosion() {
         this.playNoise(0.15, 0.15);
+        setTimeout(() => this.playOscillator(880, 0.05, 'sawtooth', 0.1), 50);
+        setTimeout(() => this.playOscillator(660, 0.05, 'sawtooth', 0.1), 100);
     },
 
     playAlienMove() {
