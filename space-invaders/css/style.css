@@ -56,10 +56,55 @@ body::after {
     to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Difficulty Buttons ── */
+#difficulty-buttons {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.diff-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.06);
+    color: #8a7ba8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+    letter-spacing: 0.3px;
+}
+
+.diff-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #c4b5d4;
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.diff-btn.active {
+    background: rgba(74, 222, 128, 0.15);
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.diff-btn:focus-visible {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+.diff-btn:active {
+    transform: scale(0.95);
+}
+
 /* ── Menu Button ── */
 #menu-btn {
     align-self: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     padding: 8px 16px;
     font-size: 13px;
     font-weight: 500;
@@ -97,36 +142,6 @@ body::after {
     gap: 6px;
     width: 100%;
     margin-bottom: 8px;
-}
-
-@media (max-width: 400px) {
-    #top-ui {
-        margin-bottom: 6px;
-        gap: 4px;
-    }
-    #info-row, #controls-row {
-        gap: 6px;
-    }
-    #score, #lives, #best-score {
-        font-size: 9px;
-    }
-    #player-name {
-        width: 72px;
-        font-size: 11px;
-        padding: 5px 8px;
-    }
-    #pause-btn {
-        padding: 5px 12px;
-        font-size: 11px;
-    }
-    #mute-btn,
-    #bgm-mute-btn {
-        padding: 4px 8px;
-        font-size: 14px;
-    }
-    #volume-slider {
-        width: 50px;
-    }
 }
 
 #info-row, #controls-row {

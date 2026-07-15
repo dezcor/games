@@ -77,6 +77,16 @@ const SoundManager = {
         this.playOscillator(220, 0.06, 'sine', 0.08);
     },
 
+    playAlienShoot() {
+        this.playSweep(600, 150, 0.3, 'sawtooth', 0.08);
+        this.playNoise(0.1, 0.06);
+    },
+
+    playUFO() {
+        this.playSweep(300, 600, 0.5, 'sine', 0.08);
+        setTimeout(() => this.playSweep(600, 300, 0.5, 'sine', 0.08), 500);
+    },
+
     playGameOver() {
         this.playSweep(440, 55, 0.8, 'sawtooth', 0.15);
     },
