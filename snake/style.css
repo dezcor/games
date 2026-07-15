@@ -13,12 +13,13 @@ body {
         radial-gradient(ellipse 70% 50% at 30% 100%, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;
     color: #fff;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
 }
 
@@ -44,9 +45,9 @@ body::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 420px;
+    max-width: 380px;
     width: 100%;
-    padding: 0 12px;
+    padding: 16px 10px 0;
     animation: fadeUp 0.5s ease-out;
 }
 
@@ -197,6 +198,12 @@ body::after {
     max-width: 380px;
 }
 
+@media (max-width: 400px) {
+    .board-wrapper {
+        max-width: 370px;
+    }
+}
+
 #gameCanvas {
     border: 2px solid rgba(74, 222, 128, 0.2);
     border-radius: 16px;
@@ -300,6 +307,21 @@ body::after {
     max-width: 220px;
     margin-top: 12px;
     padding: 0 4px;
+}
+
+@media (max-width: 400px) {
+    #touch-controls {
+        max-width: 190px;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    .touch-btn {
+        padding: 12px 0;
+        font-size: 20px;
+    }
+    .touch-btn[data-action="restart"] {
+        font-size: 11px;
+    }
 }
 
 .touch-btn {
@@ -435,6 +457,22 @@ body::after {
 
 /* ── Responsive: narrow screens ── */
 @media (max-width: 360px) {
+    .game-container {
+        padding: 0 8px;
+        max-width: 380px;
+    }
+    #score {
+        font-size: 13px;
+    }
+    #highScore {
+        font-size: 10px;
+    }
+    #volume-slider {
+        width: 56px;
+    }
+    .board-wrapper {
+        max-width: 350px;
+    }
     #game-over {
         inset: 8px;
     }
@@ -452,21 +490,22 @@ body::after {
         padding: 12px 0;
         font-size: 20px;
     }
-    #volume-slider {
-        width: 56px;
-    }
-    #score {
-        font-size: 13px;
-    }
-    #highScore {
-        font-size: 10px;
-    }
 }
 
 /* ── Responsive: very narrow ── */
 @media (max-width: 320px) {
+    .game-container {
+        padding: 0 6px;
+        max-width: 380px;
+    }
     #controls-row {
         gap: 6px;
+    }
+    #score {
+        font-size: 12px;
+    }
+    #highScore {
+        font-size: 9px;
     }
     #volume-slider {
         width: 44px;
@@ -475,6 +514,9 @@ body::after {
     #bgm-mute-btn {
         padding: 4px 6px;
         font-size: 14px;
+    }
+    .board-wrapper {
+        max-width: 310px;
     }
     #touch-controls {
         max-width: 160px;
@@ -487,6 +529,16 @@ body::after {
     }
     .touch-btn[data-action="restart"] {
         font-size: 10px;
+    }
+    #game-over {
+        inset: 6px;
+    }
+    #game-over h1 {
+        font-size: 14px;
+    }
+    .restart-btn {
+        padding: 8px 16px;
+        font-size: 9px;
     }
 }
 

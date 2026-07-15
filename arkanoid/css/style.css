@@ -15,10 +15,11 @@ body {
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start;
+    min-height: 100vh;
     margin: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
 }
 
@@ -44,9 +45,9 @@ body::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 500px;
+    max-width: 400px;
     width: 100%;
-    padding: 0 12px;
+    padding: 16px 10px 0;
     animation: fadeUp 0.5s ease-out;
 }
 
@@ -276,7 +277,13 @@ body::after {
 #board-wrapper {
     position: relative;
     width: 100%;
-    max-width: 480px;
+    max-width: 400px;
+}
+
+@media (max-width: 400px) {
+    #board-wrapper {
+        max-width: 380px;
+    }
 }
 
 #arkanoid {
@@ -470,6 +477,21 @@ body::after {
     padding: 0 4px;
 }
 
+@media (max-width: 400px) {
+    #touch-controls {
+        max-width: 190px;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    .touch-btn {
+        padding: 12px 0;
+        font-size: 20px;
+    }
+    .touch-btn[data-action="restart"] {
+        font-size: 18px;
+    }
+}
+
 .touch-btn[data-action="left"] {
     grid-column: 1;
     grid-row: 1;
@@ -545,6 +567,9 @@ body::after {
 
 /* ── Responsive: narrow ── */
 @media (max-width: 500px) {
+    #game-container {
+        padding: 0 8px;
+    }
     #info-row {
         gap: 6px;
     }
@@ -567,6 +592,21 @@ body::after {
     }
     #volume-slider {
         width: 50px;
+    }
+    #board-wrapper {
+        max-width: 380px;
+    }
+    #touch-controls {
+        max-width: 190px;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    .touch-btn {
+        padding: 12px 0;
+        font-size: 20px;
+    }
+    .touch-btn[data-action="restart"] {
+        font-size: 18px;
     }
     #pause-overlay h1 {
         font-size: 18px;
@@ -634,7 +674,10 @@ body::after {
 /* ── Responsive: desktop ── */
 @media (min-width: 500px) {
     #game-container {
-        max-width: 520px;
+        max-width: 480px;
+    }
+    #board-wrapper {
+        max-width: 440px;
     }
     #touch-controls {
         max-width: 220px;
