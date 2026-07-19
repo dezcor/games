@@ -384,6 +384,8 @@ class Ship {
 
         ctx.strokeStyle = GAME_CONFIG.shipColor;
         ctx.lineWidth = 2;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = GAME_CONFIG.shipColor;
         ctx.beginPath();
         ctx.moveTo(15, 0);
         ctx.lineTo(-10, 10);
@@ -394,10 +396,14 @@ class Ship {
 
         // Thrust flame
         if (this.thrusting) {
-            ctx.beginPath();
+            const flameLength = 15 + Math.random() * 10;
             ctx.strokeStyle = '#fbbf24';
+            ctx.shadowColor = '#fbbf24';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
             ctx.moveTo(-7, 0);
-            ctx.lineTo(-15, 0);
+            ctx.lineTo(-flameLength, 0);
             ctx.stroke();
         }
 
@@ -444,13 +450,15 @@ class Asteroid {
         ctx.rotate(this.rotation);
 
         ctx.strokeStyle = GAME_CONFIG.asteroidColors[Math.floor(Math.random() * 3)];
-        ctx.lineWidth = 2;
+        ctx.lineWidth = this.type === 'large' ? 3 : (this.type === 'medium' ? 2 : 1);
+        ctx.shadowBlur = this.type === 'large' ? 10 : (this.type === 'medium' ? 6 : 3);
+        ctx.shadowColor = ctx.strokeStyle;
 
         ctx.beginPath();
-        const points = 8;
+        const points = this.type === 'large' ? 12 : (this.type === 'medium' ? 10 : 8);
         for (let i = 0; i < points; i++) {
             const angle = (i / points) * Math.PI * 2;
-            const mut = 0.8 + Math.random() * 0.4;
+            const mut = 0.6 + Math.random() * 0.4;
             const px = Math.cos(angle) * this.r * mut;
             const py = Math.sin(angle) * this.r * mut;
             if (i === 0) ctx.moveTo(px, py);
@@ -458,6 +466,21 @@ class Asteroid {
         }
         ctx.closePath();
         ctx.stroke();
+
+        if (this.type === 'large') {
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 0;
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * Math.PI * 2 + this.rotation;
+                const cratX = Math.cos(angle) * this.r * 0.5;
+                const cratY = Math.sin(angle) * this.r * 0.5;
+                ctx.beginPath();
+                ctx.arc(cratX, cratY, this.r * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        }
 
         ctx.restore();
     }
@@ -496,7 +519,8 @@ class Bullet {
 
 
 function createExplosion(x, y, type) {
-    for (let i = 0; i < 8; i++) {
+    const count = type === 'large' ? 16 : (type === 'medium' ? 12 : 8);
+    for (let i = 0; i < count; i++) {
         game.entities.particles.push(new Particle(x, y, type));
     }
 }
@@ -506,10 +530,21 @@ class Particle {
     constructor(x, y, type) {
         this.x = x;
         this.y = y;
-        this.vx = (Math.random() - 0.5) * 4;
-        this.vy = (Math.random() - 0.5) * 4;
-        this.life = 30 + Math.random() * 30;
-        this.color = type === 'large' ? '#fff' : '#fbbf24';
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.life = 50 + Math.random() * 30;
+        this.maxLife = this.life;
+
+        if (type === 'large') {
+            this.color = '#fff';
+            this.size = 3;
+        } else if (type === 'medium') {
+            this.color = '#fbbf24';
+            this.size = 2.5;
+        } else {
+            this.color = '#f6e05e';
+            this.size = 2;
+        }
     }
 
     update(dt) {
@@ -519,9 +554,9 @@ class Particle {
     }
 
     draw(ctx) {
-        ctx.globalAlpha = this.life / 60;
+        ctx.globalAlpha = this.life / this.maxLife;
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, 2, 2);
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
         ctx.globalAlpha = 1.0;
     }
 }

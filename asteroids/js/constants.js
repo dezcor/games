@@ -8,7 +8,7 @@ const GAME_CONFIG = {
     
     // Physics
     rotationSpeed: 4,           // Radians per second
-    acceleration: 0.002,       // Thrust power
+    acceleration: 0.004,       // Thrust power
     friction: 0.98,            // Speed retention
     bulletSpeed: 5,             // Velocity
     asteroidMinSpeed: 0.5,
