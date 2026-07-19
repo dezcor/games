@@ -9,24 +9,24 @@ Implementación del clásico juego de asteroides para el **Games Hub**, siguiend
 - [x] Configurar tipografías y fondo base según el sistema de diseño.
 
 ## Fase 2: Mecánicas de Juego (Core Loop)
-- [ ] Implementar la nave del jugador (rotación, aceleración, fricción espacial).
-- [ ] Sistema de generación aleatoria de asteroides (evitando spawn sobre la nave).
-- [ ] Lógica de proyectiles (disparos, tiempo de vida, eliminación fuera de pantalla).
-- [ ] Sistema de fragmentación (Asteroides: Grande -> Mediano -> Pequeño al recibir impacto).
-- [ ] Detección de colisiones (Nave vs Asteroides, Proyectil vs Asteroides).
+- [x] Implementar la nave del jugador (rotación, aceleración, fricción espacial).
+- [x] Sistema de generación aleatoria de asteroides (evitando spawn sobre la nave).
+- [x] Lógica de proyectiles (disparos, tiempo de vida, eliminación fuera de pantalla).
+- [x] Sistema de fragmentación (Asteroides: Grande -> Mediano -> Pequeño al recibir impacto).
+- [x] Detección de colisiones (Nave vs Asteroides, Proyectil vs Asteroides).
 
 ## Fase 3: Audio y UI
-- [ ] Integrar `SoundManager` con Web Audio API para efectos de:
-  - [ ] Aceleración (pulso).
-  - [ ] Disparo (láser corto).
-  - [ ] Explosión de asteroides (ruido blanco/decaimiento).
-- [ ] Diseñar pantallas de UI (Start, Game Over, Pause) usando los estilos de botones tipo "píldora".
-- [ ] Implementar controles de teclado y DAS (Delayed Action System) si aplica.
-- [ ] Implementar controles táctiles en pantalla y gestos.
+- [x] Integrar `SoundManager` con Web Audio API para efectos de:
+  - [x] Aceleración (pulso).
+  - [x] Disparo (láser corto).
+  - [x] Explosión de asteroides (ruido blanco/decaimiento).
+- [x] Diseñar pantallas de UI (Start, Game Over, Pause) usando los estilos de botones tipo "píldora".
+- [x] Implementar controles de teclado y DAS (Delayed Action System) si aplica.
+- [x] Implementar controles táctiles en pantalla y gestos.
 
 ## Fase 4: Persistencia e Integración
-- [ ] Sistema de `localStorage` para High Scores (`asteroids_highscores`).
-- [ ] Guardar nombre de jugador (`asteroids_player_name`).
+- [x] Sistema de `localStorage` para High Scores (`asteroids_highscores`).
+- [x] Guardar nombre de jugador (`asteroids_player_name`).
 - [x] Añadir enlace al juego en el `index.html` principal del hub.
 - [ ] Verificar el guardado de la tabla de mejores puntuaciones con medallas.
 
