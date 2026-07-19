@@ -265,10 +265,19 @@ body::after {
     #high-scores-table h3 {
         font-size: 10px;
     }
+    /* ── High Score Medals ── */
+    .hs-gold { color: #fbbf24; font-weight: bold; }
+    .hs-silver { color: #a8a29e; font-weight: bold; }
+    .hs-bronze { color: #f59e0b; font-weight: bold; }
+
     #high-scores-list td {
-        padding: 4px 6px;
+        padding: 5px 8px;
         font-size: 11px;
     }
+    #high-scores-list td.hs-rank { text-align: center; }
+    #high-scores-list td.hs-name { max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #high-scores-list td.hs-score { color: #c4b5d4; font-family: 'Press Start 2P', monospace; text-align: right; }
+    #high-scores-list td.hs-date { color: #64748b; font-size: 10px; }
     #new-highscore-notice {
         font-size: 11px;
     }

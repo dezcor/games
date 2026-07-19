@@ -81,6 +81,23 @@ const game = {
                 localStorage.setItem('asteroids_player_name', this.playerName);
             });
         }
+
+        // Display player name
+        this.displayPlayerName();
+    },
+
+    /**
+     * Display player name in the UI
+     */
+    displayPlayerName() {
+        const playerNameDisplay = document.getElementById('player-display');
+        const playerNameSpan = document.getElementById('current-player-name');
+        if (playerNameDisplay) {
+            playerNameDisplay.style.display = 'inline';
+        }
+        if (playerNameSpan) {
+            playerNameSpan.textContent = this.playerName || 'Player';
+        }
     },
 
     startGame() {
@@ -103,6 +120,7 @@ const game = {
         const mainStartBtn = document.getElementById('main-start-btn');
         if (mainStartBtn) mainStartBtn.style.display = 'none';
         document.getElementById('player-name').style.display = 'none';
+        this.displayPlayerName();
 
         SoundManager.startBgm();
     },
@@ -126,6 +144,7 @@ const game = {
         if (mainStartBtn) mainStartBtn.style.display = 'block';
         document.getElementById('player-name').style.display = 'block';
         document.getElementById('quick-restart-btn').style.display = 'none';
+        this.displayPlayerName();
 
         // Clear everything
         this.entities.ship = null;
@@ -262,7 +281,11 @@ const game = {
         // Save High Score
         const currentHigh = this.highScores[0]?.score || 0;
         if (this.score > currentHigh) {
-            this.highScores.unshift({ score: this.score, name: this.playerName, date: new Date().toLocaleDateString() });
+            this.highScores.unshift({ 
+                score: this.score, 
+                name: this.playerName, 
+                date: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) 
+            });
             this.highScores = this.highScores.slice(0, 5);
             localStorage.setItem('asteroids_highscores', JSON.stringify(this.highScores));
 
@@ -279,16 +302,30 @@ const game = {
         document.getElementById('final-score').textContent = `Score: ${this.score}`;
         document.getElementById('quick-restart-btn').style.display = 'block';
 
-        // Render scores
+        // Render scores with medals
         const table = document.getElementById('high-scores-list');
         table.innerHTML = this.highScores.map((hs, i) => `
             <tr class="hs-row-${i+1}">
                 <td class="hs-rank">${i+1}</td>
-                <td class="hs-name">${hs.name}</td>
+                <td class="hs-name ${getMedalClass(hs.name, hs.score)}">${hs.name}</td>
                 <td class="hs-score">${hs.score}</td>
                 <td class="hs-date">${hs.date}</td>
             </tr>
         `).join('');
+    },
+
+    /**
+     * Helper: Get medal class based on score and name (easter egg)
+     */
+    getMedalClass(name, score) {
+        const nameLower = name.toLowerCase().replace(/\s/g, '');
+        if (nameLower === 'jsnof' || nameLower === 'jonsnow' || nameLower === 'jon') {
+            return 'hs-gold'; // Easter egg
+        }
+        if (score >= 50000) return 'hs-gold';
+        if (score >= 20000) return 'hs-silver';
+        if (score >= 5000)  return 'hs-bronze';
+        return 'hs-none';
     },
 
     draw() {
