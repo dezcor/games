@@ -1,0 +1,165 @@
+/* ── Reset ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+/* ── Base ── */
+body {
+    background: #1a1028;
+    background-image:
+        radial-gradient(ellipse 70% 50% at 30% 0%, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* CRT scanline overlay */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* ── Container ── */
+#game-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 460px;
+    width: 100%;
+    padding: 16px 10px 0;
+    animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Board ── */
+#board-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+}
+
+#asteroids-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 2px solid rgba(74, 222, 128, 0.2);
+    border-radius: 12px;
+    background-color: #0d0714;
+    box-shadow:
+        0 0 20px rgba(74, 222, 128, 0.05),
+        inset 0 0 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Overlay & UI ── */
+#pause-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(26, 16, 40, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    border-radius: 12px;
+    gap: 16px;
+    pointer-events: none;
+}
+
+#pause-overlay h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    margin: 0;
+    color: #4ade80;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+    letter-spacing: 1px;
+}
+
+#start-btn {
+    margin-top: 8px;
+    padding: 14px 40px;
+    font-size: 14px;
+    font-family: 'Press Start 2P', monospace;
+    background: linear-gradient(135deg, #4ade80, #22d3ee);
+    color: #1a1028;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.25);
+}
+
+/* ── Score & Info ── */
+#top-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+#info-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+}
+
+#score, #lives, #best-score {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+}
+
+#score { color: #ff6b8a; }
+#lives { color: #4ade80; }
+
+/* ── Touch Controls ── */
+#touch-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 10px;
+}
+
+.touch-btn {
+    padding: 14px 0;
+    font-size: 22px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: #c4b5d4;
+}
+
+.touch-btn:active {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.14);
+}
