@@ -73,18 +73,62 @@ const game = {
         if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
         if (quickBtn) quickBtn.addEventListener('click', () => this.resetGame());
 
-        // Name Input
-        const nameInput = document.getElementById('player-name');
-        if (nameInput) {
-            nameInput.addEventListener('change', (e) => {
-                this.playerName = e.target.value.trim() || 'Player';
-                localStorage.setItem('asteroids_player_name', this.playerName);
-            });
-        }
+   // Name Input
+    const nameInput = document.getElementById('player-name');
+    if (nameInput) {
+        nameInput.addEventListener('change', (e) => {
+            this.playerName = e.target.value.trim() || 'Player';
+            localStorage.setItem('asteroids_player_name', this.playerName);
+        });
+    }
 
-        // Display player name
-        this.displayPlayerName();
-    },
+    // Display player name
+    this.displayPlayerName();
+
+    // ── Sound Controls ──
+
+    const muteBtn = document.getElementById('mute-btn');
+    const volumeSlider = document.getElementById('volume-slider');
+    const bgmMuteBtn = document.getElementById('bgm-mute-btn');
+
+    function updateMuteIcon() {
+        if (muteBtn) {
+            muteBtn.textContent = SoundManager.getMuteState() || SoundManager.getVolume() === 0
+                ? '🔇' : '🔊';
+        }
+    }
+
+    function updateMusicIcon() {
+        if (bgmMuteBtn) {
+            bgmMuteBtn.textContent = MusicPlayer.getBgmMuteState()
+                ? '🔇' : '🎵';
+        }
+    }
+
+    if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+            SoundManager.toggleMute();
+            updateMuteIcon();
+        });
+    }
+
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            SoundManager.setVolume(parseFloat(e.target.value));
+            updateMuteIcon();
+        });
+    }
+
+    if (bgmMuteBtn) {
+        bgmMuteBtn.addEventListener('click', () => {
+            MusicPlayer.toggleMute();
+            updateMusicIcon();
+        });
+    }
+
+    updateMuteIcon();
+    updateMusicIcon();
+},
 
     /**
      * Display player name in the UI
