@@ -81,11 +81,13 @@ Implementación del clásico juego de asteroides para el **Games Hub**, siguiend
 - [x] Implementar controles de teclado y DAS (Delayed Action System) si aplica.
 - [x] Implementar controles táctiles en pantalla y gestos.
 
-## Fase 4: Persistencia e Integración
+## Fase 4: Persistencia e Integración ✅ COMPLETADO
 - [x] Sistema de `localStorage` para High Scores (`asteroids_highscores`).
 - [x] Guardar nombre de jugador (`asteroids_player_name`).
 - [x] Añadir enlace al juego en el `index.html` principal del hub.
-- [ ] Verificar el guardado de la tabla de mejores puntuaciones con medallas.
+- [x] Medallas en tabla de mejores puntuaciones (gold/silver/bronze).
+- [x] Formato de fechas en español (es-ES locale).
+- [x] Display del nombre del jugador en UI.
 
 ## Fase 5: Características Avanzadas
 - [ ] **Niveles de dificultad:** Configuraciones fácil/medio/difícil (velocidad de asteroides, frecuencia de aparición).
