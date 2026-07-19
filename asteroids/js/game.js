@@ -37,12 +37,28 @@ const game = {
     },
 
     setupInput() {
-        // Basic keys are handled by input.js
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.state === 'PLAYING' || this.state === 'PAUSED' || this.state === 'GAME_OVER') {
+                    this.resetGame();
+                }
+            } else if (e.key === 'Escape') {
+                if (this.state === 'PLAYING' || this.state === 'PAUSED') {
+                    this.togglePause();
+                }
+            } else if (e.key === 'Enter') {
+                if (this.state === 'MENU' || this.state === 'GAME_OVER') {
+                    this.startGame();
+                }
+            }
+        });
     },
 
     setupUI() {
         // UI elements
         const startBtn = document.getElementById('start-btn');
+        const mainStartBtn = document.getElementById('main-start-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const quickBtn = document.getElementById('quick-restart-btn');
         const highScoreValue = document.getElementById('best-score-value');
@@ -52,16 +68,19 @@ const game = {
             highScoreValue.textContent = this.highScores[0].score;
         }
 
-        startBtn.addEventListener('click', () => this.startGame());
-        pauseBtn.addEventListener('click', () => this.togglePause());
-        quickBtn.addEventListener('click', () => this.resetGame());
+        if (startBtn) startBtn.addEventListener('click', () => this.startGame());
+        if (mainStartBtn) mainStartBtn.addEventListener('click', () => this.startGame());
+        if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
+        if (quickBtn) quickBtn.addEventListener('click', () => this.resetGame());
 
         // Name Input
         const nameInput = document.getElementById('player-name');
-        nameInput.addEventListener('change', (e) => {
-            this.playerName = e.target.value.trim() || 'Player';
-            localStorage.setItem('asteroids_player_name', this.playerName);
-        });
+        if (nameInput) {
+            nameInput.addEventListener('change', (e) => {
+                this.playerName = e.target.value.trim() || 'Player';
+                localStorage.setItem('asteroids_player_name', this.playerName);
+            });
+        }
     },
 
     startGame() {
@@ -81,6 +100,8 @@ const game = {
 
         document.getElementById('pause-overlay').style.display = 'none';
         document.getElementById('start-btn').style.display = 'none';
+        const mainStartBtn = document.getElementById('main-start-btn');
+        if (mainStartBtn) mainStartBtn.style.display = 'none';
         document.getElementById('player-name').style.display = 'none';
 
         SoundManager.startBgm();
@@ -101,6 +122,8 @@ const game = {
     resetGame() {
         this.state = 'MENU';
         document.getElementById('start-btn').style.display = 'block';
+        const mainStartBtn = document.getElementById('main-start-btn');
+        if (mainStartBtn) mainStartBtn.style.display = 'block';
         document.getElementById('player-name').style.display = 'block';
         document.getElementById('quick-restart-btn').style.display = 'none';
 
@@ -114,18 +137,18 @@ const game = {
         MusicPlayer.resume(); // Restart BGM logic
     },
 
-    spawnAsteroid(type) {
+    spawnAsteroid(type, atX = null, atY = null) {
         const size = type === 'large' ? 40 : (type === 'medium' ? 20 : 10);
         let asteroid = null;
         let safeSpawn = false;
         let attempts = 0;
 
         while (!safeSpawn && attempts < 10) {
-            const x = Math.random() * game.width;
-            const y = Math.random() * game.height;
+            const x = atX !== null ? atX : Math.random() * game.width;
+            const y = atY !== null ? atY : Math.random() * game.height;
 
             const ship = this.entities.ship;
-            if (ship) {
+            if (ship && atX === null) {
                 const dist = Math.sqrt((x - ship.x) ** 2 + (y - ship.y) ** 2);
                 // Ensure asteroid is at least 50px away from the ship's radius
                 if (dist < ship.r + size + 50) {
@@ -184,7 +207,20 @@ const game = {
 
             // Ship collisions
             if (checkCollision(this.entities.ship, a)) {
-                this.handlePlayerHit(a);
+                if (this.entities.ship.invulnerable > 0) {
+                    a.hit();
+                    if (a.type === 'large') {
+                        this.spawnAsteroid('medium', a.x, a.y);
+                        this.spawnAsteroid('medium', a.x, a.y);
+                    } else if (a.type === 'medium') {
+                        this.spawnAsteroid('small', a.x, a.y);
+                        this.spawnAsteroid('small', a.x, a.y);
+                    }
+                    createExplosion(a.x, a.y, a.type);
+                    SoundManager.playExplosion();
+                } else {
+                    this.handlePlayerHit(a);
+                }
             }
 
             return !a.dead;
@@ -269,18 +305,19 @@ const game = {
             document.getElementById('score').textContent = `Score: ${this.score}`;
             document.getElementById('lives').textContent = `Lives: ${this.lives}`;
         }
-
-        requestAnimationFrame(() => this.loop());
     },
 
     loop(timestamp) {
-        const dt = (timestamp - this.lastTime) / 1000;
+        if (!this.lastTime) this.lastTime = timestamp;
+        const dt = Math.min(0.1, (timestamp - this.lastTime) / 1000);
         this.lastTime = timestamp;
 
         if (this.state === 'PLAYING') {
             this.update(dt);
         }
         this.draw();
+
+        window.requestAnimationFrame((t) => this.loop(t));
     }
 };
 
@@ -323,7 +360,7 @@ class Ship {
         if (this.invulnerable > 0) this.invulnerable--;
 
         if (keys['Space']) {
-            if (!game.entities.bullets.some(b => b.active && b.owner === this)) {
+            if (!game.entities.bullets.some(b => b.active && b.owner === 'ship')) {
                 game.entities.bullets.push(new Bullet(this.x, this.y, this.angle));
                 SoundManager.playShoot();
             }

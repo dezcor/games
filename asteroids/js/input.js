@@ -75,7 +75,17 @@ setupTouchButton('[data-action="shoot"]',
     () => { keys['Space'] = false; }
 );
 
+setupTouchButton('[data-action="pause"]',
+    () => { if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED')) game.togglePause(); },
+    () => {}
+);
+
+setupTouchButton('[data-action="restart"]',
+    () => { if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED' || game.state === 'GAME_OVER')) game.resetGame(); },
+    () => {}
+);
+
 /**
- * Note: For Asteroids, we mostly rely on the 'keys' object 
+ * Note: For Asteroids, we mostly rely on the 'keys' object
  * within the main game loop.
  */

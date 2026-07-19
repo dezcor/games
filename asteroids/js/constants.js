@@ -7,7 +7,7 @@ const GAME_CONFIG = {
     fps: 60,
     
     // Physics
-    rotationSpeed: 0.1,        // Radians per frame
+    rotationSpeed: 4,           // Radians per second
     acceleration: 0.002,       // Thrust power
     friction: 0.98,            // Speed retention
     bulletSpeed: 5,             // Velocity
