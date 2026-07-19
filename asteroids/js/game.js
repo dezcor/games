@@ -404,7 +404,7 @@ const game = {
         document.getElementById('pause-overlay').style.display = 'flex';
         document.getElementById('game-over-stats').style.display = 'flex';
         document.getElementById('final-score').textContent = `Score: ${this.score}`;
-        document.getElementById('quick-restart-btn').style.display = 'block';
+        document.getElementById('quick-restart-btn').style.display = 'flex';
 
         // Render scores with medals
         const table = document.getElementById('high-scores-list');
@@ -480,10 +480,10 @@ class Ship {
     }
 
     update(dt, keys, config) {
-        this.thrusting = keys['ArrowUp'];
+        this.thrusting = isKeyActive('ArrowUp');
 
-        if (keys['ArrowLeft']) this.rotation = -config.rotationSpeed;
-        else if (keys['ArrowRight']) this.rotation = config.rotationSpeed;
+        if (isKeyActive('ArrowLeft')) this.rotation = -config.rotationSpeed;
+        else if (isKeyActive('ArrowRight')) this.rotation = config.rotationSpeed;
         else this.rotation = 0;
 
         this.angle += this.rotation * dt;
@@ -501,12 +501,11 @@ class Ship {
 
         if (this.invulnerable > 0) this.invulnerable--;
 
-        if (keys['Space']) {
+        if (isKeyActive('Space')) {
             if (!game.entities.bullets.some(b => b.active && b.owner === 'ship')) {
                 game.entities.bullets.push(new Bullet(this.x, this.y, this.angle, config));
                 SoundManager.playShoot();
             }
-            keys['Space'] = false; // Simple fire-on-press
         }
     }
 
