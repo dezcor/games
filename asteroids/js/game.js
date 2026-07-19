@@ -116,8 +116,31 @@ const game = {
 
     spawnAsteroid(type) {
         const size = type === 'large' ? 40 : (type === 'medium' ? 20 : 10);
-        const asteroid = new Asteroid(size);
-        this.entities.asteroids.push(asteroid);
+        let asteroid = null;
+        let safeSpawn = false;
+        let attempts = 0;
+
+        while (!safeSpawn && attempts < 10) {
+            const x = Math.random() * game.width;
+            const y = Math.random() * game.height;
+
+            const ship = this.entities.ship;
+            if (ship) {
+                const dist = Math.sqrt((x - ship.x) ** 2 + (y - ship.y) ** 2);
+                // Ensure asteroid is at least 50px away from the ship's radius
+                if (dist < ship.r + size + 50) {
+                    attempts++;
+                    continue;
+                }
+            }
+
+            asteroid = new Asteroid(size, x, y, type);
+            safeSpawn = true;
+        }
+
+        if (asteroid) {
+            this.entities.asteroids.push(asteroid);
+        }
     },
 
     update(dt) {
@@ -147,11 +170,11 @@ const game = {
 
                     // Break asteroid
                     if (a.type === 'large') {
-                        this.spawnAsteroid('medium');
-                        this.spawnAsteroid('medium');
+                        this.spawnAsteroid('medium', a.x, a.y);
+                        this.spawnAsteroid('medium', a.x, a.y);
                     } else if (a.type === 'medium') {
-                        this.spawnAsteroid('small');
-                        this.spawnAsteroid('small');
+                        this.spawnAsteroid('small', a.x, a.y);
+                        this.spawnAsteroid('small', a.x, a.y);
                     }
 
                     createExplosion(a.x, a.y, a.type);
@@ -280,11 +303,11 @@ class Ship {
     update(dt, keys) {
         this.thrusting = keys['ArrowUp'];
 
-        if (keys['ArrowLeft']) this.rotation = -0.1;
-        else if (keys['ArrowRight']) this.rotation = 0.1;
+        if (keys['ArrowLeft']) this.rotation = -GAME_CONFIG.rotationSpeed;
+        else if (keys['ArrowRight']) this.rotation = GAME_CONFIG.rotationSpeed;
         else this.rotation = 0;
 
-        this.angle += this.rotation;
+        this.angle += this.rotation * dt;
 
         if (this.thrusting) {
             this.vx += Math.cos(this.angle) * GAME_CONFIG.acceleration;
@@ -412,6 +435,7 @@ class Bullet {
         this.vy = Math.sin(angle) * GAME_CONFIG.bulletSpeed;
         this.life = 60;
         this.offscreen = false;
+        this.active = true;
         this.owner = 'ship';
     }
 
@@ -421,6 +445,7 @@ class Bullet {
         this.life--;
         if (this.life <= 0 || this.x < 0 || this.x > game.width || this.y < 0 || this.y > game.height) {
             this.offscreen = true;
+            this.active = false;
         }
     }
 

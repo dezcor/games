@@ -3,10 +3,10 @@
 Implementación del clásico juego de asteroides para el **Games Hub**, siguiendo la arquitectura modular y el sistema de diseño existentes (HTML, JS, CSS plano, sin dependencias, Web Audio API).
 
 ## Fase 1: Estructura y Configuración Base
-- [ ] Crear directorio `asteroids/` y archivos base (`index.html`, `constants.js`, `game.js`, `input.js`, `sound.js`, `style.css`).
-- [ ] Definir constantes del juego (tamaño del canvas 800x600, velocidades, tamaños de asteroides).
-- [ ] Configurar animaciones iniciales (`fadeUp`) y overlay de scanlines (`body::after`).
-- [ ] Configurar tipografías y fondo base según el sistema de diseño.
+- [x] Crear directorio `asteroids/` y archivos base (`index.html`, `constants.js`, `game.js`, `input.js`, `sound.js`, `style.css`).
+- [x] Definir constantes del juego (tamaño del canvas 800x600, velocidades, tamaños de asteroides).
+- [x] Configurar animaciones iniciales (`fadeUp`) y overlay de scanlines (`body::after`).
+- [x] Configurar tipografías y fondo base según el sistema de diseño.
 
 ## Fase 2: Mecánicas de Juego (Core Loop)
 - [ ] Implementar la nave del jugador (rotación, aceleración, fricción espacial).
