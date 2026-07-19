@@ -10,10 +10,14 @@ const game = {
     height: GAME_CONFIG.canvasHeight,
 
     state: 'MENU', // MENU, PLAYING, PAUSED, GAME_OVER
+
+    difficulty: 'normal',
+    currentConfig: null,
+
     score: 0,
     lives: GAME_CONFIG.lives,
-    playerName: localStorage.getItem('asteroids_player_name') || 'Player',
-    highScores: JSON.parse(localStorage.getItem('asteroids_highscores') || '[]'),
+    playerName: localStorage.getItem(PLAYER_NAME_STORAGE) || 'Player',
+    highScores: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
 
     entities: {
         ship: null,
@@ -24,16 +28,62 @@ const game = {
 
     lastTime: 0,
 
+    // ── Difficulty Selection ──
+    getSelectedConfig() {
+        const diff = DIFFICULTY_PRESETS[this.difficulty];
+        return {
+            ...diff,
+            ...GAME_CONFIG,
+        };
+    },
+
+    updateConfig() {
+        this.currentConfig = this.getSelectedConfig();
+    },
+
     init() {
         this.canvas = document.getElementById('asteroids-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
+        // Load saved difficulty
+        const savedDiff = localStorage.getItem(DIFFICULTY_STORAGE);
+        if (savedDiff && DIFFICULTY_PRESETS[savedDiff]) {
+            this.difficulty = savedDiff;
+        }
+
+        this.updateConfig();
+
         this.setupInput();
         this.setupUI();
 
         window.requestAnimationFrame((t) => this.loop(t));
+    },
+
+    /**
+     * Select difficulty and start game
+     */
+    setDifficulty(difficulty) {
+        this.difficulty = difficulty;
+        localStorage.setItem(DIFFICULTY_STORAGE, difficulty);
+        this.updateConfig();
+
+        // Update difficulty button visual state
+        Object.entries(DIFFICULTY_PRESETS).forEach(([key, preset]) => {
+            const btn = document.querySelector(`[data-diff="${key}"]`);
+            if (btn) {
+                if (key === difficulty) {
+                    btn.classList.add('active');
+                    btn.style.borderColor = preset.color;
+                    btn.style.color = preset.color;
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    btn.style.color = '#c4b5d4';
+                }
+            }
+        });
     },
 
     setupInput() {
@@ -68,67 +118,74 @@ const game = {
             highScoreValue.textContent = this.highScores[0].score;
         }
 
+        // Start buttons
         if (startBtn) startBtn.addEventListener('click', () => this.startGame());
         if (mainStartBtn) mainStartBtn.addEventListener('click', () => this.startGame());
         if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
         if (quickBtn) quickBtn.addEventListener('click', () => this.resetGame());
 
-   // Name Input
-    const nameInput = document.getElementById('player-name');
-    if (nameInput) {
-        nameInput.addEventListener('change', (e) => {
-            this.playerName = e.target.value.trim() || 'Player';
-            localStorage.setItem('asteroids_player_name', this.playerName);
-        });
-    }
+        // Name Input
+        const nameInput = document.getElementById('player-name');
+        if (nameInput) {
+            nameInput.addEventListener('change', (e) => {
+                this.playerName = e.target.value.trim() || 'Player';
+                localStorage.setItem(PLAYER_NAME_STORAGE, this.playerName);
+            });
+        }
 
-    // Display player name
-    this.displayPlayerName();
+        this.displayPlayerName();
 
-    // ── Sound Controls ──
+        // ── Sound Controls ──
 
-    const muteBtn = document.getElementById('mute-btn');
-    const volumeSlider = document.getElementById('volume-slider');
-    const bgmMuteBtn = document.getElementById('bgm-mute-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const volumeSlider = document.getElementById('volume-slider');
+        const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 
-    function updateMuteIcon() {
+        function updateMuteIcon() {
+            if (muteBtn) {
+                muteBtn.textContent = SoundManager.getMuteState() || SoundManager.getVolume() === 0
+                    ? '🔇' : '🔊';
+            }
+        }
+
+       function updateMusicIcon() {
+            if (bgmMuteBtn) {
+                bgmMuteBtn.textContent = MusicPlayer.getMuteState() ? '🔇' : '🎵';
+            }
+        }
+
         if (muteBtn) {
-            muteBtn.textContent = SoundManager.getMuteState() || SoundManager.getVolume() === 0
-                ? '🔇' : '🔊';
+            muteBtn.addEventListener('click', () => {
+                SoundManager.toggleMute();
+                updateMuteIcon();
+            });
         }
-    }
 
-    function updateMusicIcon() {
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                SoundManager.setVolume(parseFloat(e.target.value));
+                updateMuteIcon();
+            });
+        }
+
         if (bgmMuteBtn) {
-            bgmMuteBtn.textContent = MusicPlayer.getBgmMuteState()
-                ? '🔇' : '🎵';
+            bgmMuteBtn.addEventListener('click', () => {
+                MusicPlayer.toggleMute();
+                updateMusicIcon();
+            });
         }
-    }
 
-    if (muteBtn) {
-        muteBtn.addEventListener('click', () => {
-            SoundManager.toggleMute();
-            updateMuteIcon();
+        updateMuteIcon();
+        updateMusicIcon();
+
+        // ── Difficulty Buttons ──
+        Object.entries(DIFFICULTY_PRESETS).forEach(([key, preset]) => {
+            const btn = document.getElementById(`diff-btn-${key}`);
+            if (btn) {
+                btn.addEventListener('click', () => this.setDifficulty(key));
+            }
         });
-    }
-
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', (e) => {
-            SoundManager.setVolume(parseFloat(e.target.value));
-            updateMuteIcon();
-        });
-    }
-
-    if (bgmMuteBtn) {
-        bgmMuteBtn.addEventListener('click', () => {
-            MusicPlayer.toggleMute();
-            updateMusicIcon();
-        });
-    }
-
-    updateMuteIcon();
-    updateMusicIcon();
-},
+    },
 
     /**
      * Display player name in the UI
@@ -145,14 +202,16 @@ const game = {
     },
 
     startGame() {
+        const config = this.currentConfig;
+
         this.state = 'PLAYING';
         this.score = 0;
-        this.lives = GAME_CONFIG.lives;
+        this.lives = config.lives;
         this.entities.asteroids = [];
         this.entities.bullets = [];
         this.entities.particles = [];
 
-        this.entities.ship = new Ship();
+        this.entities.ship = new Ship(config);
 
         // Initial Asteroids
         for (let i = 0; i < 5; i++) {
@@ -166,7 +225,7 @@ const game = {
         document.getElementById('player-name').style.display = 'none';
         this.displayPlayerName();
 
-        SoundManager.startBgm();
+        MusicPlayer.start();
     },
 
     togglePause() {
@@ -197,11 +256,10 @@ const game = {
         this.entities.particles = [];
 
         MusicPlayer.stop();
-        MusicPlayer.resume(); // Restart BGM logic
     },
 
     spawnAsteroid(type, atX = null, atY = null) {
-        const size = type === 'large' ? 40 : (type === 'medium' ? 20 : 10);
+        const size = type === 'large' ? ASTEROID_SIZE : (type === 'medium' ? ASTEROID_SIZE / 2 : ASTEROID_SIZE / 4);
         let asteroid = null;
         let safeSpawn = false;
         let attempts = 0;
@@ -220,7 +278,7 @@ const game = {
                 }
             }
 
-            asteroid = new Asteroid(size, x, y, type);
+            asteroid = new Asteroid(size, x, y, type, this.currentConfig);
             safeSpawn = true;
         }
 
@@ -230,11 +288,13 @@ const game = {
     },
 
     update(dt) {
+        const config = this.currentConfig;
+
         if (this.state !== 'PLAYING') return;
 
         // Update Ship
-        this.entities.ship.update(dt, keys);
-        if (keys['ArrowUp']) SoundManager.playThrust();
+        this.entities.ship.update(dt, keys, config);
+        if (isKeyActive('ArrowUp')) SoundManager.playThrust();
 
         // Update Bullets
         this.entities.bullets = this.entities.bullets.filter(b => {
@@ -311,7 +371,7 @@ const game = {
         if (this.lives <= 0) {
             this.gameOver();
         } else {
-            this.entities.ship = new Ship(); // Respawn
+            this.entities.ship = new Ship(this.currentConfig); // Respawn
         }
 
         // Visual effect
@@ -325,18 +385,18 @@ const game = {
         // Save High Score
         const currentHigh = this.highScores[0]?.score || 0;
         if (this.score > currentHigh) {
-            this.highScores.unshift({ 
-                score: this.score, 
-                name: this.playerName, 
-                date: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) 
+            this.highScores.unshift({
+                score: this.score,
+                name: this.playerName,
+                date: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
             });
             this.highScores = this.highScores.slice(0, 5);
-            localStorage.setItem('asteroids_highscores', JSON.stringify(this.highScores));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.highScores));
 
             // Show High Score Notice
             const notice = document.createElement('div');
             notice.id = 'new-highscore-notice';
-            notice.textContent = 'NEW HIGH SCORE!';
+            notice.textContent = '¡NUEVO RÉCORD!';
             document.body.appendChild(notice);
             setTimeout(() => notice.remove(), 3000);
         }
@@ -350,8 +410,8 @@ const game = {
         const table = document.getElementById('high-scores-list');
         table.innerHTML = this.highScores.map((hs, i) => `
             <tr class="hs-row-${i+1}">
-                <td class="hs-rank">${i+1}</td>
-                <td class="hs-name ${getMedalClass(hs.name, hs.score)}">${hs.name}</td>
+                <td class="hs-rank">${i + 1}</td>
+                <td class="hs-name ${this.getMedalClass(hs.name, hs.score)}">${hs.name}</td>
                 <td class="hs-score">${hs.score}</td>
                 <td class="hs-date">${hs.date}</td>
             </tr>
@@ -368,7 +428,7 @@ const game = {
         }
         if (score >= 50000) return 'hs-gold';
         if (score >= 20000) return 'hs-silver';
-        if (score >= 5000)  return 'hs-bronze';
+        if (score >= 5000) return 'hs-bronze';
         return 'hs-none';
     },
 
@@ -385,6 +445,7 @@ const game = {
         if (this.state === 'PLAYING') {
             document.getElementById('score').textContent = `Score: ${this.score}`;
             document.getElementById('lives').textContent = `Lives: ${this.lives}`;
+            document.getElementById('level').textContent = `Level: ${this.level}`;
         }
     },
 
@@ -402,11 +463,10 @@ const game = {
     }
 };
 
-
-// --- Classes ---
+// ── Classes ──
 
 class Ship {
-    constructor() {
+    constructor(config) {
         this.x = game.width / 2;
         this.y = game.height / 2;
         this.r = 15;
@@ -416,24 +476,25 @@ class Ship {
         this.rotation = 0;
         this.thrusting = false;
         this.invulnerable = 120; // Frames
+        this.config = config;
     }
 
-    update(dt, keys) {
+    update(dt, keys, config) {
         this.thrusting = keys['ArrowUp'];
 
-        if (keys['ArrowLeft']) this.rotation = -GAME_CONFIG.rotationSpeed;
-        else if (keys['ArrowRight']) this.rotation = GAME_CONFIG.rotationSpeed;
+        if (keys['ArrowLeft']) this.rotation = -config.rotationSpeed;
+        else if (keys['ArrowRight']) this.rotation = config.rotationSpeed;
         else this.rotation = 0;
 
         this.angle += this.rotation * dt;
 
         if (this.thrusting) {
-            this.vx += Math.cos(this.angle) * GAME_CONFIG.acceleration;
-            this.vy += Math.sin(this.angle) * GAME_CONFIG.acceleration;
+            this.vx += Math.cos(this.angle) * config.thrust;
+            this.vy += Math.sin(this.angle) * config.thrust;
         }
 
-        this.vx *= GAME_CONFIG.friction;
-        this.vy *= GAME_CONFIG.friction;
+        this.vx *= config.friction;
+        this.vy *= config.friction;
 
         this.x += this.vx;
         this.y += this.vy;
@@ -442,7 +503,7 @@ class Ship {
 
         if (keys['Space']) {
             if (!game.entities.bullets.some(b => b.active && b.owner === 'ship')) {
-                game.entities.bullets.push(new Bullet(this.x, this.y, this.angle));
+                game.entities.bullets.push(new Bullet(this.x, this.y, this.angle, config));
                 SoundManager.playShoot();
             }
             keys['Space'] = false; // Simple fire-on-press
@@ -492,15 +553,14 @@ class Ship {
     }
 }
 
-
 class Asteroid {
-    constructor(radius, x, y, type = 'medium') {
+    constructor(radius, x, y, type = 'medium', config = GAME_CONFIG) {
         this.x = x || (Math.random() * game.width);
         this.y = y || (Math.random() * game.height);
-        this.r = radius || (type === 'large' ? 40 : (type === 'medium' ? 20 : 10));
+        this.r = radius || (type === 'large' ? ASTEROID_SIZE : (type === 'medium' ? ASTEROID_SIZE / 2 : ASTEROID_SIZE / 4));
         this.type = type;
 
-        const speed = GAME_CONFIG.asteroidMinSpeed + Math.random() * (GAME_CONFIG.asteroidMaxSpeed - GAME_CONFIG.asteroidMinSpeed);
+        const speed = config.asteroidMinSpeed + Math.random() * (config.asteroidMaxSpeed - config.asteroidMinSpeed);
         const angle = Math.random() * Math.PI * 2;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
@@ -567,14 +627,13 @@ class Asteroid {
     }
 }
 
-
 class Bullet {
-    constructor(x, y, angle) {
+    constructor(x, y, angle, config) {
         this.x = x;
         this.y = y;
-        this.vx = Math.cos(angle) * GAME_CONFIG.bulletSpeed;
-        this.vy = Math.sin(angle) * GAME_CONFIG.bulletSpeed;
-        this.life = 60;
+        this.vx = Math.cos(angle) * config.bulletSpeed;
+        this.vy = Math.sin(angle) * config.bulletSpeed;
+        this.life = config.bulletLifetime;
         this.offscreen = false;
         this.active = true;
         this.owner = 'ship';
@@ -598,14 +657,12 @@ class Bullet {
     }
 }
 
-
 function createExplosion(x, y, type) {
     const count = type === 'large' ? 16 : (type === 'medium' ? 12 : 8);
     for (let i = 0; i < count; i++) {
         game.entities.particles.push(new Particle(x, y, type));
     }
 }
-
 
 class Particle {
     constructor(x, y, type) {
@@ -637,11 +694,10 @@ class Particle {
     draw(ctx) {
         ctx.globalAlpha = this.life / this.maxLife;
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         ctx.globalAlpha = 1.0;
     }
 }
-
 
 function checkCollision(obj1, obj2) {
     const dx = obj1.x - obj2.x;
@@ -649,7 +705,6 @@ function checkCollision(obj1, obj2) {
     const distance = Math.sqrt(dx * dx + dy * dy);
     return distance < (obj1.r || 2) + (obj2.r || 2);
 }
-
 
 // Init
 window.onload = () => game.init();

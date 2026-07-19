@@ -265,7 +265,7 @@ body::after {
     #high-scores-table h3 {
         font-size: 10px;
     }
-    /* ── High Score Medals ── */
+       /* ── High Score Medals ── */
     .hs-gold { color: #fbbf24; font-weight: bold; }
     .hs-silver { color: #a8a29e; font-weight: bold; }
     .hs-bronze { color: #f59e0b; font-weight: bold; }
@@ -280,6 +280,47 @@ body::after {
     #high-scores-list td.hs-date { color: #64748b; font-size: 10px; }
     #new-highscore-notice {
         font-size: 11px;
+    }
+
+    /* ── Difficulty Selection ── */
+    #difficulty-selection {
+        margin-bottom: 8px;
+    }
+    
+    .hint {
+        font-size: 10px;
+        color: #888;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .difficulty-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .diff-btn {
+        padding: 6px 14px;
+        font-family: 'Press Start 2P', monospace;
+        font-size: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #c4b5d4;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .diff-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .diff-btn.active {
+        background: rgba(255, 255, 255, 0.12);
+        transform: scale(1.05);
     }
     #board-wrapper {
         max-width: 380px;

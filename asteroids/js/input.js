@@ -1,13 +1,14 @@
 /**
  * Input handling for Asteroids
+ * Manages keyboard state and touch controls
  */
+
 const keys = {};
 
-// Listen for Keyboard Events
+// ── Keyboard ──
 window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
-    // Prevent scrolling with arrow keys and space
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space'].includes(e.code)) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
         e.preventDefault();
     }
 });
@@ -16,10 +17,14 @@ window.addEventListener('keyup', (e) => {
     keys[e.code] = false;
 });
 
-/**
- * helper to setup touch buttons with visual feedback
- * matches the pattern in other games
- */
+// ── Touch Controls ──
+let touchLeft = false;
+let touchRight = false;
+let touchThrust = false;
+let touchShoot = false;
+let touchPause = false;
+let touchRestart = false;
+
 function setupTouchButton(selector, onStart, onEnd) {
     const btn = document.querySelector(selector);
     if (!btn) return;
@@ -41,6 +46,7 @@ function setupTouchButton(selector, onStart, onEnd) {
         if (onEnd) onEnd();
     });
 
+    // Mouse fallback
     btn.addEventListener('mousedown', (e) => {
         e.preventDefault();
         btn.classList.add('pressed');
@@ -59,33 +65,40 @@ function setupTouchButton(selector, onStart, onEnd) {
     });
 }
 
-// Initialize Touch Buttons
+// Map touch buttons to key states
 setupTouchButton('[data-action="left"]',
-    () => { keys['ArrowLeft'] = true; },
-    () => { keys['ArrowLeft'] = false; }
+    () => { touchLeft = true; },
+    () => { touchLeft = false; }
 );
-
 setupTouchButton('[data-action="right"]',
-    () => { keys['ArrowRight'] = true; },
-    () => { keys['ArrowRight'] = false; }
+    () => { touchRight = true; },
+    () => { touchRight = false; }
 );
-
+setupTouchButton('[data-action="thrust"]',
+    () => { touchThrust = true; },
+    () => { touchThrust = false; }
+);
 setupTouchButton('[data-action="shoot"]',
-    () => { keys['Space'] = true; },
-    () => { keys['Space'] = false; }
+    () => { touchShoot = true; },
+    () => { touchShoot = false; }
 );
-
 setupTouchButton('[data-action="pause"]',
-    () => { if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED')) game.togglePause(); },
-    () => {}
+    () => { touchPause = true; },
+    () => { touchPause = false; }
 );
-
 setupTouchButton('[data-action="restart"]',
-    () => { if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED' || game.state === 'GAME_OVER')) game.resetGame(); },
-    () => {}
+    () => { touchRestart = true; },
+    () => { touchRestart = false; }
 );
 
-/**
- * Note: For Asteroids, we mostly rely on the 'keys' object
- * within the main game loop.
- */
+// ── Unified key accessor (combines keyboard + touch) ──
+function isKeyActive(code) {
+    switch (code) {
+        case 'ArrowLeft':   return !!keys['ArrowLeft']   || touchLeft;
+        case 'ArrowRight':  return !!keys['ArrowRight']  || touchRight;
+        case 'ArrowUp':     return !!keys['ArrowUp']     || touchThrust;
+        case 'Space':       return !!keys['Space']       || touchShoot;
+        case 'Escape':      return !!keys['Escape'];
+        default:            return !!keys[code];
+    }
+}

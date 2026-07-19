@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -17,6 +17,7 @@
             <div id="info-row">
                 <div id="score">Score: 0</div>
                 <div id="lives">Lives: 3</div>
+                <div id="level">Level: 1</div>
                 <div id="best-score">Best: <span id="best-score-value">0</span></div>
                 <div id="name-input-container">
                     <input type="text" id="player-name" maxlength="12" placeholder="Name">
@@ -40,6 +41,26 @@
             <div id="level-banner" style="display:none;"></div>
             <div id="pause-overlay">
                 <h1 id="overlay-title">ASTEROIDS</h1>
+
+                <!-- Difficulty Selection -->
+                <div id="difficulty-selection">
+                    <p class="hint">SELECT DIFFICULTY</p>
+                    <div class="difficulty-buttons">
+                        <button id="diff-btn-easy" data-diff="easy" class="diff-btn" style="border-color: #4ade80; color: #4ade80;">
+                            FÁCIL
+                        </button>
+                        <button id="diff-btn-normal" data-diff="normal" class="diff-btn active" style="border-color: #fbbf24; color: #fbbf24;">
+                            NORMAL
+                        </button>
+                        <button id="diff-btn-hard" data-diff="hard" class="diff-btn" style="border-color: #f87171; color: #f87171;">
+                            DIFÍCIL
+                        </button>
+                        <button id="diff-btn-insane" data-diff="insane" class="diff-btn" style="border-color: #d946ef; color: #d946ef;">
+                            LOCO
+                        </button>
+                    </div>
+                </div>
+
                 <div id="game-over-stats" style="display:none;">
                     <div id="final-score">Score: 0</div>
                     <div id="final-level">Level: 1</div>
