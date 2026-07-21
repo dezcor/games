@@ -169,6 +169,13 @@
             --card-shadow: rgba(34, 211, 238, 0.12);
         }
 
+        /* Asteroids card accent */
+        .game-card.asteroids {
+            --card-glow: linear-gradient(135deg, #f472b6, #fbbf24, #a855f7);
+            --card-shadow: rgba(244, 114, 182, 0.12);
+        }
+
+
         /* ── Icon ── */
         .game-icon {
             font-size: 56px;
@@ -256,6 +263,15 @@
         }
         .game-card.arkanoid .play-btn:hover {
             box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4), 0 6px 24px rgba(129, 140, 248, 0.2);
+        }
+
+        /* Asteroids play button */
+        .game-card.asteroids .play-btn {
+            background: linear-gradient(135deg, #f472b6, #fbbf24, #a855f7);
+            box-shadow: 0 4px 16px rgba(244, 114, 182, 0.25);
+        }
+        .game-card.asteroids .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(244, 114, 182, 0.4);
         }
 
         /* ── Footer ── */
@@ -355,6 +371,12 @@
                 <div class="game-icon">🕹️</div>
                 <div class="game-title">Arkanoid</div>
                 <div class="game-desc">Break bricks, catch power-ups, conquer 3 levels.</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+            <a class="game-card asteroids" href="asteroids/index.html">
+                <div class="game-icon">☄️</div>
+                <div class="game-title">Asteroids</div>
+                <div class="game-desc">Destroy asteroids, survive the void.</div>
                 <span class="play-btn">PLAY</span>
             </a>
         </div>
