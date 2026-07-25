@@ -1,5 +1,9 @@
 # Space Invaders - Backlog
 
+## Estado actual
+
+La fase 2 de `PLAN.md` está completada. Además de las funciones históricas de este backlog, el juego cuenta con metadatos centralizados para aliens, scoring por tipo, combos, bonus de supervivencia, proyectiles limitados, colisión entre balas, UFO escalado por nivel, partículas con límite y controles táctiles sin estados atascados.
+
 ## 🎯 Prioridad ALTA (Core Gameplay)
 
 ### 1. Aliens que disparan hacia el jugador

@@ -40,8 +40,10 @@ Breakout/Arkanoid con 3 niveles, power-ups y bricks especiales.
 Shooter retro con aliens que disparan, UFO bonus, niveles de dificultad y pantalla de game over enriquecida.
 
 - 3 tipos de aliens con diferentes formas y puntuaciones
+- Scoring por tipo, combos de bajas y bonus por completar niveles con vidas restantes
 - Aliens que disparan con sonido variado por tipo
 - Naves UFO bonus (50-300 pts) que cruzan la pantalla
+- Las balas del jugador pueden destruir proyectiles alienígenas
 - 4 niveles de dificultad (Easy/Normal/Hard/Insane) con persistencia
 - Volumen SFX y BGM persistentes
 - Niveles progresivos con bonificación por completar

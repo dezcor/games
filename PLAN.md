@@ -4,16 +4,16 @@
 
 - `BACKLOG.md` de Asteroids tiene 9 tareas abiertas. Power-ups, OVNI, hiperespacio, personalización y tutorial no existen; partículas, BGM dinámico, logros y móvil están parcialmente implementados.
 - Los errores P0 de Asteroids descritos anteriormente fueron corregidos en la Fase 1: configuración, nivel, controles táctiles, Top 5, colisiones, progresión y audio.
-- `space-invaders-backlog.md` declara 100%, pero todavía requiere centralizar metadatos, scoring avanzado, combos, UFO, animaciones y UX; la Fase 1 corrigió únicamente los contratos P0, bonus, dificultad, tiempo y audio.
+- `space-invaders-backlog.md` declara 100%; la Fase 2 también dejó verificados los metadatos, scoring avanzado, combos, UFO, animaciones y UX móvil.
 - Tetris figura completo, pero no implementa combos/Tetris reales (`tetris/js/game.js:223-255`) y el alias documentado `JSnof` no coincide con el código.
 - Todos los JS pasan `node --check`; no hay tests automáticos ni CI.
 
 ## Estado actual
 
 - Fase 1: **completada**. Asteroids y Space Invaders tienen los cambios P0 implementados y verificados con pruebas de navegador.
-- Fase 2: **en progreso**. La persistencia y separación de volumen SFX/BGM de Space Invaders ya está corregida; el resto sigue pendiente.
+- Fase 2: **completada**. Space Invaders tiene metadatos centralizados, scoring por tipo, combos, disparos limitados, colisión entre proyectiles, UFO escalado, efectos con límite y controles móviles robustos.
 - Fases 3, 4 y 5: **pendientes**.
-- Verificación completada: `node --check`, `git diff --check`, carga sin errores de consola, pausa/reinicio/touch, localStorage corrupto, dificultad, bonus único y equivalencia temporal a 60/120 Hz en Asteroids y Space Invaders.
+- Verificación completada: `node --check`, `git diff --check`, carga sin errores de consola, pausa/reinicio/touch, localStorage corrupto, dificultad, bonus único, scoring por tipo, combos, game over con partículas, UFO único y equivalencia temporal a 60/120 Hz en Asteroids y Space Invaders.
 - Verificación pendiente: matriz completa de los cinco juegos, portrait, reduced motion, foco, accesibilidad y QA final de release.
 
 ## Plan de ejecución
@@ -30,16 +30,16 @@ Estimación: 1-2 días.
 - [x] Reparar controles táctiles, pausa/reinicio y audio muteable.
 - [x] En Space Invaders, eliminar el bonus de nivel duplicado y validar la dificultad almacenada.
 
-### 2. Cerrar Space Invaders [EN PROGRESO]
+### 2. Cerrar Space Invaders [COMPLETADA]
 
 Estimación: 2-3 días.
 
-- Centralizar metadatos de los tres tipos de alien: forma, tamaño, puntos, velocidad y probabilidad de disparo.
-- Corregir el orden de tipos y puntuación.
-- Implementar combos y bonus de supervivencia con reglas explícitas.
-- Mejorar disparos alienígenas y decidir si las balas pueden destruirse entre sí.
-- Fijar el scheduler del UFO, escalarlo por nivel y conectar `playUFO()`.
-- Mejorar explosiones, game over, animaciones y controles móviles.
+- [x] Centralizar metadatos de los tres tipos de alien: forma, tamaño, puntos, velocidad y probabilidad de disparo.
+- [x] Corregir el orden de tipos y puntuación.
+- [x] Implementar combos y bonus de supervivencia con reglas explícitas.
+- [x] Mejorar disparos alienígenas y permitir que las balas del jugador destruyan proyectiles enemigos.
+- [x] Fijar el scheduler del UFO, escalarlo por nivel y conectar `playUFO()`.
+- [x] Mejorar explosiones, game over, animaciones y controles móviles.
 - [x] Separar y persistir correctamente volumen SFX y BGM.
 
 ### 3. Gameplay avanzado de Asteroids [PENDIENTE]
