@@ -3,6 +3,51 @@
  */
 
 // --- State Management ---
+function readStorage(key, fallback = null) {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function writeStorage(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
+function sanitizePlayerName(value) {
+    if (typeof value !== 'string') return 'Player';
+    const name = value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);
+    return name || 'Player';
+}
+
+function normalizeHighScores(value) {
+    if (!Array.isArray(value)) return [];
+
+    return value
+        .filter((entry) => entry && Number.isFinite(Number(entry.score)))
+        .map((entry) => ({
+            score: Math.max(0, Math.floor(Number(entry.score))),
+            name: sanitizePlayerName(entry.name),
+            date: typeof entry.date === 'string' ? entry.date.slice(0, 40) : '',
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+}
+
+function loadHighScores() {
+    try {
+        return normalizeHighScores(JSON.parse(readStorage(STORAGE_KEY, '[]')));
+    } catch (error) {
+        return [];
+    }
+}
+
 const game = {
     canvas: null,
     ctx: null,
@@ -16,8 +61,9 @@ const game = {
 
     score: 0,
     lives: GAME_CONFIG.lives,
-    playerName: localStorage.getItem(PLAYER_NAME_STORAGE) || 'Player',
-    highScores: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
+    level: 1,
+    playerName: sanitizePlayerName(readStorage(PLAYER_NAME_STORAGE, 'Player')),
+    highScores: loadHighScores(),
 
     entities: {
         ship: null,
@@ -30,10 +76,10 @@ const game = {
 
     // ── Difficulty Selection ──
     getSelectedConfig() {
-        const diff = DIFFICULTY_PRESETS[this.difficulty];
+        const diff = DIFFICULTY_PRESETS[this.difficulty] || DIFFICULTY_PRESETS.normal;
         return {
-            ...diff,
             ...GAME_CONFIG,
+            ...diff,
         };
     },
 
@@ -48,7 +94,7 @@ const game = {
         this.canvas.height = this.height;
 
         // Load saved difficulty
-        const savedDiff = localStorage.getItem(DIFFICULTY_STORAGE);
+        const savedDiff = readStorage(DIFFICULTY_STORAGE);
         if (savedDiff && DIFFICULTY_PRESETS[savedDiff]) {
             this.difficulty = savedDiff;
         }
@@ -65,24 +111,23 @@ const game = {
      * Select difficulty and start game
      */
     setDifficulty(difficulty) {
-        this.difficulty = difficulty;
-        localStorage.setItem(DIFFICULTY_STORAGE, difficulty);
-        this.updateConfig();
+        if (!DIFFICULTY_PRESETS[difficulty] || ['PLAYING', 'PAUSED'].includes(this.state)) return;
 
-        // Update difficulty button visual state
+        this.difficulty = difficulty;
+        writeStorage(DIFFICULTY_STORAGE, difficulty);
+        this.updateConfig();
+        this.updateDifficultyButtons();
+    },
+
+    updateDifficultyButtons() {
         Object.entries(DIFFICULTY_PRESETS).forEach(([key, preset]) => {
             const btn = document.querySelector(`[data-diff="${key}"]`);
-            if (btn) {
-                if (key === difficulty) {
-                    btn.classList.add('active');
-                    btn.style.borderColor = preset.color;
-                    btn.style.color = preset.color;
-                } else {
-                    btn.classList.remove('active');
-                    btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    btn.style.color = '#c4b5d4';
-                }
-            }
+            if (!btn) return;
+
+            const selected = key === this.difficulty;
+            btn.classList.toggle('active', selected);
+            btn.style.borderColor = selected ? preset.color : 'rgba(255, 255, 255, 0.1)';
+            btn.style.color = selected ? preset.color : '#c4b5d4';
         });
     },
 
@@ -114,7 +159,7 @@ const game = {
         const highScoreValue = document.getElementById('best-score-value');
 
         // Load initial high score
-        if (this.highScores.length > 0) {
+        if (highScoreValue && this.highScores.length > 0) {
             highScoreValue.textContent = this.highScores[0].score;
         }
 
@@ -127,9 +172,12 @@ const game = {
         // Name Input
         const nameInput = document.getElementById('player-name');
         if (nameInput) {
+            nameInput.value = this.playerName;
             nameInput.addEventListener('change', (e) => {
-                this.playerName = e.target.value.trim() || 'Player';
-                localStorage.setItem(PLAYER_NAME_STORAGE, this.playerName);
+                this.playerName = sanitizePlayerName(e.target.value);
+                e.target.value = this.playerName;
+                writeStorage(PLAYER_NAME_STORAGE, this.playerName);
+                this.displayPlayerName();
             });
         }
 
@@ -162,6 +210,7 @@ const game = {
         }
 
         if (volumeSlider) {
+            volumeSlider.value = String(SoundManager.getVolume());
             volumeSlider.addEventListener('input', (e) => {
                 SoundManager.setVolume(parseFloat(e.target.value));
                 updateMuteIcon();
@@ -185,6 +234,7 @@ const game = {
                 btn.addEventListener('click', () => this.setDifficulty(key));
             }
         });
+        this.updateDifficultyButtons();
     },
 
     /**
@@ -201,52 +251,78 @@ const game = {
         }
     },
 
+    updateOverlay() {
+        const overlay = document.getElementById('pause-overlay');
+        const title = document.getElementById('overlay-title');
+        const startBtn = document.getElementById('start-btn');
+        const mainStartBtn = document.getElementById('main-start-btn');
+        const quickRestartBtn = document.getElementById('quick-restart-btn');
+        const stats = document.getElementById('game-over-stats');
+        const scores = document.getElementById('high-scores-table');
+        const nameInput = document.getElementById('player-name');
+        const difficulty = document.getElementById('difficulty-selection');
+
+        const isMenu = this.state === 'MENU';
+        const isPaused = this.state === 'PAUSED';
+        const isGameOver = this.state === 'GAME_OVER';
+
+        if (overlay) overlay.style.display = this.state === 'PLAYING' ? 'none' : 'flex';
+        if (title) title.textContent = isGameOver ? 'GAME OVER' : isPaused ? 'PAUSED' : 'ASTEROIDS';
+        if (startBtn) startBtn.style.display = isMenu ? 'block' : 'none';
+        if (mainStartBtn) mainStartBtn.style.display = isMenu ? 'block' : 'none';
+        if (quickRestartBtn) quickRestartBtn.style.display = isGameOver ? 'flex' : 'none';
+        if (stats) stats.style.display = isGameOver ? 'flex' : 'none';
+        if (scores) scores.style.display = isGameOver && this.highScores.length ? 'block' : 'none';
+        if (nameInput) nameInput.style.display = isMenu ? 'block' : 'none';
+        if (difficulty) difficulty.style.display = isMenu ? 'block' : 'none';
+    },
+
     startGame() {
         const config = this.currentConfig;
 
         this.state = 'PLAYING';
         this.score = 0;
         this.lives = config.lives;
+        this.level = 1;
         this.entities.asteroids = [];
         this.entities.bullets = [];
         this.entities.particles = [];
 
         this.entities.ship = new Ship(config);
-
-        // Initial Asteroids
-        for (let i = 0; i < 5; i++) {
-            this.spawnAsteroid('large');
-        }
-
-        document.getElementById('pause-overlay').style.display = 'none';
-        document.getElementById('start-btn').style.display = 'none';
-        const mainStartBtn = document.getElementById('main-start-btn');
-        if (mainStartBtn) mainStartBtn.style.display = 'none';
-        document.getElementById('player-name').style.display = 'none';
+        this.spawnWave();
+        this.lastTime = performance.now();
+        this.updateHud();
+        this.updateOverlay();
         this.displayPlayerName();
 
         MusicPlayer.start();
     },
 
+    spawnWave() {
+        const count = ASTEROID_INITIAL_COUNT + (this.level - 1) * EXTRA_ASTEROID_PER_LEVEL;
+        for (let i = 0; i < count; i++) {
+            this.spawnAsteroid('large');
+        }
+    },
+
     togglePause() {
         if (this.state === 'PLAYING') {
             this.state = 'PAUSED';
-            document.getElementById('pause-overlay').style.display = 'flex';
+            this.updateOverlay();
             MusicPlayer.pause();
         } else if (this.state === 'PAUSED') {
             this.state = 'PLAYING';
-            document.getElementById('pause-overlay').style.display = 'none';
+            this.lastTime = performance.now();
+            this.updateOverlay();
             MusicPlayer.resume();
         }
     },
 
     resetGame() {
         this.state = 'MENU';
-        document.getElementById('start-btn').style.display = 'block';
-        const mainStartBtn = document.getElementById('main-start-btn');
-        if (mainStartBtn) mainStartBtn.style.display = 'block';
-        document.getElementById('player-name').style.display = 'block';
-        document.getElementById('quick-restart-btn').style.display = 'none';
+        this.score = 0;
+        this.lives = this.currentConfig?.lives || GAME_CONFIG.lives;
+        this.level = 1;
         this.displayPlayerName();
 
         // Clear everything
@@ -256,9 +332,11 @@ const game = {
         this.entities.particles = [];
 
         MusicPlayer.stop();
+        this.updateHud();
+        this.updateOverlay();
     },
 
-    spawnAsteroid(type, atX = null, atY = null) {
+    spawnAsteroid(type, atX = null, atY = null, target = this.entities.asteroids) {
         const size = type === 'large' ? ASTEROID_SIZE : (type === 'medium' ? ASTEROID_SIZE / 2 : ASTEROID_SIZE / 4);
         let asteroid = null;
         let safeSpawn = false;
@@ -283,8 +361,36 @@ const game = {
         }
 
         if (asteroid) {
-            this.entities.asteroids.push(asteroid);
+            target.push(asteroid);
         }
+    },
+
+    splitAsteroid(asteroid, target) {
+        const childType = asteroid.type === 'large' ? 'medium' : asteroid.type === 'medium' ? 'small' : null;
+        if (!childType) return;
+
+        this.spawnAsteroid(childType, asteroid.x, asteroid.y, target);
+        this.spawnAsteroid(childType, asteroid.x, asteroid.y, target);
+    },
+
+    updateHud() {
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const levelEl = document.getElementById('level');
+        const bestEl = document.getElementById('best-score-value');
+
+        if (scoreEl) scoreEl.textContent = `Score: ${this.score}`;
+        if (livesEl) livesEl.textContent = `Lives: ${this.lives}`;
+        if (levelEl) levelEl.textContent = `Level: ${this.level}`;
+        if (bestEl) bestEl.textContent = this.highScores[0]?.score || 0;
+    },
+
+    destroyAsteroid(asteroid, target, awardScore = true) {
+        asteroid.hit();
+        if (awardScore) this.score += SCORE_TABLE[asteroid.type] || 0;
+        this.splitAsteroid(asteroid, target);
+        createExplosion(asteroid.x, asteroid.y, asteroid.type);
+        SoundManager.playExplosion();
     },
 
     update(dt) {
@@ -297,64 +403,53 @@ const game = {
         if (isKeyActive('ArrowUp')) SoundManager.playThrust();
 
         // Update Bullets
-        this.entities.bullets = this.entities.bullets.filter(b => {
-            b.update(dt);
-            return !b.offscreen;
-        });
+        this.entities.bullets.forEach((bullet) => bullet.update(dt));
+        this.entities.bullets = this.entities.bullets.filter((bullet) => !bullet.offscreen);
 
-        // Update Asteroids
-        this.entities.asteroids = this.entities.asteroids.filter(a => {
-            a.update(dt);
+        // Resolve asteroid collisions separately so fragments are not lost during filtering.
+        const survivors = [];
+        const spawnedAsteroids = [];
+        this.entities.asteroids.forEach((asteroid) => {
+            if (asteroid.dead) return;
+            asteroid.update(dt);
 
-            // Bullet collisions
-            this.entities.bullets.forEach(b => {
-                if (checkCollision(b, a)) {
-                    a.hit();
-                    b.offscreen = true;
-                    this.score += 10;
-                    document.getElementById('score').textContent = `Score: ${this.score}`;
+            for (const bullet of this.entities.bullets) {
+                if (!bullet.active || bullet.offscreen || asteroid.dead) continue;
+                if (!checkCollision(bullet, asteroid)) continue;
 
-                    // Break asteroid
-                    if (a.type === 'large') {
-                        this.spawnAsteroid('medium', a.x, a.y);
-                        this.spawnAsteroid('medium', a.x, a.y);
-                    } else if (a.type === 'medium') {
-                        this.spawnAsteroid('small', a.x, a.y);
-                        this.spawnAsteroid('small', a.x, a.y);
-                    }
-
-                    createExplosion(a.x, a.y, a.type);
-                    SoundManager.playExplosion();
-                }
-            });
-
-            // Ship collisions
-            if (checkCollision(this.entities.ship, a)) {
-                if (this.entities.ship.invulnerable > 0) {
-                    a.hit();
-                    if (a.type === 'large') {
-                        this.spawnAsteroid('medium', a.x, a.y);
-                        this.spawnAsteroid('medium', a.x, a.y);
-                    } else if (a.type === 'medium') {
-                        this.spawnAsteroid('small', a.x, a.y);
-                        this.spawnAsteroid('small', a.x, a.y);
-                    }
-                    createExplosion(a.x, a.y, a.type);
-                    SoundManager.playExplosion();
-                } else {
-                    this.handlePlayerHit(a);
-                }
+                bullet.offscreen = true;
+                bullet.active = false;
+                this.destroyAsteroid(asteroid, spawnedAsteroids);
             }
 
-            return !a.dead;
+            if (!asteroid.dead && checkCollision(this.entities.ship, asteroid)) {
+                if (this.entities.ship.invulnerable <= 0) {
+                    this.handlePlayerHit(asteroid);
+                }
+                this.destroyAsteroid(asteroid, spawnedAsteroids, false);
+            }
+
+            if (!asteroid.dead) survivors.push(asteroid);
         });
+
+        this.entities.asteroids = survivors.concat(spawnedAsteroids);
+        this.entities.bullets = this.entities.bullets.filter((bullet) => !bullet.offscreen);
 
         // Ship wrap
         this.entities.ship.wrap(this.width, this.height);
 
-        // Spawn new asteroids if empty
-        if (this.entities.asteroids.length < 3) {
-            this.spawnAsteroid('large');
+        // A wave advances only after every asteroid and fragment is gone.
+        if (this.entities.asteroids.length === 0) {
+            this.level += 1;
+            this.spawnWave();
+            this.updateHud();
+            const banner = document.getElementById('level-banner');
+            if (banner) {
+                banner.textContent = `LEVEL ${this.level}`;
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 1800);
+            }
+            SoundManager.playLevelUp();
         }
 
         // Update particles
@@ -362,10 +457,12 @@ const game = {
             p.update(dt);
             return p.life > 0;
         });
+
+        this.updateHud();
     },
 
     handlePlayerHit(asteroid) {
-        SoundManager.playExplosion();
+        SoundManager.playPlayerHit();
         this.lives--;
 
         if (this.lives <= 0) {
@@ -375,54 +472,84 @@ const game = {
         }
 
         // Visual effect
-        document.getElementById('lives').textContent = `Lives: ${this.lives}`;
+        this.updateHud();
     },
 
     gameOver() {
         this.state = 'GAME_OVER';
         SoundManager.playGameOver();
 
-        // Save High Score
-        const currentHigh = this.highScores[0]?.score || 0;
-        if (this.score > currentHigh) {
-            this.highScores.unshift({
-                score: this.score,
-                name: this.playerName,
-                date: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
-            });
-            this.highScores = this.highScores.slice(0, 5);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.highScores));
+        const previousBest = this.highScores[0]?.score || 0;
+        const qualifies = this.score > 0 && (
+            this.highScores.length < 5 ||
+            this.score >= this.highScores[this.highScores.length - 1].score
+        );
 
-            // Show High Score Notice
-            const notice = document.createElement('div');
-            notice.id = 'new-highscore-notice';
-            notice.textContent = '¡NUEVO RÉCORD!';
-            document.body.appendChild(notice);
-            setTimeout(() => notice.remove(), 3000);
+        if (qualifies) {
+            this.highScores = normalizeHighScores([...this.highScores, {
+                score: this.score,
+                name: sanitizePlayerName(this.playerName),
+                date: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+            }]);
+            writeStorage(STORAGE_KEY, JSON.stringify(this.highScores));
+
+            if (this.score > previousBest) {
+                const existingNotice = document.getElementById('new-highscore-notice');
+                if (existingNotice) existingNotice.remove();
+                const notice = document.createElement('div');
+                notice.id = 'new-highscore-notice';
+                notice.textContent = '¡NUEVO RÉCORD!';
+                document.body.appendChild(notice);
+                setTimeout(() => notice.remove(), 3000);
+                SoundManager.playNewHighScore();
+            }
         }
 
-        document.getElementById('pause-overlay').style.display = 'flex';
-        document.getElementById('game-over-stats').style.display = 'flex';
-        document.getElementById('final-score').textContent = `Score: ${this.score}`;
-        document.getElementById('quick-restart-btn').style.display = 'flex';
+        MusicPlayer.stop();
+        const finalScore = document.getElementById('final-score');
+        const finalLevel = document.getElementById('final-level');
+        if (finalScore) finalScore.textContent = `Score: ${this.score}`;
+        if (finalLevel) finalLevel.textContent = `Level: ${this.level}`;
+        this.renderHighScores();
+        this.updateHud();
+        this.updateOverlay();
+    },
 
-        // Render scores with medals
+    renderHighScores() {
         const table = document.getElementById('high-scores-list');
-        table.innerHTML = this.highScores.map((hs, i) => `
-            <tr class="hs-row-${i+1}">
-                <td class="hs-rank">${i + 1}</td>
-                <td class="hs-name ${this.getMedalClass(hs.name, hs.score)}">${hs.name}</td>
-                <td class="hs-score">${hs.score}</td>
-                <td class="hs-date">${hs.date}</td>
-            </tr>
-        `).join('');
+        if (!table) return;
+
+        table.replaceChildren();
+        this.highScores.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.className = `hs-row-${index + 1}`;
+
+            const rank = document.createElement('td');
+            rank.className = 'hs-rank';
+            rank.textContent = String(index + 1);
+
+            const name = document.createElement('td');
+            name.className = `hs-name ${this.getMedalClass(entry.name, entry.score)}`;
+            name.textContent = entry.name;
+
+            const score = document.createElement('td');
+            score.className = 'hs-score';
+            score.textContent = String(entry.score);
+
+            const date = document.createElement('td');
+            date.className = 'hs-date';
+            date.textContent = entry.date;
+
+            row.append(rank, name, score, date);
+            table.appendChild(row);
+        });
     },
 
     /**
      * Helper: Get medal class based on score and name (easter egg)
      */
     getMedalClass(name, score) {
-        const nameLower = name.toLowerCase().replace(/\s/g, '');
+        const nameLower = sanitizePlayerName(name).toLowerCase().replace(/\s/g, '');
         if (nameLower === 'jsnof' || nameLower === 'jonsnow' || nameLower === 'jon') {
             return 'hs-gold'; // Easter egg
         }
@@ -442,16 +569,12 @@ const game = {
         this.entities.particles.forEach(p => p.draw(this.ctx));
 
         // UI overlay
-        if (this.state === 'PLAYING') {
-            document.getElementById('score').textContent = `Score: ${this.score}`;
-            document.getElementById('lives').textContent = `Lives: ${this.lives}`;
-            document.getElementById('level').textContent = `Level: ${this.level}`;
-        }
+        this.updateHud();
     },
 
     loop(timestamp) {
         if (!this.lastTime) this.lastTime = timestamp;
-        const dt = Math.min(0.1, (timestamp - this.lastTime) / 1000);
+        const dt = Math.min(0.05, (timestamp - this.lastTime) / 1000);
         this.lastTime = timestamp;
 
         if (this.state === 'PLAYING') {
@@ -475,11 +598,13 @@ class Ship {
         this.angle = -Math.PI / 2;
         this.rotation = 0;
         this.thrusting = false;
-        this.invulnerable = 120; // Frames
+        this.invulnerable = config.invulnTime / 1000;
+        this.fireCooldown = 0;
         this.config = config;
     }
 
     update(dt, keys, config) {
+        const frameScale = dt * 60;
         this.thrusting = isKeyActive('ArrowUp');
 
         if (isKeyActive('ArrowLeft')) this.rotation = -config.rotationSpeed;
@@ -489,23 +614,25 @@ class Ship {
         this.angle += this.rotation * dt;
 
         if (this.thrusting) {
-            this.vx += Math.cos(this.angle) * config.thrust;
-            this.vy += Math.sin(this.angle) * config.thrust;
+            this.vx += Math.cos(this.angle) * config.thrust * frameScale;
+            this.vy += Math.sin(this.angle) * config.thrust * frameScale;
         }
 
-        this.vx *= config.friction;
-        this.vy *= config.friction;
+        const friction = Math.pow(config.friction, frameScale);
+        this.vx *= friction;
+        this.vy *= friction;
 
-        this.x += this.vx;
-        this.y += this.vy;
+        this.x += this.vx * frameScale;
+        this.y += this.vy * frameScale;
 
-        if (this.invulnerable > 0) this.invulnerable--;
+        this.invulnerable = Math.max(0, this.invulnerable - dt);
+        this.fireCooldown = Math.max(0, this.fireCooldown - dt);
 
-        if (isKeyActive('Space')) {
-            if (!game.entities.bullets.some(b => b.active && b.owner === 'ship')) {
-                game.entities.bullets.push(new Bullet(this.x, this.y, this.angle, config));
-                SoundManager.playShoot();
-            }
+        const activeBullets = game.entities.bullets.filter((bullet) => bullet.active).length;
+        if (isKeyActive('Space') && this.fireCooldown <= 0 && activeBullets < config.maxBullets) {
+            game.entities.bullets.push(new Bullet(this.x, this.y, this.angle, config));
+            this.fireCooldown = config.fireRate / 1000;
+            SoundManager.playShoot();
         }
     }
 
@@ -517,7 +644,7 @@ class Ship {
     }
 
     draw(ctx) {
-        if (this.invulnerable % 4 > 0) return;
+        if (Math.floor(this.invulnerable * 60) % 4 > 0) return;
 
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -554,8 +681,8 @@ class Ship {
 
 class Asteroid {
     constructor(radius, x, y, type = 'medium', config = GAME_CONFIG) {
-        this.x = x || (Math.random() * game.width);
-        this.y = y || (Math.random() * game.height);
+        this.x = x ?? (Math.random() * game.width);
+        this.y = y ?? (Math.random() * game.height);
         this.r = radius || (type === 'large' ? ASTEROID_SIZE : (type === 'medium' ? ASTEROID_SIZE / 2 : ASTEROID_SIZE / 4));
         this.type = type;
 
@@ -570,9 +697,10 @@ class Asteroid {
     }
 
     update(dt) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.rotation += this.rotSpeed;
+        const frameScale = dt * 60;
+        this.x += this.vx * frameScale;
+        this.y += this.vy * frameScale;
+        this.rotation += this.rotSpeed * frameScale;
 
         if (this.x < -this.r) this.x = game.width + this.r;
         else if (this.x > game.width + this.r) this.x = -this.r;
@@ -632,16 +760,17 @@ class Bullet {
         this.y = y;
         this.vx = Math.cos(angle) * config.bulletSpeed;
         this.vy = Math.sin(angle) * config.bulletSpeed;
-        this.life = config.bulletLifetime;
+        this.life = config.bulletLifetime / 60;
         this.offscreen = false;
         this.active = true;
         this.owner = 'ship';
     }
 
     update(dt) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life--;
+        const frameScale = dt * 60;
+        this.x += this.vx * frameScale;
+        this.y += this.vy * frameScale;
+        this.life -= dt;
         if (this.life <= 0 || this.x < 0 || this.x > game.width || this.y < 0 || this.y > game.height) {
             this.offscreen = true;
             this.active = false;
@@ -669,7 +798,7 @@ class Particle {
         this.y = y;
         this.vx = (Math.random() - 0.5) * 5;
         this.vy = (Math.random() - 0.5) * 5;
-        this.life = 50 + Math.random() * 30;
+        this.life = (50 + Math.random() * 30) / 60;
         this.maxLife = this.life;
 
         if (type === 'large') {
@@ -685,9 +814,10 @@ class Particle {
     }
 
     update(dt) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life--;
+        const frameScale = dt * 60;
+        this.x += this.vx * frameScale;
+        this.y += this.vy * frameScale;
+        this.life -= dt;
     }
 
     draw(ctx) {

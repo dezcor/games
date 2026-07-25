@@ -115,6 +115,8 @@ const STORAGE_KEY = 'asteroid_highscores';
 const PLAYER_NAME_STORAGE = 'asteroid_player_name';
 const AUDIO_VOLUME_STORAGE = 'asteroid_audio_volume';
 const BGM_VOLUME_STORAGE = 'asteroid_bgm_volume';
+const SFX_MUTED_STORAGE = 'asteroid_sfx_muted';
+const BGM_MUTED_STORAGE = 'asteroid_bgm_muted';
 const DIFFICULTY_STORAGE = 'asteroid_difficulty';
 
 // ── Screen Shake ──

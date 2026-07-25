@@ -22,8 +22,6 @@ let touchLeft = false;
 let touchRight = false;
 let touchThrust = false;
 let touchShoot = false;
-let touchPause = false;
-let touchRestart = false;
 
 function setupTouchButton(selector, onStart, onEnd) {
     const btn = document.querySelector(selector);
@@ -83,12 +81,20 @@ setupTouchButton('[data-action="shoot"]',
     () => { touchShoot = false; }
 );
 setupTouchButton('[data-action="pause"]',
-    () => { touchPause = true; },
-    () => { touchPause = false; }
+    () => {
+        if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED')) {
+            game.togglePause();
+        }
+    },
+    () => {}
 );
 setupTouchButton('[data-action="restart"]',
-    () => { touchRestart = true; },
-    () => { touchRestart = false; }
+    () => {
+        if (typeof game !== 'undefined' && ['PLAYING', 'PAUSED', 'GAME_OVER'].includes(game.state)) {
+            game.resetGame();
+        }
+    },
+    () => {}
 );
 
 // ── Unified key accessor (combines keyboard + touch) ──
