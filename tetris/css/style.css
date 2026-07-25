@@ -6,6 +6,14 @@
     touch-action: manipulation;
 }
 
+/* ── Focus Visible ── */
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
 /* ── Base ── */
 body {
     background: #1a1028;
@@ -854,4 +862,40 @@ body.north-theme .touch-btn[data-action="drop"]:active,
 body.north-theme .touch-btn[data-action="drop"].pressed {
     background: rgba(180, 140, 200, 0.25);
     border-color: rgba(180, 140, 200, 0.4);
+}
+
+/* ── Combo Banner ── */
+#combo-banner {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #fbbf24;
+    text-shadow: 0 0 16px rgba(251, 191, 36, 0.6), 0 0 32px rgba(251, 191, 36, 0.3);
+    pointer-events: none;
+    text-align: center;
+    letter-spacing: 1px;
+    opacity: 0;
+    z-index: 5;
+    white-space: nowrap;
+}
+
+#combo-banner.show {
+    animation: comboPop 1.2s ease-out forwards;
+}
+
+@keyframes comboPop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    40%  { transform: translate(-50%, -50%) scale(1); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #combo-banner.show {
+        animation-duration: 0.01ms;
+    }
 }

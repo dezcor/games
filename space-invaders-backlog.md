@@ -1,5 +1,9 @@
 # Space Invaders - Backlog
 
+## Estado actual
+
+Las fases 1, 2 y 4 de `PLAN.md` están completadas. Además de las funciones históricas de este backlog, el juego cuenta con metadatos centralizados para aliens, scoring por tipo, combos, bonus de supervivencia, proyectiles limitados, colisión entre balas, UFO escalado por nivel, partículas con límite, controles táctiles sin estados atascados, persistencia de audio (SFX + BGM, volumen + mute), y ARIA + focus-visible.
+
 ## 🎯 Prioridad ALTA (Core Gameplay)
 
 ### 1. Aliens que disparan hacia el jugador
@@ -227,12 +231,27 @@
 
 ## 📋 Historial de implementaciones previas
 
+### ✅ Implementado (Fase 4 de PLAN.md)
+- ARIA labels en canvas/botones/score
+- Focus-visible global (`outline: 2px solid #fbbf24`)
+- `aria-pressed` en toggles de mute/pause
+- `aria-live="polite"` en score
+
 ### ✅ Implementado (PR #14 - Sprint 2)
 - **feat: space invaders sprint 2 - alien shots, UFOs, difficulty options**
 - Aliens que disparan (con sonido, configurable por dificultad)
 - Naves UFO intermedias (score variable 50-300)
 - Opciones de dificultad (Easy/Normal/Hard/Insane) con persistencia
 - Fix: botón restart touch ahora funciona
+
+### ✅ Implementado (Fase 2 de PLAN.md)
+- Metadatos centralizados para aliens
+- Scoring por tipo, combos, bonus de supervivencia
+- Proyectiles limitados, colisión entre balas
+- UFO escalado por nivel
+- Partículas con límite
+- Controles táctiles sin estados atascados
+- Persistencia de audio (SFX + BGM, volumen + mute)
 
 ### ✅ Implementado (comit: 38f6f35)
 - **feat: align Arkanoid & Space Invaders with existing game design system**

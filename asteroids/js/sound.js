@@ -4,21 +4,68 @@
  */
 
 let audioCtx = null;
-let masterGain = null;
+let sfxGain = null;
+let bgmGain = null;
 let sfxVolume = 0.7;
 let bgmVolume = 0.1;
 let sfxMuted = false;
 let bgmMuted = false;
 let musicScheduler = null;
 let bgmRunning = false;
+let ufoLayerGain = null;
+let ufoLayerActive = false;
+
+function getStoredNumber(key, fallback) {
+    try {
+        const value = Number.parseFloat(localStorage.getItem(key));
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function getStoredBoolean(key) {
+    try {
+        return localStorage.getItem(key) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function saveAudioSetting(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
+sfxVolume = getStoredNumber(AUDIO_VOLUME_STORAGE, sfxVolume);
+bgmVolume = getStoredNumber(BGM_VOLUME_STORAGE, bgmVolume);
+sfxMuted = getStoredBoolean(SFX_MUTED_STORAGE);
+bgmMuted = getStoredBoolean(BGM_MUTED_STORAGE);
+
+function updateSfxGain() {
+    if (sfxGain) sfxGain.gain.setValueAtTime(sfxMuted ? 0 : sfxVolume, audioCtx.currentTime);
+}
+
+function updateBgmGain() {
+    if (bgmGain) bgmGain.gain.setValueAtTime(bgmMuted ? 0 : bgmVolume, audioCtx.currentTime);
+}
 
 // ── Initialize ──
 function ensureAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = sfxVolume;
-        masterGain.connect(audioCtx.destination);
+        sfxGain = audioCtx.createGain();
+        bgmGain = audioCtx.createGain();
+        ufoLayerGain = audioCtx.createGain();
+        sfxGain.connect(audioCtx.destination);
+        bgmGain.connect(audioCtx.destination);
+        ufoLayerGain.connect(audioCtx.destination);
+        updateSfxGain();
+        updateBgmGain();
+        if (ufoLayerGain) ufoLayerGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
@@ -34,14 +81,14 @@ function playTone(freq, type, duration, volume, delay) {
     const gain = audioCtx.createGain();
     osc.type = type;
     osc.frequency.value = freq;
-    const vol = volume * sfxVolume;
+    const vol = volume;
 
     const start = audioCtx.currentTime + (delay || 0);
     gain.gain.setValueAtTime(vol, start);
     gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
     osc.connect(gain);
-    gain.connect(masterGain);
+    gain.connect(sfxGain);
     osc.start(start);
     osc.stop(start + duration);
 }
@@ -53,16 +100,16 @@ function playSweep(startFreq, endFreq, duration, type, volume, delay) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type;
-    osc.frequency.setValueAtTime(startFreq, delay || 0);
-    osc.frequency.exponentialRampToValueAtTime(endFreq, (delay || 0) + duration);
-    const vol = volume * sfxVolume;
-
     const start = audioCtx.currentTime + (delay || 0);
+    osc.frequency.setValueAtTime(startFreq, start);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, start + duration);
+    const vol = volume;
+
     gain.gain.setValueAtTime(vol, start);
     gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
     osc.connect(gain);
-    gain.connect(masterGain);
+    gain.connect(sfxGain);
     osc.start(start);
     osc.stop(start + duration);
 }
@@ -81,14 +128,14 @@ function playNoise(duration, volume, delay) {
     const noise = audioCtx.createBufferSource();
     noise.buffer = buffer;
     const gain = audioCtx.createGain();
-    const vol = volume * sfxVolume;
+    const vol = volume;
 
     const start = audioCtx.currentTime + (delay || 0);
     gain.gain.setValueAtTime(vol, start);
     gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
     noise.connect(gain);
-    gain.connect(masterGain);
+    gain.connect(sfxGain);
     noise.start(start);
 }
 
@@ -120,6 +167,15 @@ const SoundManager = {
         playSweep(400, 800, 0.4, 'sine', 0.08, 0.8);
     },
 
+    playUfoShoot() {
+        playSweep(500, 200, 0.12, 'square', 0.08);
+    },
+
+    playUfoExplode() {
+        playNoise(0.35, 0.3);
+        playSweep(180, 60, 0.3, 'sawtooth', 0.18, 0.05);
+    },
+
     playGameOver() {
         playSweep(440, 100, 0.5, 'sawtooth', 0.2);
         playSweep(300, 80, 0.4, 'sawtooth', 0.15, 0.3);
@@ -140,16 +196,37 @@ const SoundManager = {
         playTone(1047, 'sine', 0.3, 0.12, 0.36);
     },
 
+    playPowerupSpawn() {
+        playSweep(400, 800, 0.12, 'sine', 0.08);
+    },
+
+    playPowerupPickup() {
+        playTone(523, 'triangle', 0.1, 0.12, 0);
+        playTone(784, 'triangle', 0.1, 0.12, 0.08);
+        playTone(1047, 'triangle', 0.18, 0.14, 0.16);
+    },
+
+    playHyperspace() {
+        playSweep(220, 1200, 0.25, 'sawtooth', 0.12);
+    },
+
+    playHyperspaceFail() {
+        playSweep(800, 200, 0.18, 'square', 0.08);
+    },
+
     // ── API ──
     setVolume(value) {
-        sfxVolume = Math.max(0, Math.min(1, value));
-        if (masterGain) {
-            masterGain.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
-        }
+        const normalized = Number(value);
+        if (!Number.isFinite(normalized)) return;
+        sfxVolume = Math.max(0, Math.min(1, normalized));
+        saveAudioSetting(AUDIO_VOLUME_STORAGE, sfxVolume);
+        updateSfxGain();
     },
 
     toggleMute() {
         sfxMuted = !sfxMuted;
+        saveAudioSetting(SFX_MUTED_STORAGE, sfxMuted);
+        updateSfxGain();
         return sfxMuted;
     },
 
@@ -157,15 +234,18 @@ const SoundManager = {
     getVolume() { return sfxVolume; }
 };
 
-// ── Music Player (procedural BGM) ──
+// ── Music Player (procedural BGM with intensity) ──
 let bgmTimer = null;
 let bgmStep = 0;
 let bgmNextNoteTime = 0;
-const tempo = 110;
+let bgmTempo = 110;
+let bgmIntensity = 0;
+let ufoLayerOsc = null;
+let ufoLayerStep = 0;
+
 const lookahead = 25;
 const stepsPerBeat = 4;
 
-// Notes: C4 (262), E4 (330), G4 (392), C5 (523)
 const melodyNotes = [261, 330, 0, 392, 0, 330, 0, 523,
                     0, 392, 0, 330, 0, 523, 0, 261];
 const bassNotes = [0, 0, 0, 261,
@@ -182,20 +262,21 @@ const snarePattern = [0, 0, 1, 0,
                       0, 0, 1, 0];
 
 function scheduleNote(step, time) {
-    const beatDuration = 60 / tempo;
+    const beatDuration = 60 / bgmTempo;
     const stepDuration = beatDuration / stepsPerBeat;
+    const intensityVol = BGM_VOLUME[bgmIntensity] || 0.10;
 
     const melodyNote = melodyNotes[step % melodyNotes.length];
     if (melodyNote > 0) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.value = melodyNote;
+        osc.type = bgmIntensity >= 2 ? 'square' : 'sawtooth';
+        osc.frequency.value = melodyNote * (bgmIntensity >= 1 ? 1.005 : 1.0);
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.05 * bgmVolume, time + 0.01);
+        gain.gain.linearRampToValueAtTime(0.05, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration);
         osc.connect(gain);
-        gain.connect(masterGain);
+        gain.connect(bgmGain);
         osc.start(time);
         osc.stop(time + stepDuration);
     }
@@ -207,15 +288,17 @@ function scheduleNote(step, time) {
         osc.type = 'sine';
         osc.frequency.value = bassNote;
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.12 * bgmVolume, time + 0.01);
+        gain.gain.linearRampToValueAtTime(0.12, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 2);
         osc.connect(gain);
-        gain.connect(masterGain);
+        gain.connect(bgmGain);
         osc.start(time);
         osc.stop(time + stepDuration * 2);
     }
 
-    if (kickPattern[step % kickPattern.length]) {
+    // Kick / snare density scales with intensity
+    const kickGain = (kickPattern[step % kickPattern.length]) * (bgmIntensity >= 1 ? 1 : 0.7);
+    if (kickGain > 0) {
         const bufferSize = audioCtx.sampleRate * 0.1;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -229,15 +312,16 @@ function scheduleNote(step, time) {
         filter.frequency.value = 300;
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.15 * bgmVolume, time + 0.005);
+        gain.gain.linearRampToValueAtTime(0.15 * kickGain, time + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(masterGain);
+        gain.connect(bgmGain);
         noise.start(time);
     }
 
-    if (snarePattern[step % snarePattern.length]) {
+    const snareHit = (snarePattern[step % snarePattern.length]) * (bgmIntensity >= 1 ? 1 : 0.6);
+    if (snareHit > 0) {
         const bufferSize = audioCtx.sampleRate * 0.1;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -251,12 +335,28 @@ function scheduleNote(step, time) {
         filter.frequency.value = 1000;
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.08 * bgmVolume, time + 0.005);
+        gain.gain.linearRampToValueAtTime(0.08 * snareHit, time + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(masterGain);
+        gain.connect(bgmGain);
         noise.start(time);
+    }
+
+    // UFO siren layer (only when active)
+    if (ufoLayerActive && ufoLayerGain) {
+        const sirenFreq = 200 + Math.sin(time * 6) * 200;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = sirenFreq;
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(0.06, time + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 0.9);
+        osc.connect(gain);
+        gain.connect(ufoLayerGain);
+        osc.start(time);
+        osc.stop(time + stepDuration);
     }
 }
 
@@ -264,9 +364,27 @@ function schedule() {
     while (bgmNextNoteTime < audioCtx.currentTime + lookahead) {
         scheduleNote(bgmStep, bgmNextNoteTime);
         bgmStep++;
-        bgmNextNoteTime += (60 / tempo) / stepsPerBeat;
+        bgmNextNoteTime += (60 / bgmTempo) / stepsPerBeat;
     }
     bgmTimer = setTimeout(schedule, lookahead);
+}
+
+function applyBgmVolume() {
+    if (!bgmGain) return;
+    const target = BGM_VOLUME[bgmIntensity] || 0.10;
+    const now = audioCtx.currentTime;
+    bgmGain.gain.cancelScheduledValues(now);
+    bgmGain.gain.setValueAtTime(bgmGain.gain.value, now);
+    bgmGain.gain.linearRampToValueAtTime(bgmMuted ? 0 : target, now + 0.5);
+}
+
+function applyUfoLayerVolume() {
+    if (!ufoLayerGain) return;
+    const now = audioCtx.currentTime;
+    ufoLayerGain.gain.cancelScheduledValues(now);
+    ufoLayerGain.gain.setValueAtTime(ufoLayerGain.gain.value, now);
+    const target = ufoLayerActive ? 1.0 : 0.0;
+    ufoLayerGain.gain.linearRampToValueAtTime(bgmMuted ? 0 : target, now + 0.4);
 }
 
 // ── MusicPlayer API ──
@@ -278,6 +396,7 @@ const MusicPlayer = {
         bgmStep = 0;
         bgmNextNoteTime = audioCtx.currentTime + 0.1;
         schedule();
+        applyBgmVolume();
     },
 
     stop() {
@@ -286,6 +405,13 @@ const MusicPlayer = {
             bgmTimer = null;
         }
         bgmRunning = false;
+        if (ufoLayerGain) {
+            const now = audioCtx.currentTime;
+            ufoLayerGain.gain.cancelScheduledValues(now);
+            ufoLayerGain.gain.setValueAtTime(ufoLayerGain.gain.value, now);
+            ufoLayerGain.gain.linearRampToValueAtTime(0, now + 0.3);
+        }
+        ufoLayerActive = false;
     },
 
     pause() {
@@ -305,26 +431,45 @@ const MusicPlayer = {
         }
     },
 
+    setIntensity(level) {
+        const clamped = Math.max(0, Math.min(2, level | 0));
+        if (clamped === bgmIntensity) return;
+        bgmIntensity = clamped;
+        bgmTempo = BGM_TEMPO[bgmIntensity] || 110;
+        applyBgmVolume();
+    },
+
+    getIntensity() { return bgmIntensity; },
+
+    setUfoActive(active) {
+        const next = !!active;
+        if (next === ufoLayerActive) return;
+        ufoLayerActive = next;
+        applyUfoLayerVolume();
+    },
+
+    isUfoActive() { return ufoLayerActive; },
+
     toggleMute() {
         bgmMuted = !bgmMuted;
+        saveAudioSetting(BGM_MUTED_STORAGE, bgmMuted);
+        updateBgmGain();
+        applyBgmVolume();
+        applyUfoLayerVolume();
         return bgmMuted;
     },
 
     getMuteState() { return bgmMuted; },
 
     setVolume(value) {
-        bgmVolume = Math.max(0, Math.min(1, value));
+        const normalized = Number(value);
+        if (!Number.isFinite(normalized)) return;
+        bgmVolume = Math.max(0, Math.min(1, normalized));
+        saveAudioSetting(BGM_VOLUME_STORAGE, bgmVolume);
+        updateBgmGain();
+        applyBgmVolume();
+        applyUfoLayerVolume();
     },
+
+    getVolume() { return bgmVolume; },
 };
-
-// ── Initialize volume on page load ──
-const savedVol = localStorage.getItem(AUDIO_VOLUME_STORAGE);
-if (savedVol !== null) {
-    sfxVolume = parseFloat(savedVol);
-    if (masterGain) masterGain.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
-}
-
-const savedBgmVol = localStorage.getItem(BGM_VOLUME_STORAGE);
-if (savedBgmVol !== null) {
-    bgmVolume = parseFloat(savedBgmVol);
-}

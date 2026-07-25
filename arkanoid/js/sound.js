@@ -1,3 +1,34 @@
+// ── Persistence keys ──
+const ARKANOID_SFX_VOLUME = 'arkanoid_audio_volume';
+const ARKANOID_SFX_MUTED = 'arkanoid_sfx_muted';
+const ARKANOID_BGM_VOLUME = 'arkanoid_bgm_volume';
+const ARKANOID_BGM_MUTED = 'arkanoid_bgm_muted';
+
+function getStoredNumber(key, fallback) {
+    try {
+        const value = Number.parseFloat(localStorage.getItem(key));
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function getStoredBoolean(key) {
+    try {
+        return localStorage.getItem(key) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function saveAudioSetting(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
 const SoundManager = {
     audioCtx: null,
     masterGain: null,
@@ -102,6 +133,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(ARKANOID_SFX_VOLUME, this.volume);
     },
 
     toggleMute() {
@@ -109,6 +141,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(ARKANOID_SFX_MUTED, this.isMuted);
     },
 
     getVolume() {
@@ -131,6 +164,9 @@ const SoundManager = {
         MusicPlayer.resume();
     }
 };
+
+SoundManager.volume = getStoredNumber(ARKANOID_SFX_VOLUME, SoundManager.volume);
+SoundManager.isMuted = getStoredBoolean(ARKANOID_SFX_MUTED);
 
 const MusicPlayer = {
     isPlaying: false,
@@ -344,14 +380,18 @@ const MusicPlayer = {
 
     toggleMute() {
         this.bgmMuted = !this.bgmMuted;
+        saveAudioSetting(ARKANOID_BGM_MUTED, this.bgmMuted);
     },
 
     setVolume(value) {
         this.bgmVolume = Math.max(0, Math.min(1, value));
-        SoundManager.setVolume(SoundManager.getVolume());
+        saveAudioSetting(ARKANOID_BGM_VOLUME, this.bgmVolume);
     },
 
     getMuteState() {
         return this.bgmMuted;
     }
 };
+
+MusicPlayer.bgmVolume = getStoredNumber(ARKANOID_BGM_VOLUME, MusicPlayer.bgmVolume);
+MusicPlayer.bgmMuted = getStoredBoolean(ARKANOID_BGM_MUTED);

@@ -10,3 +10,12 @@ const COLORS = {
     'T': '#FF0D72',
     'Z': '#F538FF',
 };
+
+// ── Scoring (standard guideline) ──
+const LINE_SCORES = {
+    1: 100, // single
+    2: 300, // double
+    3: 500, // triple
+    4: 800, // tetris
+};
+const BACK_TO_BACK_MULTIPLIER = 1.5;

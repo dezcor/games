@@ -3,7 +3,6 @@ const ctx = canvas.getContext('2d');
 
 // Global variables
 let score, lives, gameOver, isPaused, gameStarted;
-let alienColors = ['#ff6b8a', '#ff8fa3', '#ff2060', '#ff4080', '#ff6b8a'];
 let bullets = [];
 let alienBullets = [];
 let particles = [];
@@ -17,57 +16,97 @@ let alienSpeed = ALIEN_BASE_SPEED;
 let lastTime = 0;
 let shootCooldown = 0;
 let ufoSpawnTimer = 0;
+let ufoSpawnDelay = 0;
 let alienShootTimer = 0;
-let previousBestScore = 0;
 let level = 1;
-let levelBonus = 0;
 let selectedDifficulty = 'normal';
+let gameTime = 0;
+let comboCount = 0;
+let comboExpiresAt = 0;
+let playerInvulnerabilityUntil = 0;
+
+function readStorage(key, fallback = null) {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function writeStorage(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
+function sanitizePlayerName(value) {
+    if (typeof value !== 'string') return 'Anonymous';
+    const name = value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);
+    return name || 'Anonymous';
+}
+
+function normalizeHighScores(value) {
+    if (!Array.isArray(value)) return [];
+
+    return value
+        .filter((entry) => entry && Number.isFinite(Number(entry.score)))
+        .map((entry) => ({
+            score: Math.max(0, Math.floor(Number(entry.score))),
+            name: sanitizePlayerName(entry.name),
+            date: typeof entry.date === 'string' ? entry.date.slice(0, 40) : '',
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+}
 
 function getHighScores() {
     try {
         const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
+        return normalizeHighScores(data ? JSON.parse(data) : []);
     } catch (e) {
         return [];
     }
 }
 
 function getSavedName() {
-    return localStorage.getItem(PLAYER_NAME_STORAGE) || '';
+    return sanitizePlayerName(readStorage(PLAYER_NAME_STORAGE, ''));
 }
 
 function getSavedAudioVolume() {
-    const saved = localStorage.getItem(AUDIO_VOLUME_STORAGE);
-    return saved !== null ? parseFloat(saved) : 0.7;
+    const saved = Number.parseFloat(readStorage(AUDIO_VOLUME_STORAGE, '0.7'));
+    return Number.isFinite(saved) ? Math.max(0, Math.min(1, saved)) : 0.7;
 }
 
 function getSavedBgmVolume() {
-    const saved = localStorage.getItem(BGM_VOLUME_STORAGE);
-    return saved !== null ? parseFloat(saved) : 0.1;
+    const saved = Number.parseFloat(readStorage(BGM_VOLUME_STORAGE, '0.1'));
+    return Number.isFinite(saved) ? Math.max(0, Math.min(1, saved)) : 0.1;
 }
 
 function saveAudioVolume(vol) {
-    localStorage.setItem(AUDIO_VOLUME_STORAGE, vol.toString());
+    writeStorage(AUDIO_VOLUME_STORAGE, String(Math.max(0, Math.min(1, vol))));
 }
 
 function saveBgmVolume(vol) {
-    localStorage.setItem(BGM_VOLUME_STORAGE, vol.toString());
+    writeStorage(BGM_VOLUME_STORAGE, String(Math.max(0, Math.min(1, vol))));
 }
 
 function saveHighScore(sc) {
     const highScores = getHighScores();
     const now = new Date();
     const nameInput = document.getElementById('player-name');
-    const playerName = nameInput ? nameInput.value.trim() : '';
+    const playerName = sanitizePlayerName(nameInput ? nameInput.value : getSavedName());
     const entry = {
         score: sc,
-        name: playerName || 'Anonymous',
-        date: now.toLocaleDateString('en-US'),
+        name: playerName,
+        date: now.toLocaleDateString('es-ES'),
     };
     highScores.push(entry);
     highScores.sort((a, b) => b.score - a.score);
     const top5 = highScores.slice(0, 5);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(top5));
+    writeStorage(STORAGE_KEY, JSON.stringify(top5));
 }
 
 function getBestScore() {
@@ -87,26 +126,38 @@ function renderHighScoresTable() {
     const tableContainer = document.getElementById('high-scores-table');
     const table = document.getElementById('high-scores-list');
 
-    if (!tableContainer || !table || highScores.length === 0) {
+    if (!tableContainer || !table) {
         return;
     }
 
-    table.innerHTML = '';
+    table.replaceChildren();
     const medals = ['\u{1F947}', '\u{1F948}', '\u{1F949}', '4.', '5.'];
 
     highScores.forEach((entry, index) => {
         const row = document.createElement('tr');
         row.className = `hs-row hs-row-${index + 1}`;
-        row.innerHTML = `
-            <td class="hs-rank">${medals[index]}</td>
-            <td class="hs-name">${entry.name}</td>
-            <td class="hs-score">${entry.score}</td>
-            <td class="hs-date">${entry.date}</td>
-        `;
+
+        const rank = document.createElement('td');
+        rank.className = 'hs-rank';
+        rank.textContent = medals[index];
+
+        const name = document.createElement('td');
+        name.className = 'hs-name';
+        name.textContent = entry.name;
+
+        const score = document.createElement('td');
+        score.className = 'hs-score';
+        score.textContent = String(entry.score);
+
+        const date = document.createElement('td');
+        date.className = 'hs-date';
+        date.textContent = entry.date;
+
+        row.append(rank, name, score, date);
         table.appendChild(row);
     });
 
-    tableContainer.style.display = 'block';
+    tableContainer.style.display = highScores.length > 0 ? 'block' : 'none';
 }
 
 function showNewHighScoreNotice() {
@@ -125,36 +176,53 @@ function initAliens() {
     aliens = [];
     for (let r = 0; r < ALIEN_ROWS; r++) {
         for (let c = 0; c < ALIEN_COLS; c++) {
+            const type = ALIEN_ROW_TYPES[r] || 'TYPE_1';
+            const metadata = ALIEN_TYPES[type];
             aliens.push({
-                x: ALIEN_START_X + c * (ALIEN_WIDTH + ALIEN_X_GAP),
-                y: ALIEN_START_Y + r * (ALIEN_HEIGHT + ALIEN_Y_GAP),
+                x: ALIEN_START_X + c * (metadata.width + ALIEN_X_GAP),
+                y: ALIEN_START_Y + r * (metadata.height + ALIEN_Y_GAP),
                 alive: true,
                 row: r,
-                type: r < 2 ? 'TYPE_1' : r < 4 ? 'TYPE_2' : 'TYPE_3',
-                baseSpeed: r < 2 ? 0.5 : r < 4 ? 0.6 : 0.7
+                column: c,
+                type,
+                width: metadata.width,
+                height: metadata.height,
+                shape: metadata.shape,
+                color: metadata.color,
             });
         }
     }
 }
 
-function createExplosion(x, y, color) {
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function createExplosion(x, y, color, requestedCount = PARTICLE_COUNT) {
+    const remainingSlots = Math.max(0, MAX_PARTICLES - particles.length);
+    const motionScale = prefersReducedMotion() ? 0.5 : 1;
+    const count = Math.min(requestedCount, remainingSlots);
+
+    for (let i = 0; i < count; i++) {
+        const lifetime = Math.min(PARTICLE_LIFETIME, PARTICLE_LIFETIME * motionScale);
         particles.push({
-            x: x + ALIEN_WIDTH / 2,
-            y: y + ALIEN_HEIGHT / 2,
-            vx: (Math.random() - 0.5) * PARTICLE_SPEED * 4,
-            vy: (Math.random() - 0.5) * PARTICLE_SPEED * 4,
-            life: PARTICLE_LIFETIME,
+            x,
+            y,
+            vx: (Math.random() - 0.5) * PARTICLE_SPEED * 4 * motionScale,
+            vy: (Math.random() - 0.5) * PARTICLE_SPEED * 4 * motionScale,
+            life: lifetime,
+            maxLife: lifetime,
             color: color,
-            size: Math.random() * 4 + 2
+            size: Math.random() * 4 + 2,
         });
     }
 }
 
 function updateParticles(delta) {
+    const frameScale = delta / (1000 / 60);
     particles = particles.filter(p => {
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx * frameScale;
+        p.y += p.vy * frameScale;
         p.life -= delta;
         return p.life > 0;
     });
@@ -163,7 +231,7 @@ function updateParticles(delta) {
 function drawParticles() {
     particles.forEach(p => {
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life / PARTICLE_LIFETIME;
+        ctx.globalAlpha = p.life / p.maxLife;
         ctx.fillRect(p.x, p.y, p.size, p.size);
     });
     ctx.globalAlpha = 1;
@@ -182,14 +250,17 @@ function initGame() {
     ufos = [];
     particles = [];
     ufoSpawnTimer = 0;
+    ufoSpawnDelay = getUfoSpawnDelay();
     alienShootTimer = 0;
     alienDirection = 1;
     alienMoveTimer = 0;
     alienMoveInterval = 600;
     alienSpeed = diff.alienSpeed;
     shootCooldown = 0;
-    previousBestScore = 0;
-    levelBonus = 0;
+    gameTime = 0;
+    comboCount = 0;
+    comboExpiresAt = 0;
+    playerInvulnerabilityUntil = 0;
     playerX = canvas.width / 2 - PLAYER_WIDTH / 2;
 
     initAliens();
@@ -199,9 +270,42 @@ function initGame() {
 function updateUI() {
     const scoreEl = document.getElementById('score');
     const livesEl = document.getElementById('lives');
+    const comboEl = document.getElementById('combo-display');
     if (scoreEl) scoreEl.textContent = `Score: ${score}`;
     if (livesEl) livesEl.textContent = `Lives: ${lives}`;
+    if (comboEl) {
+        comboEl.textContent = comboCount > 1 ? `Combo x${comboCount}` : '';
+        comboEl.classList.toggle('active', comboCount > 1);
+    }
     updateBestScoreDisplay();
+}
+
+function resetCombo() {
+    comboCount = 0;
+    comboExpiresAt = 0;
+    updateUI();
+}
+
+function awardScore(points, { countsForCombo = false, feedbackColor = '#fbbf24' } = {}) {
+    let awardedPoints = Math.max(0, Math.floor(points));
+
+    if (countsForCombo) {
+        comboCount = gameTime <= comboExpiresAt ? comboCount + 1 : 1;
+        comboExpiresAt = gameTime + COMBO_WINDOW;
+        const comboBonus = Math.min(
+            Math.max(0, comboCount - 1) * COMBO_BONUS_STEP,
+            MAX_COMBO_BONUS
+        );
+        awardedPoints += comboBonus;
+
+        if (comboCount > 1) {
+            showScoreFeedback(`COMBO x${comboCount} +${awardedPoints}`, feedbackColor);
+        }
+    }
+
+    score += awardedPoints;
+    updateUI();
+    return awardedPoints;
 }
 
 function showLevelBanner(text, color) {
@@ -233,15 +337,65 @@ function resetAliens() {
     const diff = DIFFICULTY_PRESETS[selectedDifficulty];
     alienMoveInterval = Math.max(150, 600 - (level - 1) * 100);
     alienSpeed = diff.alienSpeed + (level - 1) * 0.3;
-    if (level > 1) {
-        levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
-        score += levelBonus;
-        updateUI();
-        flashScore();
+}
+
+function completeLevel() {
+    const clearedLevel = level;
+    const levelBonus = Math.floor(
+        LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, clearedLevel - 1)
+    );
+    const survivalBonus = lives * SURVIVAL_BONUS;
+
+    score += levelBonus + survivalBonus;
+    level += 1;
+    resetCombo();
+    showLevelBanner(`LEVEL ${level}  +${levelBonus + survivalBonus}`, '#4ade80');
+    const boardWrapper = document.getElementById('board-wrapper');
+    if (boardWrapper) {
+        boardWrapper.classList.remove('level-complete');
+        boardWrapper.offsetHeight;
+        boardWrapper.classList.add('level-complete');
     }
+    updateUI();
+    flashScore();
+    resetAliens();
+    bullets = [];
+    alienBullets = [];
+    ufos = [];
+    scheduleNextUFO();
 }
 
 // ── Alien Shooting ──
+
+function getColumnShooters() {
+    const shooters = new Map();
+
+    aliens.forEach((alien) => {
+        if (!alien.alive) return;
+        const current = shooters.get(alien.column);
+        if (!current || alien.y > current.y) {
+            shooters.set(alien.column, alien);
+        }
+    });
+
+    return Array.from(shooters.values());
+}
+
+function chooseWeightedAlien(availableAliens) {
+    const totalWeight = availableAliens.reduce((total, alien) => {
+        return total + (ALIEN_TYPES[alien.type]?.shootWeight || 1);
+    }, 0);
+
+    if (totalWeight <= 0) return null;
+
+    let target = Math.random() * totalWeight;
+    for (const alien of availableAliens) {
+        target -= ALIEN_TYPES[alien.type]?.shootWeight || 1;
+        if (target <= 0) return alien;
+    }
+
+    return availableAliens[availableAliens.length - 1] || null;
+}
 
 function spawnAlienShots(delta) {
     const diff = DIFFICULTY_PRESETS[selectedDifficulty];
@@ -252,35 +406,47 @@ function spawnAlienShots(delta) {
 
     // Shorter interval as fewer aliens remain (more aggressive)
     const aliveRatio = aliveAliens / (ALIEN_ROWS * ALIEN_COLS);
-    const interval = diff.shootInterval * (0.4 + aliveRatio * 0.6);
+    const interval = diff.shootInterval * (0.45 + aliveRatio * 0.55);
 
-    if (alienShootTimer >= interval) {
-        alienShootTimer = 0;
+    if (alienShootTimer < interval) return;
+    alienShootTimer = 0;
 
-        // Number of shots scales with difficulty and remaining aliens
-        const aliveList = aliens.filter(a => a.alive);
-        if (aliveList.length === 0) return;
+    if (alienBullets.length >= diff.maxAlienBullets) return;
 
-        // Easy: 1 shot, Normal: 1-2, Hard: 2-3, Insane: 3-4
-        const shotsCount = diff.shootInterval <= 1000
-            ? 2 + Math.floor(Math.random() * 3)
-            : diff.shootInterval <= 2000
-                ? 1 + Math.floor(Math.random() * 2)
-                : 1;
+    const shooter = chooseWeightedAlien(getColumnShooters());
+    if (!shooter) return;
 
-        for (let i = 0; i < shotsCount; i++) {
-            const shooter = aliveList[Math.floor(Math.random() * aliveList.length)];
-            alienBullets.push({
-                x: shooter.x + ALIEN_WIDTH / 2,
-                y: shooter.y + ALIEN_HEIGHT,
-                speed: diff.alienBulletSpeed,
-            });
-            SoundManager.playAlienShoot(shooter.type);
-        }
-    }
+    alienBullets.push({
+        x: shooter.x + shooter.width / 2 - ALIEN_BULLET_WIDTH / 2,
+        y: shooter.y + shooter.height,
+        width: ALIEN_BULLET_WIDTH,
+        height: ALIEN_BULLET_HEIGHT,
+        speed: diff.alienBulletSpeed,
+        type: shooter.type,
+    });
+    SoundManager.playAlienShoot(shooter.type);
 }
 
 // ── UFO ──
+
+function getUfoSpawnDelay() {
+    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
+    const levelFactor = Math.pow(UFO_LEVEL_INTERVAL_FACTOR, Math.max(0, level - 1));
+    const minDelay = Math.max(
+        UFO_MIN_INTERVAL,
+        UFO_SPAWN_MIN * levelFactor * diff.ufoIntervalFactor
+    );
+    const maxDelay = Math.max(
+        minDelay + 1000,
+        UFO_SPAWN_MAX * levelFactor * diff.ufoIntervalFactor
+    );
+    return minDelay + Math.random() * (maxDelay - minDelay);
+}
+
+function scheduleNextUFO() {
+    ufoSpawnTimer = 0;
+    ufoSpawnDelay = getUfoSpawnDelay();
+}
 
 function spawnUFO() {
     const diff = DIFFICULTY_PRESETS[selectedDifficulty];
@@ -290,8 +456,12 @@ function spawnUFO() {
         y: UFO_Y,
         direction: direction,
         score: Math.floor(Math.random() * (UFO_SCORE_RANGE[1] - UFO_SCORE_RANGE[0] + 1) + UFO_SCORE_RANGE[0]),
+        width: UFO_WIDTH,
+        height: UFO_HEIGHT,
+        speed: UFO_SPEED * diff.ufoSpeedFactor * (1 + (level - 1) * UFO_LEVEL_SPEED_FACTOR),
         alive: true,
     });
+    SoundManager.playUFO();
 }
 
 
@@ -305,7 +475,7 @@ function drawUFO() {
 
         // Dome
         ctx.beginPath();
-        ctx.arc(ufo.x + UFO_WIDTH / 2, ufo.y + UFO_HEIGHT - 2, UFO_WIDTH / 4, Math.PI, 0);
+        ctx.arc(ufo.x + ufo.width / 2, ufo.y + ufo.height - 2, ufo.width / 4, Math.PI, 0);
         ctx.fillStyle = '#fff';
         ctx.fill();
         ctx.fillStyle = '#fbbf24';
@@ -313,59 +483,62 @@ function drawUFO() {
 
         // Body
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(ufo.x, ufo.y + UFO_HEIGHT / 2 - 2, UFO_WIDTH, UFO_HEIGHT / 2 - 2);
+        ctx.fillRect(ufo.x, ufo.y + ufo.height / 2 - 2, ufo.width, ufo.height / 2 - 2);
 
         // Bottom
         ctx.fillStyle = '#ff6b8a';
-        ctx.fillRect(ufo.x + 8, ufo.y + UFO_HEIGHT - 2, UFO_WIDTH - 16, 2);
+        ctx.fillRect(ufo.x + 8, ufo.y + ufo.height - 2, ufo.width - 16, 2);
         ctx.shadowBlur = 0;
     });
 }
 
 function updateUFOs(delta) {
     // Spawn UFO
-    ufoSpawnTimer += delta;
-    if (ufoSpawnTimer > UFO_SPAWN_MIN + Math.random() * (UFO_SPAWN_MAX - UFO_SPAWN_MIN)) {
-        ufoSpawnTimer = 0;
-        if (!ufos.find(u => u.alive)) {
+    if (!ufos.some(ufo => ufo.alive)) {
+        ufoSpawnTimer += delta;
+        if (ufoSpawnTimer >= ufoSpawnDelay) {
             spawnUFO();
+            ufoSpawnTimer = 0;
         }
     }
 
     // Move UFOs
-    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
+    const frameScale = delta / (1000 / 60);
     ufos.forEach(ufo => {
         if (!ufo.alive) return;
-        ufo.x += UFO_SPEED * ufo.direction * diff.alienBulletSpeed / 1.5;
+        ufo.x += ufo.speed * ufo.direction * frameScale;
 
         // Remove if off screen
-        if ((ufo.direction === 1 && ufo.x > CANVAS_WIDTH + UFO_WIDTH) ||
-            (ufo.direction === -1 && ufo.x + UFO_WIDTH < 0)) {
+        if ((ufo.direction === 1 && ufo.x > CANVAS_WIDTH + ufo.width) ||
+            (ufo.direction === -1 && ufo.x + ufo.width < 0)) {
             ufo.alive = false;
         }
     });
 
     ufos = ufos.filter(u => u.alive);
+    if (ufos.length === 0 && ufoSpawnTimer === 0) {
+        scheduleNextUFO();
+    }
 }
 
 // ── Difficulty Persistence ──
 
 function getSavedDifficulty() {
-    return localStorage.getItem('si_difficulty') || 'normal';
+    const saved = readStorage(DIFFICULTY_STORAGE, 'normal');
+    return DIFFICULTY_PRESETS[saved] ? saved : 'normal';
 }
 
 function saveDifficulty(diff) {
-    localStorage.setItem('si_difficulty', diff);
+    if (DIFFICULTY_PRESETS[diff]) writeStorage(DIFFICULTY_STORAGE, diff);
 }
 
 function applyDifficulty(diff) {
+    if (!DIFFICULTY_PRESETS[diff] || (gameStarted && !gameOver)) return false;
     selectedDifficulty = diff;
     const d = DIFFICULTY_PRESETS[diff];
     alienSpeed = d.alienSpeed;
-    if (level === 1) {
-        lives = d.lives;
-        updateUI();
-    }
+    updateUI();
+    return true;
 }
 
 // ── Main update ──
@@ -373,19 +546,26 @@ function applyDifficulty(diff) {
 function update(delta) {
     if (isPaused || gameOver) return;
 
+    const frameScale = delta / (1000 / 60);
+    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
+    gameTime += delta;
+
+    if (comboCount > 0 && gameTime >= comboExpiresAt) {
+        resetCombo();
+    }
+
     // Player movement
     if (keys['ArrowLeft'] || keys['KeyA']) {
-        playerX -= 2.5;
+        playerX -= 2.5 * frameScale;
     }
     if (keys['ArrowRight'] || keys['KeyD']) {
-        playerX += 2.5;
+        playerX += 2.5 * frameScale;
     }
     if (playerX < 0) playerX = 0;
     if (playerX + PLAYER_WIDTH > canvas.width) playerX = canvas.width - PLAYER_WIDTH;
 
     // Player shooting
     shootCooldown -= delta;
-    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
     if ((keys['Space'] || keys['Enter']) && shootCooldown <= 0) {
         bullets.push({
             x: playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
@@ -397,14 +577,14 @@ function update(delta) {
 
     // Update player bullets
     bullets = bullets.filter(b => b.y > 0);
-    bullets.forEach(b => { b.y -= diff.bulletSpeed; });
+    bullets.forEach(b => { b.y -= diff.bulletSpeed * frameScale; });
 
     // Alien shooting
     spawnAlienShots(delta);
 
     // Update alien bullets
-    alienBullets = alienBullets.filter(b => b.y < CANVAS_HEIGHT);
-    alienBullets.forEach(b => { b.y += b.speed; });
+    alienBullets = alienBullets.filter(b => b.y < CANVAS_HEIGHT + b.height);
+    alienBullets.forEach(b => { b.y += b.speed * frameScale; });
 
     // Alien movement timing
     alienMoveTimer += delta;
@@ -417,15 +597,16 @@ function update(delta) {
         let moveDown = false;
         aliens.forEach(a => {
             if (!a.alive) return;
-            a.x += alienSpeed * alienDirection * 8 * (a.baseSpeed / ALIEN_BASE_SPEED);
-            if (a.x <= 2 || a.x + ALIEN_WIDTH >= canvas.width - 2) {
+            const metadata = ALIEN_TYPES[a.type];
+            a.x += alienSpeed * alienDirection * 8 * (metadata.speed / ALIEN_BASE_SPEED);
+            if (a.x <= 2 || a.x + a.width >= canvas.width - 2) {
                 moveDown = true;
             }
         });
         if (moveDown) {
             alienDirection *= -1;
             aliens.forEach(a => {
-                if (a.alive) a.y += ALIEN_DROP;
+                if (a.alive) a.y += diff.alienDrop;
             });
         }
         SoundManager.playAlienMove();
@@ -434,21 +615,42 @@ function update(delta) {
     // Update UFOs
     updateUFOs(delta);
 
-   // Collision: bullets vs aliens
+    // Collision: player bullets vs alien bullets
+    for (let bi = bullets.length - 1; bi >= 0; bi--) {
+        const playerBullet = bullets[bi];
+        for (let abi = alienBullets.length - 1; abi >= 0; abi--) {
+            const alienBullet = alienBullets[abi];
+            if (playerBullet.x < alienBullet.x + alienBullet.width &&
+                playerBullet.x + BULLET_WIDTH > alienBullet.x &&
+                playerBullet.y < alienBullet.y + alienBullet.height &&
+                playerBullet.y + BULLET_HEIGHT > alienBullet.y) {
+                bullets.splice(bi, 1);
+                alienBullets.splice(abi, 1);
+                createExplosion(
+                    alienBullet.x + alienBullet.width / 2,
+                    alienBullet.y + alienBullet.height / 2,
+                    '#fbbf24',
+                    4
+                );
+                SoundManager.playBulletClash();
+                break;
+            }
+        }
+    }
+
+    // Collision: bullets vs aliens
     for (let bi = bullets.length - 1; bi >= 0; bi--) {
         const b = bullets[bi];
         for (let ai = 0; ai < aliens.length; ai++) {
             const a = aliens[ai];
             if (!a.alive) continue;
-            if (b.x < a.x + ALIEN_WIDTH && b.x + BULLET_WIDTH > a.x &&
-                b.y < a.y + ALIEN_HEIGHT && b.y + BULLET_HEIGHT > a.y) {
+            if (b.x < a.x + a.width && b.x + BULLET_WIDTH > a.x &&
+                b.y < a.y + a.height && b.y + BULLET_HEIGHT > a.y) {
                 a.alive = false;
                 bullets.splice(bi, 1);
-                const points = Math.max(10, 30 - a.row * 5);
-                score += points;
-                updateUI();
+                awardScore(ALIEN_TYPES[a.type].points, { countsForCombo: true });
                 SoundManager.playExplosion();
-                createExplosion(a.x + ALIEN_WIDTH / 2, a.y + ALIEN_HEIGHT / 2, alienColors[a.row]);
+                createExplosion(a.x + a.width / 2, a.y + a.height / 2, a.color);
                 break;
             }
         }
@@ -460,14 +662,13 @@ function update(delta) {
         for (let ui = 0; ui < ufos.length; ui++) {
             const u = ufos[ui];
             if (!u.alive) continue;
-            if (b.x < u.x + UFO_WIDTH && b.x + BULLET_WIDTH > u.x &&
-                b.y < u.y + UFO_HEIGHT && b.y + BULLET_HEIGHT > u.y) {
+            if (b.x < u.x + u.width && b.x + BULLET_WIDTH > u.x &&
+                b.y < u.y + u.height && b.y + BULLET_HEIGHT > u.y) {
                 u.alive = false;
                 bullets.splice(bi, 1);
-                score += u.score;
-                updateUI();
+                awardScore(u.score);
                 SoundManager.playExplosion();
-                createExplosion(u.x + UFO_WIDTH / 2, u.y + UFO_HEIGHT / 2, '#fbbf24');
+                createExplosion(u.x + u.width / 2, u.y + u.height / 2, '#fbbf24', 12);
                 showUfoScore(u.score);
                 break;
             }
@@ -477,9 +678,13 @@ function update(delta) {
     // Collision: alienBullets vs player
     for (let bi = alienBullets.length - 1; bi >= 0; bi--) {
         const b = alienBullets[bi];
-        if (b.x < playerX + PLAYER_WIDTH && b.x + 2 > playerX &&
-            b.y < PLAYER_Y + PLAYER_HEIGHT && b.y + b.speed > PLAYER_Y) {
+        if (b.x < playerX + PLAYER_WIDTH && b.x + b.width > playerX &&
+            b.y < PLAYER_Y + PLAYER_HEIGHT && b.y + b.height > PLAYER_Y) {
             alienBullets.splice(bi, 1);
+            if (gameTime < playerInvulnerabilityUntil) continue;
+
+            playerInvulnerabilityUntil = gameTime + 700;
+            resetCombo();
             createExplosion(playerX + PLAYER_WIDTH / 2, PLAYER_Y + PLAYER_HEIGHT / 2, '#4ade80');
             lives--;
             updateUI();
@@ -493,8 +698,9 @@ function update(delta) {
     }
 
     // Check if aliens reach bottom
-    const reachedBottom = aliens.some(a => a.alive && a.y + ALIEN_HEIGHT >= PLAYER_Y);
+    const reachedBottom = aliens.some(a => a.alive && a.y + a.height >= PLAYER_Y);
     if (reachedBottom) {
+        resetCombo();
         lives--;
         updateUI();
         if (lives <= 0) {
@@ -503,67 +709,60 @@ function update(delta) {
         }
         bullets = [];
         alienBullets = [];
+        playerInvulnerabilityUntil = gameTime + 700;
         resetAliens();
     }
 
     // Check level complete
     if (aliens.every(a => !a.alive)) {
-        const newLevel = level + 1;
-        showLevelBanner(`LEVEL ${newLevel}`, '#4ade80');
-        const boardWrapper = document.getElementById('board-wrapper');
-        if (boardWrapper) {
-            boardWrapper.classList.remove('level-complete');
-            boardWrapper.offsetHeight;
-            boardWrapper.classList.add('level-complete');
-        }
-        level = newLevel;
-        if (level > 1) {
-            levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
-            score += levelBonus;
-            updateUI();
-        }
-        resetAliens();
-        bullets = [];
-        alienBullets = [];
+        completeLevel();
     }
 }
 
-// ── Show UFO score popup ──
+// ── Score feedback ──
 
-function showUfoScore(score) {
-    const existing = document.getElementById('ufo-score-popup');
-    if (existing) existing.remove();
+function showScoreFeedback(text, color = '#fbbf24') {
+    const feedback = document.createElement('div');
+    feedback.className = 'score-feedback';
+    feedback.style.setProperty('--feedback-color', color);
+    feedback.textContent = text;
+    canvas.parentElement.appendChild(feedback);
+    setTimeout(() => feedback.remove(), 1500);
+}
 
-    const popup = document.createElement('div');
-    popup.id = 'ufo-score-popup';
-    popup.style.cssText = `
-        position: absolute; left: 50%; top: 30%;
-        transform: translateX(-50%);
-        color: #fbbf24;
-        font-family: 'Press Start 2P', monospace;
-        font-size: 12px;
-        pointer-events: none;
-        z-index: 30;
-        animation: popupFloat 1.5s ease-out forwards;
-        text-shadow: 0 0 10px #fbbf24;
-    `;
-    popup.textContent = `+${score}`;
-    canvas.parentElement.appendChild(popup);
-    setTimeout(() => popup.remove(), 1500);
+function showUfoScore(ufoScore) {
+    showScoreFeedback(`+${ufoScore}`, '#fbbf24');
+}
 
-    // Add keyframe if not exists
-    let style = document.getElementById('ufo-popup-style');
-    if (!style) {
-        style = document.createElement('style');
-        style.id = 'ufo-popup-style';
-        style.textContent = `
-            @keyframes popupFloat {
-                0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
-            }
-        `;
-        document.head.appendChild(style);
+function drawAlien(alien) {
+    const { x, y, width, height, shape, color } = alien;
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 4;
+
+    if (shape === 'large') {
+        ctx.fillRect(x, y + 2, width, height - 4);
+        ctx.fillRect(x + 3, y, 4, 3);
+        ctx.fillRect(x + width - 7, y, 4, 3);
+        ctx.fillStyle = '#0d0714';
+        ctx.fillRect(x + 4, y + 4, 4, 3);
+        ctx.fillRect(x + width - 8, y + 4, 4, 3);
+    } else if (shape === 'medium') {
+        ctx.fillRect(x + 1, y + 2, width - 2, height - 4);
+        ctx.fillRect(x + 4, y, 3, 3);
+        ctx.fillRect(x + width - 7, y, 3, 3);
+        ctx.fillStyle = '#0d0714';
+        ctx.fillRect(x + 5, y + 4, 3, 3);
+        ctx.fillRect(x + width - 8, y + 4, 3, 3);
+    } else {
+        ctx.fillRect(x + 2, y + 3, width - 4, height - 5);
+        ctx.fillStyle = '#0d0714';
+        ctx.fillRect(x + 6, y + 4, 3, 2);
+        ctx.fillRect(x + width - 9, y + 4, 3, 2);
     }
+
+    ctx.shadowBlur = 0;
 }
 
 // ── Draw ──
@@ -582,6 +781,9 @@ function draw() {
     }
 
     // Draw player
+    if (gameTime < playerInvulnerabilityUntil && Math.floor(gameTime / 80) % 2 === 0) {
+        ctx.globalAlpha = 0.35;
+    }
     ctx.fillStyle = '#4ade80';
     ctx.shadowColor = '#4ade80';
     ctx.shadowBlur = 8;
@@ -591,6 +793,7 @@ function draw() {
     ctx.lineTo(playerX, PLAYER_Y + PLAYER_HEIGHT);
     ctx.closePath();
     ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
 
     // Draw UFOs
@@ -599,27 +802,7 @@ function draw() {
     // Draw aliens
     aliens.forEach(a => {
         if (!a.alive) return;
-        ctx.fillStyle = alienColors[a.row] || '#ff6b8a';
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 4;
-
-        if (a.type === 'TYPE_3') {
-            ctx.fillRect(a.x, a.y + 4, ALIEN_WIDTH, ALIEN_HEIGHT - 8);
-            ctx.fillStyle = '#0d0714';
-            ctx.fillRect(a.x + 5, a.y + 6, 8, 8);
-            ctx.fillRect(a.x + ALIEN_WIDTH - 13, a.y + 6, 8, 8);
-        } else if (a.type === 'TYPE_2') {
-            ctx.fillRect(a.x, a.y + 3, ALIEN_WIDTH, ALIEN_HEIGHT - 6);
-            ctx.fillStyle = '#0d0714';
-            ctx.fillRect(a.x + 6, a.y + 4, 6, 6);
-            ctx.fillRect(a.x + ALIEN_WIDTH - 12, a.y + 4, 6, 6);
-        } else {
-            ctx.fillRect(a.x, a.y + 5, ALIEN_WIDTH, ALIEN_HEIGHT - 10);
-            ctx.fillStyle = '#0d0714';
-            ctx.fillRect(a.x + 7, a.y + 6, 4, 4);
-            ctx.fillRect(a.x + ALIEN_WIDTH - 11, a.y + 6, 4, 4);
-        }
-        ctx.shadowBlur = 0;
+        drawAlien(a);
     });
 
     // Draw player bullets
@@ -636,7 +819,7 @@ function draw() {
         ctx.fillStyle = '#ff2060';
         ctx.shadowColor = '#ff2060';
         ctx.shadowBlur = 4;
-        ctx.fillRect(b.x, b.y, 2, b.speed);
+        ctx.fillRect(b.x, b.y, b.width, b.height);
         ctx.shadowBlur = 0;
     });
 }
@@ -644,12 +827,10 @@ function draw() {
 // ── Loop ──
 
 function loop(timestamp) {
-    const delta = timestamp - lastTime;
+    const delta = Math.min(100, Math.max(0, timestamp - lastTime));
     lastTime = timestamp;
-    if (delta < 100) {
-        update(delta);
-        updateParticles(delta);
-    }
+    update(delta);
+    updateParticles(delta);
     draw();
     drawParticles();
     requestAnimationFrame(loop);
@@ -658,9 +839,11 @@ function loop(timestamp) {
 // ── Game Over ──
 
 function handleGameOver() {
+    if (gameOver) return;
     gameOver = true;
     isPaused = true;
-    particles = [];
+    resetCombo();
+    updatePauseControl();
 
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
@@ -697,21 +880,38 @@ function handleGameOver() {
 
 // ── Pause ──
 
+function updatePauseControl() {
+    const pauseButton = document.getElementById('pause-btn');
+    const touchPauseButton = document.querySelector('[data-action="pause"]');
+    const label = gameStarted && isPaused && !gameOver ? 'Resume' : 'Pause';
+
+    if (pauseButton) {
+        pauseButton.textContent = label;
+        pauseButton.setAttribute('aria-label', label);
+        pauseButton.setAttribute('aria-pressed', String(isPaused));
+    }
+    if (touchPauseButton) {
+        touchPauseButton.textContent = label === 'Resume' ? '>' : '||';
+        touchPauseButton.setAttribute('aria-label', label);
+        touchPauseButton.setAttribute('title', label);
+        touchPauseButton.setAttribute('aria-pressed', String(isPaused));
+    }
+}
+
 function togglePause() {
     if (!gameStarted || gameOver) return;
     isPaused = !isPaused;
-    particles = [];
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     if (overlay) {
         overlay.style.display = isPaused ? 'flex' : 'none';
     }
-    if (!isPaused && overlayTitle) {
-        overlayTitle.textContent = 'SPACE INVADERS';
-    }
+    if (overlayTitle) overlayTitle.textContent = isPaused ? 'PAUSED' : 'SPACE INVADERS';
+    updatePauseControl();
     if (isPaused) {
         MusicPlayer.pause();
     } else {
+        lastTime = performance.now();
         MusicPlayer.resume();
     }
 }
@@ -723,6 +923,7 @@ function resetGame() {
     initGame();
     isPaused = false;
     gameStarted = true;
+    updatePauseControl();
 
     const overlay = document.getElementById('pause-overlay');
     if (overlay) overlay.style.display = 'none';
@@ -739,7 +940,6 @@ function resetGame() {
     const quickRestartBtn = document.getElementById('quick-restart-btn');
     if (quickRestartBtn) quickRestartBtn.style.display = 'none';
 
-    previousBestScore = getBestScore();
     updateBestScoreDisplay();
 
     SoundManager.startBgm();
@@ -753,7 +953,9 @@ if (playerNameInput) {
     playerNameInput.value = savedName;
 
     playerNameInput.addEventListener('input', () => {
-        localStorage.setItem(PLAYER_NAME_STORAGE, playerNameInput.value);
+        const sanitized = sanitizePlayerName(playerNameInput.value);
+        if (playerNameInput.value !== sanitized) playerNameInput.value = sanitized;
+        writeStorage(PLAYER_NAME_STORAGE, sanitized);
     });
 }
 
@@ -769,6 +971,12 @@ function updateMuteIcon() {
         } else {
             muteBtn.textContent = '\u{1F50A}';
         }
+    }
+}
+
+function updateBgmIcon() {
+    if (bgmMuteBtn) {
+        bgmMuteBtn.textContent = MusicPlayer.getMuteState() ? '\u{1F507}' : '\u{1F3B5}';
     }
 }
 
@@ -795,14 +1003,14 @@ updateMuteIcon();
 
 const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 if (bgmMuteBtn) {
-    const savedBgmMute = localStorage.getItem('si_bgm_muted') === 'true';
-    if (savedBgmMute) {
-        MusicPlayer.bgmMuted = true;
-    }
+    const savedBgmMute = readStorage(BGM_MUTED_STORAGE, 'false') === 'true';
+    MusicPlayer.setVolume(getSavedBgmVolume());
+    MusicPlayer.setMute(savedBgmMute);
     bgmMuteBtn.addEventListener('click', () => {
         MusicPlayer.toggleMute();
-        localStorage.setItem('si_bgm_muted', MusicPlayer.bgmMuted.toString());
+        updateBgmIcon();
     });
+    updateBgmIcon();
 }
 
 const pauseBtn = document.getElementById('pause-btn');
@@ -827,19 +1035,18 @@ function setupDifficultyButtons() {
         }
 
         btn.addEventListener('click', () => {
+            if (gameStarted && !gameOver) return;
+            if (!applyDifficulty(diff)) return;
+
             Object.keys(DIFFICULTY_PRESETS).forEach(d => {
                 const b = container.querySelector(`[data-diff="${d}"]`);
                 if (b) b.classList.remove('active');
             });
             btn.classList.add('active');
             saveDifficulty(diff);
-            applyDifficulty(diff);
-            // If game not started, apply immediately
+
             if (!gameStarted || gameOver) {
                 initGame();
-                updateUI();
-            } else {
-                lives = DIFFICULTY_PRESETS[diff].lives;
                 updateUI();
             }
         });
@@ -862,8 +1069,6 @@ document.addEventListener('keydown', (e) => {
     if (gameOver) return;
     if (isPaused && e.key === 'Enter') {
         togglePause();
-        const overlayTitle = document.getElementById('overlay-title');
-        if (overlayTitle) overlayTitle.textContent = 'SPACE INVADERS';
         return;
     }
     if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
@@ -877,8 +1082,6 @@ canvas.addEventListener('click', () => {
         startGame();
     } else if (isPaused && !gameOver) {
         togglePause();
-        const overlayTitle = document.getElementById('overlay-title');
-        if (overlayTitle) overlayTitle.textContent = 'SPACE INVADERS';
     }
 });
 
@@ -886,6 +1089,7 @@ function startGame() {
     gameStarted = true;
     isPaused = false;
     particles = [];
+    updatePauseControl();
     const overlay = document.getElementById('pause-overlay');
     const overlayTitle = document.getElementById('overlay-title');
     const startBtn = document.getElementById('start-btn');
@@ -923,10 +1127,8 @@ if (quickRestartBtn) {
 
 // ── Initialize ──
 
+selectedDifficulty = getSavedDifficulty();
 initGame();
-
-// Apply saved difficulty
-applyDifficulty(getSavedDifficulty());
 
 // Setup difficulty buttons
 setupDifficultyButtons();
@@ -939,7 +1141,7 @@ if (overlay) overlay.style.display = 'flex';
 if (overlayTitle) overlayTitle.textContent = 'SPACE INVADERS';
 if (startBtnEl) startBtnEl.style.display = 'block';
 
-previousBestScore = getBestScore();
+updatePauseControl();
 updateBestScoreDisplay();
 
 lastTime = performance.now();

@@ -1,3 +1,34 @@
+// ── Persistence keys ──
+const TETRIS_SFX_VOLUME = 'tetris_audio_volume';
+const TETRIS_SFX_MUTED = 'tetris_sfx_muted';
+const TETRIS_BGM_VOLUME = 'tetris_bgm_volume';
+const TETRIS_BGM_MUTED = 'tetris_bgm_muted';
+
+function getStoredNumber(key, fallback) {
+    try {
+        const value = Number.parseFloat(localStorage.getItem(key));
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function getStoredBoolean(key) {
+    try {
+        return localStorage.getItem(key) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function saveAudioSetting(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
 const SoundManager = {
     audioCtx: null,
     masterGain: null,
@@ -92,6 +123,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(TETRIS_SFX_VOLUME, this.volume);
     },
 
     toggleMute() {
@@ -99,6 +131,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(TETRIS_SFX_MUTED, this.isMuted);
     },
 
     getVolume() {
@@ -121,6 +154,9 @@ const SoundManager = {
         MusicPlayer.resume();
     }
 };
+
+SoundManager.volume = getStoredNumber(TETRIS_SFX_VOLUME, SoundManager.volume);
+SoundManager.isMuted = getStoredBoolean(TETRIS_SFX_MUTED);
 
 const MusicPlayer = {
     isPlaying: false,
@@ -334,14 +370,18 @@ const MusicPlayer = {
 
     toggleMute() {
         this.bgmMuted = !this.bgmMuted;
+        saveAudioSetting(TETRIS_BGM_MUTED, this.bgmMuted);
     },
 
     setVolume(value) {
         this.bgmVolume = Math.max(0, Math.min(1, value));
-        SoundManager.setVolume(SoundManager.getVolume());
+        saveAudioSetting(TETRIS_BGM_VOLUME, this.bgmVolume);
     },
 
     getMuteState() {
         return this.bgmMuted;
     }
 };
+
+MusicPlayer.bgmVolume = getStoredNumber(TETRIS_BGM_VOLUME, MusicPlayer.bgmVolume);
+MusicPlayer.bgmMuted = getStoredBoolean(TETRIS_BGM_MUTED);

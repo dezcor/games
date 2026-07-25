@@ -2,6 +2,10 @@
 
 Implementación del clásico juego de asteroides para el **Games Hub**, siguiendo la arquitectura modular y el sistema de diseño existentes (HTML, JS, CSS plano, sin dependencias, Web Audio API).
 
+## Estado actual
+
+Todas las fases están completadas (ver `PLAN.md`). El juego incluye persistencia de audio (SFX + BGM, volumen + mute), high scores con nombre y medallas, 4 niveles de dificultad, 3 power-ups, OVNI grande y pequeño, hiperespacio con cooldown, BGM dinámico, 5 logros persistentes, selector de 6 colores de nave, tutorial 4 pasos, layout portrait con pinch-zoom y double-tap reset, y repaso de UI consistente con el hub (top UI, botones, sound card, game over modal).
+
 ## Fase 1: Estructura y Configuración Base ✅ COMPLETADO
 - [x] Crear directorio `asteroids/` y archivos base (`index.html`, `constants.js`, `game.js`, `input.js`, `sound.js`, `style.css`).
 - [x] Definir constantes del juego (tamaño del canvas 800x600, velocidades, tamaños de asteroides).
@@ -28,23 +32,24 @@ Implementación del clásico juego de asteroides para el **Games Hub**, siguiend
 - [x] Implementar controles táctiles en pantalla y gestos.
 
 ## Fase 4: Persistencia e Integración ✅ COMPLETADO
-- [x] Sistema de `localStorage` para High Scores (`asteroids_highscores`).
-- [x] Guardar nombre de jugador (`asteroids_player_name`).
+- [x] Sistema de `localStorage` para High Scores (`asteroid_highscores`).
+- [x] Guardar nombre de jugador (`asteroid_player_name`).
+- [x] Persistencia de audio SFX + BGM (volumen + mute).
 - [x] Añadir enlace al juego en el `index.html` principal del hub.
-- [x] Medallas en tabla de mejores puntuaciones (gold/silver/bronze).
+- [x] Medallas en tabla de mejores puntuaciones (gold/silver/bronze, easter egg JSnow/JSnof).
 - [x] Formato de fechas en español (es-ES locale).
-- [x] Display del nombre del jugador en UI.
 
-## Fase 5: Características Avanzadas ⚙️ EN PROCESO
+## Fase 5: Características Avanzadas ✅ COMPLETADO
 - [x] **Niveles de dificultad:** Configuraciones Fácil/Normal/Difícil/Loco (velocidad de asteroides, frecuencia de aparición, vidas, invulnerabilidad).
-- [ ] **Power-ups:** Escudo temporal, doble disparo, vida extra (generados al destruir asteroides).
-- [ ] **Enemigo OVNI:** Implementar OVNI clásico que aparece aleatoriamente, se mueve por la parte superior y dispara a la nave.
-- [ ] **Sistema de partículas:** Fragmentos visuales en explosiones y propulsor de la nave.
-- [ ] **Hiperespacio:** Mecanismo de teletransporte aleatorio de la nave (con riesgo de generar sobre un asteroide).
+- [x] **Power-ups:** Escudo temporal, doble disparo, vida extra (generados al destruir asteroides, con HUD y SFX).
+- [x] **Enemigo OVNI:** OVNI grande (200 pts) y pequeño (1000 pts desde nivel 3) con disparos y SFX.
+- [x] **Sistema de partículas:** Fragmentos visuales en explosiones y propulsor de la nave, con tope global (MAX_PARTICLES).
+- [x] **Hiperespacio:** Teletransporte aleatorio con tecla/botón, cooldown 5 s, 10 % self-destruct, 0.3 s invuln al reaparecer.
 
-## Fase 6: Polish y Extras
-- [ ] **Música dinámica (BGM):** `MusicPlayer` que cambie de ritmo o tono según la intensidad (ej. ritmo más rápido al aparecer un OVNI).
-- [ ] **Logros/Medallas:** Sistema de achievements locales desbloqueables (ej. "Primer Millón", "Superviviente").
-- [ ] **Personalización de nave:** Selector de color/diseño de la nave en la pantalla de inicio (persistido en `localStorage`).
-- [ ] **Tutorial interactivo:** Mini-guía visual de los controles y el objetivo en la primera partida.
-- [ ] **Compatibilidad móvil:** Adaptar layout del canvas y botones para modo portrait.
+## Fase 6: Polish y Extras ✅ COMPLETADO
+- [x] **Música dinámica (BGM):** `MusicPlayer` con tempo variable (110/125/140 BPM) según intensidad + capa de sirena OVNI.
+- [x] **Logros/Medallas:** 5 achievements persistentes (`first_ufo`, `first_powerup`, `hyperspace_safe`, `reach_level_5`, `score_10k`) con notificación toast y panel en menú.
+- [x] **Personalización de nave:** Selector de 6 colores (cyan/amber/green/pink/white/magenta) persistido en `asteroid_ship_skin`.
+- [x] **Tutorial interactivo:** 4 pasos (controles, power-ups, hiperespacio, OVNI), descartable, persistido en `asteroid_tutorial_dismissed`.
+- [x] **Compatibilidad móvil:** Layout portrait con media query, pinch-zoom 1x-2x, double-tap reset, indicator de zoom.
+- [x] **Accesibilidad:** `aria-label` en canvas/botones, `aria-live` en score, `aria-pressed` en toggles, `aria-expanded` en achievements, `role=dialog/tab/radio/list`, focus-visible global, soporte de teclado del tutorial.

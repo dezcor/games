@@ -1,3 +1,32 @@
+// ── Persistence keys ──
+const SNAKE_SFX_VOLUME = 'snake_audio_volume';
+const SNAKE_SFX_MUTED = 'snake_sfx_muted';
+
+function getStoredNumber(key, fallback) {
+    try {
+        const value = Number.parseFloat(localStorage.getItem(key));
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function getStoredBoolean(key) {
+    try {
+        return localStorage.getItem(key) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function saveAudioSetting(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
 const SoundManager = {
     audioCtx: null,
     masterGain: null,
@@ -96,6 +125,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(SNAKE_SFX_VOLUME, this.volume);
     },
 
     toggleMute() {
@@ -103,6 +133,7 @@ const SoundManager = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
+        saveAudioSetting(SNAKE_SFX_MUTED, this.isMuted);
     },
 
     getVolume() {
@@ -125,6 +156,9 @@ const SoundManager = {
         MusicPlayer.resume();
     },
 };
+
+SoundManager.volume = getStoredNumber(SNAKE_SFX_VOLUME, SoundManager.volume);
+SoundManager.isMuted = getStoredBoolean(SNAKE_SFX_MUTED);
 
 const MusicPlayer = {
     isPlaying: false,
