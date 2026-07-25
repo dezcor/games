@@ -125,6 +125,84 @@ const BGM_VOLUME_STORAGE = 'asteroid_bgm_volume';
 const SFX_MUTED_STORAGE = 'asteroid_sfx_muted';
 const BGM_MUTED_STORAGE = 'asteroid_bgm_muted';
 const DIFFICULTY_STORAGE = 'asteroid_difficulty';
+const SHIP_SKIN_STORAGE = 'asteroid_ship_skin';
+const ACHIEVEMENTS_STORAGE = 'asteroid_achievements';
+const TUTORIAL_DISMISSED_STORAGE = 'asteroid_tutorial_dismissed';
+
+// ── Ship Skins ──
+const SHIP_SKINS = [
+    { id: 'cyan',    color: '#06b6d4', name: 'Cyan' },
+    { id: 'amber',   color: '#fbbf24', name: 'Ámbar' },
+    { id: 'green',   color: '#4ade80', name: 'Verde' },
+    { id: 'pink',    color: '#ff6b8a', name: 'Rosa' },
+    { id: 'white',   color: '#e5e7eb', name: 'Blanco' },
+    { id: 'magenta', color: '#d946ef', name: 'Magenta' },
+];
+const DEFAULT_SHIP_SKIN = 'cyan';
+
+// ── Achievements ──
+// check(state) returns true when the achievement should be unlocked.
+const ACHIEVEMENTS = [
+    {
+        id: 'first_ufo',
+        label: 'Cazador de OVNIs',
+        description: 'Destruye tu primer OVNI.',
+        icon: '🛸',
+        check: (state) => state.ufoDestroyed,
+    },
+    {
+        id: 'first_powerup',
+        label: 'Coleccionista',
+        description: 'Recoge tu primer power-up.',
+        icon: '⚡',
+        check: (state) => state.powerupCollected,
+    },
+    {
+        id: 'hyperspace_safe',
+        label: 'Maestro del hiperespacio',
+        description: 'Completa un hiperespacio con éxito.',
+        icon: '✨',
+        check: (state) => state.hyperspaceSafe,
+    },
+    {
+        id: 'reach_level_5',
+        label: 'Superviviente',
+        description: 'Alcanza el nivel 5.',
+        icon: '🏆',
+        check: (state) => state.maxLevel >= 5,
+    },
+    {
+        id: 'score_10k',
+        label: 'Primer millón',
+        description: 'Consigue 10 000 puntos en una partida.',
+        icon: '💯',
+        check: (state) => state.maxScore >= 10000,
+    },
+];
+
+// ── Tutorial Steps ──
+const TUTORIAL_STEPS = [
+    {
+        title: 'Controles',
+        body: '←/→ o A/D: rotar la nave. ↑ o W: impulso. Espacio: disparar. H: hiperespacio. P: pausa. R: reiniciar.',
+        icon: '🎮',
+    },
+    {
+        title: 'Power-ups',
+        body: 'Escudo (cyan) absorbe 1 impacto. Doble disparo (ámbar) duplica tus balas. Vida extra (verde) suma +1.',
+        icon: '⚡',
+    },
+    {
+        title: 'Hiperespacio',
+        body: 'Teletransporte aleatorio con cooldown de 5 s. Existe un 10 % de riesgo de fallar.',
+        icon: '✨',
+    },
+    {
+        title: 'OVNI y objetivo',
+        body: 'Sobrevive, suma puntos y sube de nivel. OVNI grande = 200 pts, pequeño = 1000 pts.',
+        icon: '🛸',
+    },
+];
 
 // ── Screen Shake ──
 const SHAKE_DURATION = 300;
