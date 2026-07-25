@@ -48,6 +48,44 @@ function loadHighScores() {
     }
 }
 
+function loadShipSkin() {
+    const saved = readStorage(SHIP_SKIN_STORAGE, DEFAULT_SHIP_SKIN);
+    return SHIP_SKINS.some((s) => s.id === saved) ? saved : DEFAULT_SHIP_SKIN;
+}
+
+function getShipColor(skinId) {
+    const skin = SHIP_SKINS.find((s) => s.id === skinId);
+    return (skin && skin.color) || GAME_CONFIG.shipColor;
+}
+
+function loadAchievements() {
+    try {
+        const raw = JSON.parse(readStorage(ACHIEVEMENTS_STORAGE, '{}'));
+        if (!raw || typeof raw !== 'object') return {};
+        const out = {};
+        for (const def of ACHIEVEMENTS) {
+            const entry = raw[def.id];
+            if (entry && entry.unlocked) {
+                out[def.id] = {
+                    unlocked: true,
+                    date: typeof entry.date === 'string' ? entry.date.slice(0, 40) : new Date().toISOString(),
+                };
+            }
+        }
+        return out;
+    } catch (error) {
+        return {};
+    }
+}
+
+function saveAchievements(map) {
+    writeStorage(ACHIEVEMENTS_STORAGE, JSON.stringify(map));
+}
+
+function isTutorialDismissed() {
+    return readStorage(TUTORIAL_DISMISSED_STORAGE, 'false') === 'true';
+}
+
 const reducedMotion = (() => {
     try {
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -72,6 +110,23 @@ const game = {
     level: 1,
     playerName: sanitizePlayerName(readStorage(PLAYER_NAME_STORAGE, 'Player')),
     highScores: loadHighScores(),
+
+    shipSkin: loadShipSkin(),
+    achievements: loadAchievements(),
+
+    achievementState: {
+        ufoDestroyed: false,
+        powerupCollected: false,
+        hyperspaceSafe: false,
+        maxLevel: 1,
+        maxScore: 0,
+    },
+
+    toastQueue: [],
+    toastActive: false,
+
+    tutorialStep: 0,
+    showAchievements: false,
 
     entities: {
         ship: null,
@@ -127,6 +182,8 @@ const game = {
         this.updateHud();
         this.updatePowerupHud();
 
+        this.maybeShowTutorial();
+
         window.requestAnimationFrame((t) => this.loop(t));
     },
 
@@ -154,9 +211,228 @@ const game = {
         });
     },
 
+    // ── Ship Skin ──
+    setShipSkin(skinId) {
+        if (!SHIP_SKINS.some((s) => s.id === skinId)) return;
+        this.shipSkin = skinId;
+        writeStorage(SHIP_SKIN_STORAGE, skinId);
+        this.updateSkinSwatches();
+    },
+
+    updateSkinSwatches() {
+        const container = document.getElementById('skin-swatches');
+        if (!container) return;
+        container.innerHTML = '';
+        SHIP_SKINS.forEach((skin) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'skin-swatch';
+            btn.dataset.skin = skin.id;
+            btn.style.color = skin.color;
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', skin.id === this.shipSkin ? 'true' : 'false');
+            btn.setAttribute('aria-label', skin.name);
+            btn.title = skin.name;
+            if (skin.id === this.shipSkin) btn.classList.add('active');
+            btn.addEventListener('click', () => this.setShipSkin(skin.id));
+            container.appendChild(btn);
+        });
+    },
+
+    // ── Achievements ──
+    checkAchievements() {
+        if (this.state !== 'PLAYING' && this.state !== 'GAME_OVER') return;
+        ACHIEVEMENTS.forEach((def) => {
+            if (this.achievements[def.id]) return;
+            if (!def.check(this.achievementState)) return;
+            const entry = { unlocked: true, date: new Date().toISOString() };
+            this.achievements[def.id] = entry;
+            this.toastQueue.push(def);
+            saveAchievements(this.achievements);
+        });
+        if (!this.toastActive) this.processToastQueue();
+        this.renderAchievementsList();
+    },
+
+    processToastQueue() {
+        if (this.toastQueue.length === 0) {
+            this.toastActive = false;
+            return;
+        }
+        this.toastActive = true;
+        const def = this.toastQueue.shift();
+        const toast = document.getElementById('achievement-toast');
+        const iconEl = document.getElementById('achievement-toast-icon');
+        const textEl = document.getElementById('achievement-toast-text');
+        if (toast && iconEl && textEl) {
+            iconEl.textContent = def.icon;
+            textEl.textContent = def.label;
+            toast.style.display = 'flex';
+            const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const duration = reduced ? 2000 : 3000;
+            setTimeout(() => {
+                toast.style.display = 'none';
+                this.processToastQueue();
+            }, duration);
+        } else {
+            this.processToastQueue();
+        }
+    },
+
+    renderAchievementsList() {
+        const list = document.getElementById('achievements-list');
+        if (!list) return;
+        list.innerHTML = '';
+        ACHIEVEMENTS.forEach((def) => {
+            const entry = this.achievements[def.id];
+            const li = document.createElement('li');
+            li.className = 'ach-item' + (entry ? ' unlocked' : '');
+            li.setAttribute('role', 'listitem');
+
+            const icon = document.createElement('span');
+            icon.className = 'ach-item-icon';
+            icon.textContent = def.icon;
+            icon.setAttribute('aria-hidden', 'true');
+
+            const body = document.createElement('div');
+            body.className = 'ach-item-body';
+            const label = document.createElement('div');
+            label.className = 'ach-item-label';
+            label.textContent = def.label;
+            const desc = document.createElement('div');
+            desc.className = 'ach-item-desc';
+            desc.textContent = def.description;
+            body.appendChild(label);
+            body.appendChild(desc);
+
+            const status = document.createElement('span');
+            status.className = 'ach-item-date';
+            if (entry) {
+                const d = new Date(entry.date);
+                status.textContent = isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-ES');
+            } else {
+                const hidden = document.createElement('span');
+                hidden.className = 'sr-only';
+                hidden.textContent = 'Bloqueado';
+                status.textContent = '—';
+                status.appendChild(hidden);
+            }
+
+            li.appendChild(icon);
+            li.appendChild(body);
+            li.appendChild(status);
+            list.appendChild(li);
+        });
+    },
+
+    toggleAchievementsPanel() {
+        this.showAchievements = !this.showAchievements;
+        const panel = document.getElementById('achievements-panel');
+        const btn = document.getElementById('achievements-btn');
+        if (panel) panel.style.display = this.showAchievements ? 'block' : 'none';
+        if (btn) {
+            btn.classList.toggle('active', this.showAchievements);
+            btn.setAttribute('aria-expanded', this.showAchievements ? 'true' : 'false');
+        }
+    },
+
+    // ── Tutorial ──
+    maybeShowTutorial() {
+        if (isTutorialDismissed()) return;
+        if (this.state !== 'MENU') return;
+        this.openTutorial();
+    },
+
+    openTutorial() {
+        this.tutorialStep = 0;
+        const overlay = document.getElementById('tutorial-overlay');
+        if (!overlay) return;
+        overlay.style.display = 'flex';
+        this.renderTutorial();
+        const firstBtn = document.getElementById('tutorial-next');
+        if (firstBtn) firstBtn.focus();
+    },
+
+    closeTutorial(persistDismiss) {
+        const overlay = document.getElementById('tutorial-overlay');
+        if (overlay) overlay.style.display = 'none';
+        if (persistDismiss) {
+            writeStorage(TUTORIAL_DISMISSED_STORAGE, 'true');
+        }
+    },
+
+    renderTutorial() {
+        const step = TUTORIAL_STEPS[this.tutorialStep];
+        if (!step) return;
+        const icon = document.getElementById('tutorial-icon');
+        const title = document.getElementById('tutorial-title');
+        const body = document.getElementById('tutorial-body');
+        if (icon) icon.textContent = step.icon;
+        if (title) title.textContent = step.title;
+        if (body) body.textContent = step.body;
+
+        const dots = document.getElementById('tutorial-dots');
+        if (dots) {
+            dots.innerHTML = '';
+            TUTORIAL_STEPS.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'tutorial-dot' + (i === this.tutorialStep ? ' active' : '');
+                dot.setAttribute('role', 'tab');
+                dot.setAttribute('aria-selected', i === this.tutorialStep ? 'true' : 'false');
+                dot.setAttribute('aria-label', `Paso ${i + 1} de ${TUTORIAL_STEPS.length}`);
+                dot.addEventListener('click', () => {
+                    this.tutorialStep = i;
+                    this.renderTutorial();
+                });
+                dots.appendChild(dot);
+            });
+        }
+
+        const prev = document.getElementById('tutorial-prev');
+        const next = document.getElementById('tutorial-next');
+        if (prev) prev.disabled = this.tutorialStep === 0;
+        if (next) next.disabled = this.tutorialStep === TUTORIAL_STEPS.length - 1;
+    },
+
+    tutorialNext() {
+        if (this.tutorialStep < TUTORIAL_STEPS.length - 1) {
+            this.tutorialStep += 1;
+            this.renderTutorial();
+        }
+    },
+
+    tutorialPrev() {
+        if (this.tutorialStep > 0) {
+            this.tutorialStep -= 1;
+            this.renderTutorial();
+        }
+    },
+
     setupInput() {
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
+            const tutorialOpen = document.getElementById('tutorial-overlay') &&
+                document.getElementById('tutorial-overlay').style.display === 'flex';
+            if (tutorialOpen) {
+                if (e.key === 'Escape') {
+                    const cb = document.getElementById('tutorial-dismiss-cb');
+                    this.closeTutorial(cb && cb.checked);
+                    e.preventDefault();
+                    return;
+                }
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    this.tutorialNext();
+                    e.preventDefault();
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    this.tutorialPrev();
+                    e.preventDefault();
+                    return;
+                }
+                return;
+            }
             if (e.key === 'r' || e.key === 'R') {
                 if (this.state === 'PLAYING' || this.state === 'PAUSED' || this.state === 'GAME_OVER') {
                     this.resetGame();
@@ -180,7 +456,6 @@ const game = {
     setupUI() {
         // UI elements
         const startBtn = document.getElementById('start-btn');
-        const mainStartBtn = document.getElementById('main-start-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const quickBtn = document.getElementById('quick-restart-btn');
         const highScoreValue = document.getElementById('best-score-value');
@@ -192,7 +467,6 @@ const game = {
 
         // Start buttons
         if (startBtn) startBtn.addEventListener('click', () => this.startGame());
-        if (mainStartBtn) mainStartBtn.addEventListener('click', () => this.startGame());
         if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
         if (quickBtn) quickBtn.addEventListener('click', () => this.resetGame());
 
@@ -204,11 +478,8 @@ const game = {
                 this.playerName = sanitizePlayerName(e.target.value);
                 e.target.value = this.playerName;
                 writeStorage(PLAYER_NAME_STORAGE, this.playerName);
-                this.displayPlayerName();
             });
         }
-
-        this.displayPlayerName();
 
         // ── Sound Controls ──
 
@@ -262,46 +533,58 @@ const game = {
             }
         });
         this.updateDifficultyButtons();
-    },
 
-    /**
-     * Display player name in the UI
-     */
-    displayPlayerName() {
-        const playerNameDisplay = document.getElementById('player-display');
-        const playerNameSpan = document.getElementById('current-player-name');
-        if (playerNameDisplay) {
-            playerNameDisplay.style.display = 'inline';
-        }
-        if (playerNameSpan) {
-            playerNameSpan.textContent = this.playerName || 'Player';
-        }
+        // ── Ship Skin ──
+        this.updateSkinSwatches();
+
+        // ── Achievements ──
+        this.renderAchievementsList();
+        const achBtn = document.getElementById('achievements-btn');
+        if (achBtn) achBtn.addEventListener('click', () => this.toggleAchievementsPanel());
+
+        // ── Tutorial ──
+        const tPrev = document.getElementById('tutorial-prev');
+        const tNext = document.getElementById('tutorial-next');
+        const tSkip = document.getElementById('tutorial-skip');
+        if (tPrev) tPrev.addEventListener('click', () => this.tutorialPrev());
+        if (tNext) tNext.addEventListener('click', () => this.tutorialNext());
+        if (tSkip) tSkip.addEventListener('click', () => {
+            const cb = document.getElementById('tutorial-dismiss-cb');
+            this.closeTutorial(cb && cb.checked);
+        });
     },
 
     updateOverlay() {
         const overlay = document.getElementById('pause-overlay');
         const title = document.getElementById('overlay-title');
         const startBtn = document.getElementById('start-btn');
-        const mainStartBtn = document.getElementById('main-start-btn');
-        const quickRestartBtn = document.getElementById('quick-restart-btn');
-        const stats = document.getElementById('game-over-stats');
-        const scores = document.getElementById('high-scores-table');
-        const nameInput = document.getElementById('player-name');
+        const gameOverCard = document.getElementById('game-over-card');
+        const nameInput = document.getElementById('name-input-container');
         const difficulty = document.getElementById('difficulty-selection');
+        const shipSkin = document.getElementById('ship-skin-selection');
+        const achievementsBtn = document.getElementById('achievements-btn');
+        const achievementsPanel = document.getElementById('achievements-panel');
 
         const isMenu = this.state === 'MENU';
         const isPaused = this.state === 'PAUSED';
         const isGameOver = this.state === 'GAME_OVER';
 
         if (overlay) overlay.style.display = this.state === 'PLAYING' ? 'none' : 'flex';
-        if (title) title.textContent = isGameOver ? 'GAME OVER' : isPaused ? 'PAUSED' : 'ASTEROIDS';
+        if (title) {
+            if (isGameOver) {
+                title.style.display = 'none';
+            } else {
+                title.style.display = 'block';
+                title.textContent = isPaused ? 'PAUSED' : 'ASTEROIDS';
+            }
+        }
         if (startBtn) startBtn.style.display = isMenu ? 'block' : 'none';
-        if (mainStartBtn) mainStartBtn.style.display = isMenu ? 'block' : 'none';
-        if (quickRestartBtn) quickRestartBtn.style.display = isGameOver ? 'flex' : 'none';
-        if (stats) stats.style.display = isGameOver ? 'flex' : 'none';
-        if (scores) scores.style.display = isGameOver && this.highScores.length ? 'block' : 'none';
-        if (nameInput) nameInput.style.display = isMenu ? 'block' : 'none';
+        if (gameOverCard) gameOverCard.style.display = isGameOver ? 'flex' : 'none';
+        if (nameInput) nameInput.style.display = isMenu ? 'inline-block' : 'none';
         if (difficulty) difficulty.style.display = isMenu ? 'block' : 'none';
+        if (shipSkin) shipSkin.style.display = isMenu ? 'flex' : 'none';
+        if (achievementsBtn) achievementsBtn.style.display = isMenu ? 'inline-block' : 'none';
+        if (achievementsPanel) achievementsPanel.style.display = (isMenu && this.showAchievements) ? 'block' : 'none';
     },
 
     startGame() {
@@ -330,7 +613,6 @@ const game = {
         this.updateHud();
         this.updatePowerupHud();
         this.updateOverlay();
-        this.displayPlayerName();
 
         MusicPlayer.start();
         MusicPlayer.setIntensity(0);
@@ -371,7 +653,6 @@ const game = {
         this.level = 1;
         this.shipEffects.shield = 0;
         this.shipEffects.double = 0;
-        this.displayPlayerName();
 
         // Clear everything
         this.entities.ship = null;
@@ -510,6 +791,7 @@ const game = {
         if (!ufo || ufo.dead) return;
         ufo.dead = true;
         this.score += SCORE_TABLE[`ufo${ufo.size.charAt(0).toUpperCase()}${ufo.size.slice(1)}`] || 0;
+        this.achievementState.ufoDestroyed = true;
         createExplosion(ufo.x, ufo.y, 'large');
         SoundManager.playUfoExplode();
         if (this.entities.ufo === ufo) {
@@ -517,6 +799,7 @@ const game = {
             MusicPlayer.setUfoActive(false);
         }
         this.updateHud();
+        this.checkAchievements();
     },
 
     tryHyperspace() {
@@ -566,15 +849,19 @@ const game = {
         ship.vy = 0;
         ship.invulnerable = Math.max(ship.invulnerable, HYPERSPACE_REENTRY_INVULN);
         ship.hyperspaceCooldownUntil = now + HYPERSPACE_COOLDOWN;
+        this.achievementState.hyperspaceSafe = true;
         if (!reducedMotion) {
             this.entities.effects.push(new FlashEffect(ship.x, ship.y, '#ffffff', 0.15, HYPERSPACE_FLASH_FRAMES));
         }
+        this.checkAchievements();
     },
 
     applyPowerup(type) {
         SoundManager.playPowerupPickup();
         this.score += SCORE_TABLE.powerup || 0;
+        this.achievementState.powerupCollected = true;
         this.updateHud();
+        this.checkAchievements();
         if (type === 'shield') {
             this.shipEffects.shield = POWERUP_TYPES.shield.duration;
         } else if (type === 'double') {
@@ -780,8 +1067,12 @@ const game = {
         // A wave advances only after every asteroid and fragment is gone.
         if (this.entities.asteroids.length === 0) {
             this.level += 1;
+            if (this.level > this.achievementState.maxLevel) {
+                this.achievementState.maxLevel = this.level;
+            }
             this.spawnWave();
             this.updateHud();
+            this.checkAchievements();
             const banner = document.getElementById('level-banner');
             if (banner) {
                 banner.textContent = `LEVEL ${this.level}`;
@@ -789,6 +1080,11 @@ const game = {
                 setTimeout(() => { banner.style.display = 'none'; }, 1800);
             }
             SoundManager.playLevelUp();
+        }
+
+        if (this.score > this.achievementState.maxScore) {
+            this.achievementState.maxScore = this.score;
+            this.checkAchievements();
         }
 
         // Update particles with global cap
@@ -1032,10 +1328,10 @@ class Ship {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
-        ctx.strokeStyle = GAME_CONFIG.shipColor;
+        ctx.strokeStyle = getShipColor(game.shipSkin);
         ctx.lineWidth = 2;
         ctx.shadowBlur = 8;
-        ctx.shadowColor = GAME_CONFIG.shipColor;
+        ctx.shadowColor = getShipColor(game.shipSkin);
         ctx.beginPath();
         ctx.moveTo(15, 0);
         ctx.lineTo(-10, 10);
