@@ -2,6 +2,7 @@ const lerp = (start, end, t) => start + (end - start) * t;
 const ANIMATION_SPEED = 0.15;
 let rowsToClear = [];
 let gravityTimer = 0;
+let lastClearWasTetris = false;
 
 function getGravityInterval() {
     const speeds = [60, 50, 40, 30, 20, 15, 10, 5];
@@ -227,32 +228,55 @@ function clearLines() {
             fullRows.push(y);
         }
     }
-    
+
     if (fullRows.length > 0) {
-        player.score += fullRows.length * 100;
-        player.linesCleared += fullRows.length;
+        const lines = fullRows.length;
+        const isTetris = lines === 4;
+        const isBackToBack = isTetris && lastClearWasTetris;
+        const base = LINE_SCORES[lines] || (lines * 100);
+        const multiplier = isBackToBack ? BACK_TO_BACK_MULTIPLIER : 1;
+        const points = Math.round(base * player.level * multiplier);
+
+        player.score += points;
+        player.linesCleared += lines;
         player.level = Math.floor(player.linesCleared / 10) + 1;
-        
+        lastClearWasTetris = isTetris;
+
         fullRows.forEach(y => {
             rowsToClear.push({ y, data: [...grid[y]], alpha: 1.0 });
         });
-        
+
         fullRows.sort((a, b) => b - a).forEach(y => {
             grid.splice(y, 1);
         });
-        
+
         for (let i = 0; i < fullRows.length; i++) {
             grid.unshift(new Array(COLS).fill(0));
         }
-        
+
+        if (isTetris) {
+            showComboBanner(isBackToBack ? 'BACK-TO-BACK TETRIS' : 'TETRIS', points);
+        } else if (lines >= 2) {
+            showComboBanner(lines === 2 ? 'DOUBLE' : 'TRIPLE', points);
+        }
+
         if (player.score > previousBestScore) {
             previousBestScore = player.score;
             updateBestScoreDisplay();
             showNewHighScoreNotice();
         }
-        
-        SoundManager.playLineClear(fullRows.length);
+
+        SoundManager.playLineClear(lines);
     }
+}
+
+function showComboBanner(label, points) {
+    const banner = document.getElementById('combo-banner');
+    if (!banner) return;
+    banner.textContent = `${label}  +${points}`;
+    banner.classList.remove('show');
+    void banner.offsetWidth; // restart animation
+    banner.classList.add('show');
 }
 
 function getHighScores() {
@@ -304,22 +328,34 @@ function renderHighScoresTable() {
     if (!tableContainer || !table || highScores.length === 0) {
         return;
     }
-    
-    table.innerHTML = '';
+
+    table.replaceChildren();
     const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
-    
+
     highScores.forEach((entry, index) => {
         const row = document.createElement('tr');
         row.className = `hs-row hs-row-${index + 1}`;
-        row.innerHTML = `
-            <td class="hs-rank">${medals[index]}</td>
-            <td class="hs-name">${entry.name}</td>
-            <td class="hs-score">${entry.score}</td>
-            <td class="hs-date">${entry.date}</td>
-        `;
+
+        const rank = document.createElement('td');
+        rank.className = 'hs-rank';
+        rank.textContent = medals[index];
+
+        const name = document.createElement('td');
+        name.className = 'hs-name';
+        name.textContent = String(entry.name || '');
+
+        const score = document.createElement('td');
+        score.className = 'hs-score';
+        score.textContent = String(entry.score);
+
+        const date = document.createElement('td');
+        date.className = 'hs-date';
+        date.textContent = String(entry.date || '');
+
+        row.append(rank, name, score, date);
         table.appendChild(row);
     });
-    
+
     tableContainer.style.display = 'block';
 }
 
@@ -641,25 +677,29 @@ if (muteBtn) {
     muteBtn.addEventListener('click', () => {
         SoundManager.toggleMute();
         updateMuteIcon();
+        muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
     });
 }
 
 if (volumeSlider) {
+    volumeSlider.value = String(SoundManager.getVolume());
     volumeSlider.addEventListener('input', (e) => {
         SoundManager.setVolume(parseFloat(e.target.value));
         updateMuteIcon();
     });
 }
 
- SoundManager.setVolume(0.7);
 updateMuteIcon();
+if (muteBtn) muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
 
 const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 if (bgmMuteBtn) {
     bgmMuteBtn.addEventListener('click', () => {
         MusicPlayer.toggleMute();
         updateMusicIcon();
+        bgmMuteBtn.setAttribute('aria-pressed', MusicPlayer.getBgmMuteState() ? 'true' : 'false');
     });
+    bgmMuteBtn.setAttribute('aria-pressed', MusicPlayer.getBgmMuteState() ? 'true' : 'false');
 }
 
 function updateMusicIcon() {
@@ -755,6 +795,7 @@ function resetGame() {
     dasTimers = { left: 0, right: 0, down: 0 };
     rotationQueue = [];
     rowsToClear = [];
+    lastClearWasTetris = false;
     previousBestScore = getBestScore();
     
     const overlay = document.getElementById('pause-overlay');
