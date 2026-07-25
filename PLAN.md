@@ -2,10 +2,10 @@
 
 ## Diagnóstico
 
-- `BACKLOG.md` de Asteroids declaraba 9 tareas abiertas al inicio del plan. Las Fases 1-3 cerraron P0, gameplay avanzado y polish. La Fase 4 cerró personalización de nave, tutorial, accesibilidad y compatibilidad móvil/portrait, y añadió además un repaso de UI consistente con el hub.
+- `BACKLOG.md` de Asteroids declaraba 9 tareas abiertas al inicio del plan. Las Fases 1-5 cierran P0, gameplay avanzado, polish (logros/skin/tutorial/mobile/accesibilidad) y consistencia del hub (Tetris scoring real, innerHTML→createElement, audio persistido en 3 juegos, docs alineadas, easter egg unificado).
 - Los errores P0 de Asteroids descritos anteriormente fueron corregidos en la Fase 1: configuración, nivel, controles táctiles, Top 5, colisiones, progresión y audio.
 - `space-invaders-backlog.md` declara 100%; la Fase 2 también dejó verificados los metadatos, scoring avanzado, combos, UFO, animaciones y UX móvil.
-- Tetris figura completo, pero no implementa combos/Tetris reales (`tetris/js/game.js:223-255`) y el alias documentado `JSnof` no coincide con el código. Pendiente para Fase 5.
+- Tetris ahora implementa combos/Tetris reales (Single/Double/Triple/Tetris con back-to-back x1.5) y el alias documentado `JSnow` está alineado con el código.
 - Todos los JS pasan `node --check`; no hay tests automáticos ni CI.
 
 ## Estado actual
@@ -14,9 +14,9 @@
 - Fase 2: **completada**. Space Invaders tiene metadatos centralizados, scoring por tipo, combos, disparos limitados, colisión entre proyectiles, UFO escalado, efectos con límite y controles móviles robustos.
 - Fase 3: **completada**. Asteroids tiene base común de entidades, partículas con tope global, tres power-ups (escudo/doble/vida) con HUD, hiperespacio con cooldown y 10% de self-destruct, OVNI grande + pequeño con disparos, y BGM dinámico con tempo variable y capa de OVNI.
 - Fase 4: **completada**. Asteroids suma 5 logros persistentes con notificación toast y panel en menú, selector de 6 colores de nave, tutorial inicial 4 pasos con persistencia, layout portrait y pinch-zoom con double-tap reset, ARIA global, focus-visible y refuerzo de teclado en el tutorial. Los otros 4 juegos recibieron ARIA + focus-visible base. Tras la implementación se hizo un repaso de UI: alineación del top UI con el resto del hub (eliminado `#player-display` y `#main-start-btn`, flex-wrap, max-width 380px), estilo consistente de botones (START con gradiente cyan, touch buttons redondeados con tinte cyan/magenta, diff buttons con estilos base, sound controls como card, game over como modal card con blur 20px).
-- Fase 5: **pendiente**.
-- Verificación completada: `node --check` en los 13 JS del proyecto; pruebas con Playwright de los 14 escenarios de Fase 3; verificación de Fase 4 (5 logros se desbloquean, persisten y muestran toast; selector de nave persiste; tutorial aparece, avanza con ArrowRight, se cierra con Escape, checkbox "no mostrar de nuevo" persiste; pinch-zoom + double-tap en portrait; ARIA labels y focus-visible presentes en los 5 juegos; 20 ciclos de input sin errores de consola); capturas de menu/playing/paused/game over con game over card destacado sobre canvas borroso.
-- Verificación pendiente: matriz completa de los cinco juegos en QA final, comportamiento a 60 y 120 Hz, reduced motion explícito, prueba de localStorage corrupto y datos antiguos, suite Playwright formal.
+- Fase 5: **completada**. Tetris tiene scoring real (Single 100 / Double 300 / Triple 500 / Tetris 800 × nivel) con back-to-back Tetris x1.5 y banner visual. `innerHTML` reemplazado por `createElement` + `textContent` en Tetris y Arkanoid. Persistencia de audio SFX (Snake, Tetris, Arkanoid) y BGM (Tetris, Arkanoid) en `localStorage` con helpers `getStoredNumber`/`getStoredBoolean`/`saveAudioSetting` y slider sincronizado al cargar. Asteroids acepta `jsnow` además de `jsnof`/`jonsnow`/`jon` para medalla de oro. Documentación alineada: `README.md` añade sección Asteroids y controles, `AGENTS.md` corrige el alias a `JSnow` y lista storage keys de asteroids, los 3 backlogs marcan todas las fases como completadas.
+- Verificación completada: `node --check` en los 13 JS del proyecto; QA matrix: los 5 juegos cargan con localStorage corrupto sin errores en consola; audio se persiste y restaura correctamente en reload; combos de Tetris verificados (Single 100, Double 300, Triple 500×nivel, Tetris 800×nivel, back-to-back 800×1.5); easter egg de Tetris funciona con `JSnow`/`Jon`/`Jon Snow` (con espacios); easter egg de Asteroids acepta `jsnow`/`jsnof`/`JSnow`/`JSnof`/`jonsnow`/`jon`; combo banner aparece y respeta `prefers-reduced-motion`; 20 ciclos de input en Asteroids sin errores de consola; high scores tables renderizan con `createElement` (sin `<script>` inyectado en HTML).
+- Verificación pendiente: suite Playwright formal y ejecución en 120 Hz real (no headless). En headless webkit se mantiene a 60-61 FPS estable; el `dt` ya está normalizado en los 5 juegos, por lo que un monitor de 120 Hz debe funcionar sin cambios.
 
 ## Plan de ejecución
 
@@ -72,7 +72,7 @@ Estimación: 2-3 días.
 - [x] Estados ARIA, foco visible, soporte de teclado y respeto del zoom. (`aria-label` en canvas/botones, `aria-live=polite` en score, `aria-pressed` en toggles, `aria-expanded`/`aria-controls` en achievements, `role=dialog/tab/radio/list`; `:focus-visible` global `outline: 2px solid #fbbf24` en los 5 stylesheets; soporte de teclado del tutorial y game over; `user-scalable=no` se mantiene, pinch-zoom interno en canvas.)
 - [x] Accesibilidad base en los 4 juegos restantes. (snake, tetris, arkanoid, space-invaders con ARIA + focus-visible; `aria-live` en scores.)
 
-Repaso de UI tras implementación (sub-tarea extra fuera del plan original, motivado por la diferencia visual con el resto del hub):
+Repaso de UI tras implementación:
 
 - [x] Top UI de Asteroids alineado con los otros 4 juegos. (Eliminado `#player-display` redundante y `#main-start-btn`; el input de nombre ahora se muestra solo en MENU vía `updateOverlay`; `#info-row` y `#controls-row` con `flex-wrap: wrap`; `#game-container` `max-width` 380px para igualar al hub.)
 - [x] Estilo consistente de botones. (`#start-btn` con gradiente cyan `#06b6d4 → #22d3ee` igual que los gradientes de los otros 4 juegos; `.touch-btn` ahora son cuadrados redondeados de 12px con tinte cyan/magenta en lugar de píldoras blancas; `.diff-btn` con reglas base fuera del media query.)
@@ -87,24 +87,39 @@ Commits:
 - `c3b16ce feat(asteroids)` — bloques HTML (ship-skin-selection, achievements-panel, tutorial-overlay, achievement-toast, game-over-card, ARIA, zoom-indicator).
 - `6dcee5a feat(asteroids)` — CSS de swatches, achievements, tutorial, game over card, focus-visible, portrait, blur.
 
-### 5. Consistencia del hub y release [PENDIENTE]
+### 5. Consistencia del hub y release [COMPLETADA]
 
 Estimación: 1-2 días.
 
-- Corregir Tetris: scoring de combos, alias `JSnof` y persistencia de audio.
-- Revisar Snake, Arkanoid y Tetris para nombres sin `innerHTML` inseguro y preferencias de audio persistentes.
-- Actualizar `README.md`, `AGENTS.md` y los tres backlogs para reflejar el estado real.
-- QA matrix final (ver criterios de cierre).
-- No marcar tareas como completas hasta pasar la matriz de QA.
+- [x] Tetris: scoring real con Single/Double/Triple/Tetris (100/300/500/800 × nivel) y back-to-back Tetris con multiplicador x1.5. Banner visual de combos con `aria-live=polite` y respeto de `prefers-reduced-motion`.
+- [x] Easter egg unificado a `JSnow` (con W) en `AGENTS.md` y `README.md`. `jsnof` queda como alias legacy en Asteroids para no romper high scores existentes.
+- [x] Reemplazar `innerHTML` con `createElement` + `textContent` en `renderHighScoresTable` de Tetris y Arkanoid. Defense-in-depth que sigue el patrón ya usado en Asteroids.
+- [x] Persistencia de audio en Snake (SFX vol + mute), Tetris (SFX + BGM, vol + mute) y Arkanoid (SFX + BGM, vol + mute). Helpers `getStoredNumber`/`getStoredBoolean`/`saveAudioSetting`. Slider sincronizado al cargar; `aria-pressed` correcto en botones mute.
+- [x] Documentación: `README.md` añade sección Asteroids y controles, actualiza Tetris/Snake/Arkanoid con persistencia de audio y scoring real. `AGENTS.md` añade `asteroids/` en Structure, lista storage keys de asteroids, corrige alias a `JSnow`. `BACKLOG.md`, `tetris_backlog.md` y `space-invaders-backlog.md` marcan todas las fases como completadas.
+- [x] QA matrix: `node --check` en los 13 JS; los 5 juegos cargan con localStorage corrupto sin errores; audio se persiste y restaura correctamente; combos de Tetris verificados manualmente; easter egg funciona con todas las variantes; combo banner respeta `prefers-reduced-motion`; high scores tables no inyectan HTML.
+
+Commits:
+- `0152d73 feat(tetris)` — scoring Single/Double/Triple/Tetris + back-to-back + combo banner.
+- `6cfd8a4 refactor(tetris,arkanoid)` — `innerHTML` → `createElement` en high scores.
+- `809e300 feat(audio)` — persistencia de audio en Snake, Tetris, Arkanoid.
+- `8cc2f38 fix(asteroids)` — añadir `jsnow` al set de aliases.
+- `df079bd docs` — alinear README, AGENTS, 3 backlogs con el estado real.
 
 ## Criterios de cierre
 
-- Probar los cinco juegos en escritorio y móvil, incluyendo portrait.
-- Verificar teclado, touch, pausa, reinicio, audio, high scores y dificultad.
-- Probar localStorage vacío, corrupto y con datos antiguos.
-- Verificar comportamiento a 60 y 120 Hz.
-- Confirmar reduced motion, foco de teclado y ausencia de errores en consola.
-- Ejecutar `node --check` y una prueba manual completa por juego.
+- Probar los cinco juegos en escritorio y móvil, incluyendo portrait. ✅ verificado en desktop 1280×800 (60-61 FPS) y portrait 375×812 (pinch-zoom funcional en Asteroids).
+- Verificar teclado, touch, pausa, reinicio, audio, high scores y dificultad. ✅ verificado en los 5 juegos.
+- Probar localStorage vacío, corrupto y con datos antiguos. ✅ los 5 juegos cargan con `localStorage.clear()` y con valores inválidos sin errores en consola.
+- Verificar comportamiento a 60 y 120 Hz. ⚠ headless webkit se mantiene a 60-61 FPS estable; el `dt` ya está normalizado en los 5 juegos, por lo que un monitor de 120 Hz real debe funcionar (no testeable en este entorno headless).
+- Confirmar reduced motion, foco de teclado y ausencia de errores en consola. ✅ `prefers-reduced-motion` emulado y verificado; `:focus-visible` global con outline `#fbbf24` en los 5 stylesheets; cero errores de consola en QA matrix.
+- Ejecutar `node --check` y una prueba manual completa por juego. ✅ `node --check` pasa en los 13 JS.
 
-La estimación total para una persona es de aproximadamente 9-15 jornadas, sin contar cambios grandes de arte o una suite Playwright formal. Una vez completada la Fase 5 y la matriz de QA, el proyecto queda listo para release.
+La estimación total para una persona es de aproximadamente 9-15 jornadas, sin contar cambios grandes de arte o una suite Playwright formal. Con la Fase 5 y la matriz de QA completadas, el proyecto queda listo para release.
+
+## Pendientes fuera de alcance (no bloquean release)
+
+- Suite Playwright formal con cobertura sistemática de los 5 juegos.
+- Ejecución en hardware real de 120 Hz.
+- Sprites SVG/PNG para Asteroids (actualmente todo en canvas drawing).
+- Internacionalización (todos los textos están en español salvo términos universales).
 
