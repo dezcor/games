@@ -96,6 +96,10 @@ const SoundManager = {
         this.playSweep(880, 440, 0.08, 'square', 0.1);
     },
 
+    playBulletClash() {
+        this.playSweep(520, 880, 0.05, 'triangle', 0.05);
+    },
+
     playExplosion() {
         this.playNoise(0.15, 0.15);
         setTimeout(() => this.playOscillator(880, 0.05, 'sawtooth', 0.1), 50);

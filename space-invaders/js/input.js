@@ -11,6 +11,27 @@ window.addEventListener('keyup', (e) => {
     keys[e.code] = false;
 });
 
+function clearPressedKeys() {
+    Object.keys(keys).forEach((key) => {
+        keys[key] = false;
+    });
+
+    [dasLeft, dasRight].forEach((direction) => {
+        direction._pressed = false;
+        direction._timer = 0;
+        direction._state = 'idle';
+    });
+
+    document.querySelectorAll('.touch-btn.pressed').forEach((button) => {
+        button.classList.remove('pressed');
+    });
+}
+
+window.addEventListener('blur', clearPressedKeys);
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearPressedKeys();
+});
+
 function handleDAS(direction, action) {
     const keyCode = direction.key;
     const isDown = keys[keyCode];
@@ -48,31 +69,39 @@ let dasRight = { _pressed: false, _timer: 0, _state: 'idle', key: 'ArrowRight' }
 function setupTouchButton(selector, onStart, onEnd) {
     const btn = document.querySelector(selector);
     if (!btn) return;
+    let touchActive = false;
+
     btn.addEventListener('touchstart', (e) => {
         if (e.cancelable) e.preventDefault();
+        touchActive = true;
         btn.classList.add('pressed');
         if (onStart) onStart();
     }, { passive: false });
     btn.addEventListener('touchend', (e) => {
         if (e.cancelable) e.preventDefault();
+        touchActive = false;
         btn.classList.remove('pressed');
         if (onEnd) onEnd();
     }, { passive: false });
     btn.addEventListener('touchcancel', (e) => {
+        touchActive = false;
         btn.classList.remove('pressed');
         if (onEnd) onEnd();
     });
     btn.addEventListener('mousedown', (e) => {
+        if (touchActive) return;
         e.preventDefault();
         btn.classList.add('pressed');
         if (onStart) onStart();
     });
     btn.addEventListener('mouseup', (e) => {
+        if (touchActive) return;
         e.preventDefault();
         btn.classList.remove('pressed');
         if (onEnd) onEnd();
     });
     btn.addEventListener('mouseleave', (e) => {
+        if (touchActive) return;
         btn.classList.remove('pressed');
         if (onEnd) onEnd();
     });

@@ -233,6 +233,23 @@ body::after {
     white-space: nowrap;
 }
 
+#combo-display {
+    min-width: 68px;
+    color: #fbbf24;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+}
+
+#combo-display.active {
+    opacity: 1;
+    transform: translateY(0);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.55);
+}
+
 #score {
     color: #ff6b8a;
     text-shadow: 0 0 12px rgba(255, 107, 138, 0.3);
@@ -629,6 +646,28 @@ body::after {
     100% { opacity: 0; }
 }
 
+/* ── Score Feedback ── */
+.score-feedback {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    z-index: 30;
+    transform: translateX(-50%);
+    color: var(--feedback-color, #fbbf24);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    pointer-events: none;
+    text-align: center;
+    text-shadow: 0 0 10px var(--feedback-color, #fbbf24);
+    white-space: nowrap;
+    animation: popupFloat 1.5s ease-out forwards;
+}
+
+@keyframes popupFloat {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+}
+
 /* ── Touch Controls ── */
 #touch-controls {
     display: grid;
@@ -779,6 +818,10 @@ body::after {
     }
     #score, #lives, #best-score {
         font-size: 8px;
+    }
+    #combo-display {
+        min-width: 0;
+        font-size: 7px;
     }
     #player-name {
         width: 64px;
