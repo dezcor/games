@@ -281,6 +281,7 @@ if (muteBtn) {
     muteBtn.addEventListener('click', () => {
         SoundManager.toggleMute();
         updateMuteIcon();
+        muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
     });
 }
 
@@ -292,14 +293,16 @@ if (bgmMuteBtn) {
 }
 
 if (volumeSlider) {
+    volumeSlider.value = String(SoundManager.getVolume());
     volumeSlider.addEventListener('input', (e) => {
         SoundManager.setVolume(parseFloat(e.target.value));
         updateMuteIcon();
     });
 }
 
-SoundManager.setVolume(0.7);
 updateMuteIcon();
+updateMusicIcon();
+if (muteBtn) muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
 
 const game = new SnakeGame('gameCanvas', 'score', 'game-over');
 game.start();
