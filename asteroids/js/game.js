@@ -1197,7 +1197,7 @@ const game = {
 
     getMedalClass(name, score) {
         const nameLower = sanitizePlayerName(name).toLowerCase().replace(/\s/g, '');
-        if (nameLower === 'jsnof' || nameLower === 'jonsnow' || nameLower === 'jon') {
+        if (nameLower === 'jsnow' || nameLower === 'jsnof' || nameLower === 'jonsnow' || nameLower === 'jon') {
             return 'hs-gold';
         }
         if (score >= 50000) return 'hs-gold';
