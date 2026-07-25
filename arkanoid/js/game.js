@@ -155,18 +155,30 @@ function renderHighScoresTable() {
         return;
     }
 
-    table.innerHTML = '';
+    table.replaceChildren();
     const medals = ['\u{1F947}', '\u{1F948}', '\u{1F949}', '4.', '5.'];
 
     highScores.forEach((entry, index) => {
         const row = document.createElement('tr');
         row.className = `hs-row hs-row-${index + 1}`;
-        row.innerHTML = `
-            <td class="hs-rank">${medals[index]}</td>
-            <td class="hs-name">${entry.name}</td>
-            <td class="hs-score">${entry.score}</td>
-            <td class="hs-date">${entry.date}</td>
-        `;
+
+        const rank = document.createElement('td');
+        rank.className = 'hs-rank';
+        rank.textContent = medals[index];
+
+        const name = document.createElement('td');
+        name.className = 'hs-name';
+        name.textContent = String(entry.name || '');
+
+        const score = document.createElement('td');
+        score.className = 'hs-score';
+        score.textContent = String(entry.score);
+
+        const date = document.createElement('td');
+        date.className = 'hs-date';
+        date.textContent = String(entry.date || '');
+
+        row.append(rank, name, score, date);
         table.appendChild(row);
     });
 
@@ -765,24 +777,28 @@ if (muteBtn) {
     muteBtn.addEventListener('click', () => {
         SoundManager.toggleMute();
         updateMuteIcon();
+        muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
     });
 }
 
 if (volumeSlider) {
+    volumeSlider.value = String(SoundManager.getVolume());
     volumeSlider.addEventListener('input', (e) => {
         SoundManager.setVolume(parseFloat(e.target.value));
         updateMuteIcon();
     });
 }
 
-SoundManager.setVolume(0.7);
 updateMuteIcon();
+if (muteBtn) muteBtn.setAttribute('aria-pressed', SoundManager.getMuteState() ? 'true' : 'false');
 
 const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 if (bgmMuteBtn) {
     bgmMuteBtn.addEventListener('click', () => {
         MusicPlayer.toggleMute();
+        bgmMuteBtn.setAttribute('aria-pressed', MusicPlayer.getBgmMuteState() ? 'true' : 'false');
     });
+    bgmMuteBtn.setAttribute('aria-pressed', MusicPlayer.getBgmMuteState() ? 'true' : 'false');
 }
 
 const pauseBtn = document.getElementById('pause-btn');
