@@ -15,30 +15,27 @@
         <a href="../index.html" id="menu-btn">← Menu</a>
         <div id="top-ui">
             <div id="info-row">
-                <div id="score">Score: 0</div>
+                <div id="score" aria-live="polite">Score: 0</div>
                 <div id="lives">Lives: 3</div>
                 <div id="level">Level: 1</div>
                 <div id="best-score">Best: <span id="best-score-value">0</span></div>
                 <div id="name-input-container">
-                    <input type="text" id="player-name" maxlength="12" placeholder="Name">
-                </div>
-                <div id="player-display" style="display:none;">
-                    <span>Player: <span id="current-player-name">Player</span></span>
+                    <input type="text" id="player-name" maxlength="12" placeholder="Name" aria-label="Player name">
                 </div>
             </div>
             <div id="powerup-status"></div>
             <div id="controls-row">
                 <div id="sound-controls">
-                    <button id="mute-btn" title="Mute">🔊</button>
-                    <button id="bgm-mute-btn" title="Mute Music">🎵</button>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+                    <button id="mute-btn" title="Mute" aria-label="Mute sound effects" aria-pressed="false">🔊</button>
+                    <button id="bgm-mute-btn" title="Mute Music" aria-label="Mute music" aria-pressed="false">🎵</button>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
                 </div>
-                <button id="pause-btn">Pause</button>
-                <button id="main-start-btn">Start Game</button>
+                <button id="pause-btn" aria-label="Pause" aria-pressed="false">Pause</button>
             </div>
         </div>
         <div id="board-wrapper">
-            <canvas id="asteroids-canvas"></canvas>
+            <canvas id="asteroids-canvas" aria-label="Asteroids game board"></canvas>
+            <div id="zoom-indicator" aria-hidden="true">100%</div>
             <div id="level-banner" style="display:none;"></div>
             <div id="pause-overlay">
                 <h1 id="overlay-title">ASTEROIDS</h1>
@@ -62,16 +59,60 @@
                     </div>
                 </div>
 
-                <div id="game-over-stats" style="display:none;">
-                    <div id="final-score">Score: 0</div>
-                    <div id="final-level">Level: 1</div>
+                <!-- Ship Skin Selection -->
+                <div id="ship-skin-selection">
+                    <p class="hint">SHIP COLOR</p>
+                    <div id="skin-swatches" role="radiogroup" aria-label="Ship color"></div>
                 </div>
+
+                <!-- Achievements Panel -->
+                <div id="achievements-panel" style="display:none;">
+                    <h3>Achievements</h3>
+                    <ul id="achievements-list" role="list"></ul>
+                </div>
+                <button id="achievements-btn" type="button" aria-expanded="false" aria-controls="achievements-panel">Achievements</button>
                 <button id="start-btn">START</button>
-                <button id="quick-restart-btn" style="display:none;">PLAY AGAIN</button>
-                <div id="high-scores-table" style="display:none;">
-                    <h3>Top 5 Records</h3>
-                    <table id="high-scores-list"></table>
+
+                <div id="game-over-card" style="display:none;">
+                    <h1 id="game-over-title">GAME OVER</h1>
+                    <div id="game-over-stats">
+                        <div id="final-score">Score: 0</div>
+                        <div id="final-level">Level: 1</div>
+                    </div>
+                    <button id="quick-restart-btn">PLAY AGAIN</button>
+                    <div id="high-scores-table">
+                        <h3>Top 5 Records</h3>
+                        <table id="high-scores-list"></table>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Overlay -->
+        <div id="tutorial-overlay" role="dialog" aria-labelledby="tutorial-title" aria-modal="true" style="display:none;">
+            <div class="tutorial-content">
+                <div id="tutorial-icon" aria-hidden="true"></div>
+                <h2 id="tutorial-title"></h2>
+                <p id="tutorial-body"></p>
+                <div id="tutorial-dots" role="tablist" aria-label="Tutorial steps"></div>
+                <div class="tutorial-controls">
+                    <button id="tutorial-prev" type="button" aria-label="Previous step">←</button>
+                    <button id="tutorial-next" type="button" aria-label="Next step">→</button>
+                    <button id="tutorial-skip" type="button" aria-label="Skip tutorial">Saltar</button>
+                </div>
+                <label class="tutorial-dismiss">
+                    <input type="checkbox" id="tutorial-dismiss-cb">
+                    <span>No mostrar de nuevo</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Achievement Toast -->
+        <div id="achievement-toast" role="status" aria-live="polite" style="display:none;">
+            <span id="achievement-toast-icon" aria-hidden="true"></span>
+            <div>
+                <div class="ach-toast-label">¡Logro desbloqueado!</div>
+                <div id="achievement-toast-text"></div>
             </div>
         </div>
         <div id="touch-controls">
