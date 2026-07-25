@@ -23,51 +23,88 @@ let level = 1;
 let levelBonus = 0;
 let selectedDifficulty = 'normal';
 
+function readStorage(key, fallback = null) {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function writeStorage(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
+function sanitizePlayerName(value) {
+    if (typeof value !== 'string') return 'Anonymous';
+    const name = value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);
+    return name || 'Anonymous';
+}
+
+function normalizeHighScores(value) {
+    if (!Array.isArray(value)) return [];
+
+    return value
+        .filter((entry) => entry && Number.isFinite(Number(entry.score)))
+        .map((entry) => ({
+            score: Math.max(0, Math.floor(Number(entry.score))),
+            name: sanitizePlayerName(entry.name),
+            date: typeof entry.date === 'string' ? entry.date.slice(0, 40) : '',
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+}
+
 function getHighScores() {
     try {
         const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
+        return normalizeHighScores(data ? JSON.parse(data) : []);
     } catch (e) {
         return [];
     }
 }
 
 function getSavedName() {
-    return localStorage.getItem(PLAYER_NAME_STORAGE) || '';
+    return sanitizePlayerName(readStorage(PLAYER_NAME_STORAGE, ''));
 }
 
 function getSavedAudioVolume() {
-    const saved = localStorage.getItem(AUDIO_VOLUME_STORAGE);
-    return saved !== null ? parseFloat(saved) : 0.7;
+    const saved = Number.parseFloat(readStorage(AUDIO_VOLUME_STORAGE, '0.7'));
+    return Number.isFinite(saved) ? Math.max(0, Math.min(1, saved)) : 0.7;
 }
 
 function getSavedBgmVolume() {
-    const saved = localStorage.getItem(BGM_VOLUME_STORAGE);
-    return saved !== null ? parseFloat(saved) : 0.1;
+    const saved = Number.parseFloat(readStorage(BGM_VOLUME_STORAGE, '0.1'));
+    return Number.isFinite(saved) ? Math.max(0, Math.min(1, saved)) : 0.1;
 }
 
 function saveAudioVolume(vol) {
-    localStorage.setItem(AUDIO_VOLUME_STORAGE, vol.toString());
+    writeStorage(AUDIO_VOLUME_STORAGE, String(Math.max(0, Math.min(1, vol))));
 }
 
 function saveBgmVolume(vol) {
-    localStorage.setItem(BGM_VOLUME_STORAGE, vol.toString());
+    writeStorage(BGM_VOLUME_STORAGE, String(Math.max(0, Math.min(1, vol))));
 }
 
 function saveHighScore(sc) {
     const highScores = getHighScores();
     const now = new Date();
     const nameInput = document.getElementById('player-name');
-    const playerName = nameInput ? nameInput.value.trim() : '';
+    const playerName = sanitizePlayerName(nameInput ? nameInput.value : getSavedName());
     const entry = {
         score: sc,
-        name: playerName || 'Anonymous',
-        date: now.toLocaleDateString('en-US'),
+        name: playerName,
+        date: now.toLocaleDateString('es-ES'),
     };
     highScores.push(entry);
     highScores.sort((a, b) => b.score - a.score);
     const top5 = highScores.slice(0, 5);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(top5));
+    writeStorage(STORAGE_KEY, JSON.stringify(top5));
 }
 
 function getBestScore() {
@@ -87,26 +124,38 @@ function renderHighScoresTable() {
     const tableContainer = document.getElementById('high-scores-table');
     const table = document.getElementById('high-scores-list');
 
-    if (!tableContainer || !table || highScores.length === 0) {
+    if (!tableContainer || !table) {
         return;
     }
 
-    table.innerHTML = '';
+    table.replaceChildren();
     const medals = ['\u{1F947}', '\u{1F948}', '\u{1F949}', '4.', '5.'];
 
     highScores.forEach((entry, index) => {
         const row = document.createElement('tr');
         row.className = `hs-row hs-row-${index + 1}`;
-        row.innerHTML = `
-            <td class="hs-rank">${medals[index]}</td>
-            <td class="hs-name">${entry.name}</td>
-            <td class="hs-score">${entry.score}</td>
-            <td class="hs-date">${entry.date}</td>
-        `;
+
+        const rank = document.createElement('td');
+        rank.className = 'hs-rank';
+        rank.textContent = medals[index];
+
+        const name = document.createElement('td');
+        name.className = 'hs-name';
+        name.textContent = entry.name;
+
+        const score = document.createElement('td');
+        score.className = 'hs-score';
+        score.textContent = String(entry.score);
+
+        const date = document.createElement('td');
+        date.className = 'hs-date';
+        date.textContent = entry.date;
+
+        row.append(rank, name, score, date);
         table.appendChild(row);
     });
 
-    tableContainer.style.display = 'block';
+    tableContainer.style.display = highScores.length > 0 ? 'block' : 'none';
 }
 
 function showNewHighScoreNotice() {
@@ -152,9 +201,10 @@ function createExplosion(x, y, color) {
 }
 
 function updateParticles(delta) {
+    const frameScale = delta / (1000 / 60);
     particles = particles.filter(p => {
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx * frameScale;
+        p.y += p.vy * frameScale;
         p.life -= delta;
         return p.life > 0;
     });
@@ -233,12 +283,24 @@ function resetAliens() {
     const diff = DIFFICULTY_PRESETS[selectedDifficulty];
     alienMoveInterval = Math.max(150, 600 - (level - 1) * 100);
     alienSpeed = diff.alienSpeed + (level - 1) * 0.3;
-    if (level > 1) {
-        levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
-        score += levelBonus;
-        updateUI();
-        flashScore();
+}
+
+function completeLevel() {
+    level += 1;
+    levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
+    score += levelBonus;
+    showLevelBanner(`LEVEL ${level}`, '#4ade80');
+    const boardWrapper = document.getElementById('board-wrapper');
+    if (boardWrapper) {
+        boardWrapper.classList.remove('level-complete');
+        boardWrapper.offsetHeight;
+        boardWrapper.classList.add('level-complete');
     }
+    updateUI();
+    flashScore();
+    resetAliens();
+    bullets = [];
+    alienBullets = [];
 }
 
 // ── Alien Shooting ──
@@ -334,9 +396,10 @@ function updateUFOs(delta) {
 
     // Move UFOs
     const diff = DIFFICULTY_PRESETS[selectedDifficulty];
+    const frameScale = delta / (1000 / 60);
     ufos.forEach(ufo => {
         if (!ufo.alive) return;
-        ufo.x += UFO_SPEED * ufo.direction * diff.alienBulletSpeed / 1.5;
+        ufo.x += UFO_SPEED * ufo.direction * diff.alienBulletSpeed / 1.5 * frameScale;
 
         // Remove if off screen
         if ((ufo.direction === 1 && ufo.x > CANVAS_WIDTH + UFO_WIDTH) ||
@@ -351,21 +414,21 @@ function updateUFOs(delta) {
 // ── Difficulty Persistence ──
 
 function getSavedDifficulty() {
-    return localStorage.getItem('si_difficulty') || 'normal';
+    const saved = readStorage(DIFFICULTY_STORAGE, 'normal');
+    return DIFFICULTY_PRESETS[saved] ? saved : 'normal';
 }
 
 function saveDifficulty(diff) {
-    localStorage.setItem('si_difficulty', diff);
+    if (DIFFICULTY_PRESETS[diff]) writeStorage(DIFFICULTY_STORAGE, diff);
 }
 
 function applyDifficulty(diff) {
+    if (!DIFFICULTY_PRESETS[diff] || (gameStarted && !gameOver)) return false;
     selectedDifficulty = diff;
     const d = DIFFICULTY_PRESETS[diff];
     alienSpeed = d.alienSpeed;
-    if (level === 1) {
-        lives = d.lives;
-        updateUI();
-    }
+    updateUI();
+    return true;
 }
 
 // ── Main update ──
@@ -373,19 +436,21 @@ function applyDifficulty(diff) {
 function update(delta) {
     if (isPaused || gameOver) return;
 
+    const frameScale = delta / (1000 / 60);
+    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
+
     // Player movement
     if (keys['ArrowLeft'] || keys['KeyA']) {
-        playerX -= 2.5;
+        playerX -= 2.5 * frameScale;
     }
     if (keys['ArrowRight'] || keys['KeyD']) {
-        playerX += 2.5;
+        playerX += 2.5 * frameScale;
     }
     if (playerX < 0) playerX = 0;
     if (playerX + PLAYER_WIDTH > canvas.width) playerX = canvas.width - PLAYER_WIDTH;
 
     // Player shooting
     shootCooldown -= delta;
-    const diff = DIFFICULTY_PRESETS[selectedDifficulty];
     if ((keys['Space'] || keys['Enter']) && shootCooldown <= 0) {
         bullets.push({
             x: playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
@@ -397,14 +462,14 @@ function update(delta) {
 
     // Update player bullets
     bullets = bullets.filter(b => b.y > 0);
-    bullets.forEach(b => { b.y -= diff.bulletSpeed; });
+    bullets.forEach(b => { b.y -= diff.bulletSpeed * frameScale; });
 
     // Alien shooting
     spawnAlienShots(delta);
 
     // Update alien bullets
     alienBullets = alienBullets.filter(b => b.y < CANVAS_HEIGHT);
-    alienBullets.forEach(b => { b.y += b.speed; });
+    alienBullets.forEach(b => { b.y += b.speed * frameScale; });
 
     // Alien movement timing
     alienMoveTimer += delta;
@@ -425,7 +490,7 @@ function update(delta) {
         if (moveDown) {
             alienDirection *= -1;
             aliens.forEach(a => {
-                if (a.alive) a.y += ALIEN_DROP;
+                if (a.alive) a.y += diff.alienDrop;
             });
         }
         SoundManager.playAlienMove();
@@ -434,7 +499,7 @@ function update(delta) {
     // Update UFOs
     updateUFOs(delta);
 
-   // Collision: bullets vs aliens
+    // Collision: bullets vs aliens
     for (let bi = bullets.length - 1; bi >= 0; bi--) {
         const b = bullets[bi];
         for (let ai = 0; ai < aliens.length; ai++) {
@@ -478,7 +543,7 @@ function update(delta) {
     for (let bi = alienBullets.length - 1; bi >= 0; bi--) {
         const b = alienBullets[bi];
         if (b.x < playerX + PLAYER_WIDTH && b.x + 2 > playerX &&
-            b.y < PLAYER_Y + PLAYER_HEIGHT && b.y + b.speed > PLAYER_Y) {
+            b.y < PLAYER_Y + PLAYER_HEIGHT && b.y + BULLET_HEIGHT > PLAYER_Y) {
             alienBullets.splice(bi, 1);
             createExplosion(playerX + PLAYER_WIDTH / 2, PLAYER_Y + PLAYER_HEIGHT / 2, '#4ade80');
             lives--;
@@ -508,23 +573,7 @@ function update(delta) {
 
     // Check level complete
     if (aliens.every(a => !a.alive)) {
-        const newLevel = level + 1;
-        showLevelBanner(`LEVEL ${newLevel}`, '#4ade80');
-        const boardWrapper = document.getElementById('board-wrapper');
-        if (boardWrapper) {
-            boardWrapper.classList.remove('level-complete');
-            boardWrapper.offsetHeight;
-            boardWrapper.classList.add('level-complete');
-        }
-        level = newLevel;
-        if (level > 1) {
-            levelBonus = Math.floor(LEVEL_BASE_SCORE * Math.pow(LEVEL_BONUS_MULTIPLIER, level - 1));
-            score += levelBonus;
-            updateUI();
-        }
-        resetAliens();
-        bullets = [];
-        alienBullets = [];
+        completeLevel();
     }
 }
 
@@ -644,12 +693,10 @@ function draw() {
 // ── Loop ──
 
 function loop(timestamp) {
-    const delta = timestamp - lastTime;
+    const delta = Math.min(100, Math.max(0, timestamp - lastTime));
     lastTime = timestamp;
-    if (delta < 100) {
-        update(delta);
-        updateParticles(delta);
-    }
+    update(delta);
+    updateParticles(delta);
     draw();
     drawParticles();
     requestAnimationFrame(loop);
@@ -712,6 +759,7 @@ function togglePause() {
     if (isPaused) {
         MusicPlayer.pause();
     } else {
+        lastTime = performance.now();
         MusicPlayer.resume();
     }
 }
@@ -753,7 +801,9 @@ if (playerNameInput) {
     playerNameInput.value = savedName;
 
     playerNameInput.addEventListener('input', () => {
-        localStorage.setItem(PLAYER_NAME_STORAGE, playerNameInput.value);
+        const sanitized = sanitizePlayerName(playerNameInput.value);
+        if (playerNameInput.value !== sanitized) playerNameInput.value = sanitized;
+        writeStorage(PLAYER_NAME_STORAGE, sanitized);
     });
 }
 
@@ -769,6 +819,12 @@ function updateMuteIcon() {
         } else {
             muteBtn.textContent = '\u{1F50A}';
         }
+    }
+}
+
+function updateBgmIcon() {
+    if (bgmMuteBtn) {
+        bgmMuteBtn.textContent = MusicPlayer.getMuteState() ? '\u{1F507}' : '\u{1F3B5}';
     }
 }
 
@@ -795,14 +851,14 @@ updateMuteIcon();
 
 const bgmMuteBtn = document.getElementById('bgm-mute-btn');
 if (bgmMuteBtn) {
-    const savedBgmMute = localStorage.getItem('si_bgm_muted') === 'true';
-    if (savedBgmMute) {
-        MusicPlayer.bgmMuted = true;
-    }
+    const savedBgmMute = readStorage(BGM_MUTED_STORAGE, 'false') === 'true';
+    MusicPlayer.setVolume(getSavedBgmVolume());
+    MusicPlayer.setMute(savedBgmMute);
     bgmMuteBtn.addEventListener('click', () => {
         MusicPlayer.toggleMute();
-        localStorage.setItem('si_bgm_muted', MusicPlayer.bgmMuted.toString());
+        updateBgmIcon();
     });
+    updateBgmIcon();
 }
 
 const pauseBtn = document.getElementById('pause-btn');
@@ -827,19 +883,18 @@ function setupDifficultyButtons() {
         }
 
         btn.addEventListener('click', () => {
+            if (gameStarted && !gameOver) return;
+            if (!applyDifficulty(diff)) return;
+
             Object.keys(DIFFICULTY_PRESETS).forEach(d => {
                 const b = container.querySelector(`[data-diff="${d}"]`);
                 if (b) b.classList.remove('active');
             });
             btn.classList.add('active');
             saveDifficulty(diff);
-            applyDifficulty(diff);
-            // If game not started, apply immediately
+
             if (!gameStarted || gameOver) {
                 initGame();
-                updateUI();
-            } else {
-                lives = DIFFICULTY_PRESETS[diff].lives;
                 updateUI();
             }
         });
@@ -923,10 +978,8 @@ if (quickRestartBtn) {
 
 // ── Initialize ──
 
+selectedDifficulty = getSavedDifficulty();
 initGame();
-
-// Apply saved difficulty
-applyDifficulty(getSavedDifficulty());
 
 // Setup difficulty buttons
 setupDifficultyButtons();

@@ -1,15 +1,44 @@
+function loadAudioNumber(key, fallback) {
+    try {
+        const value = Number.parseFloat(localStorage.getItem(key));
+        return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function loadAudioBoolean(key) {
+    try {
+        return localStorage.getItem(key) === 'true';
+    } catch (error) {
+        return false;
+    }
+}
+
+function saveAudioSetting(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+    } catch (error) {
+        // Storage can be unavailable in private browsing contexts.
+    }
+}
+
 const SoundManager = {
     audioCtx: null,
     masterGain: null,
-    isMuted: false,
-    volume: 0.7,
+    bgmGain: null,
+    isMuted: loadAudioBoolean(SFX_MUTED_STORAGE),
+    volume: loadAudioNumber(AUDIO_VOLUME_STORAGE, 0.7),
 
     ensureAudio() {
         if (!this.audioCtx) {
             this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             this.masterGain = this.audioCtx.createGain();
-            this.masterGain.gain.value = this.volume;
+            this.bgmGain = this.audioCtx.createGain();
+            this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
             this.masterGain.connect(this.audioCtx.destination);
+            this.bgmGain.gain.value = 1;
+            this.bgmGain.connect(this.audioCtx.destination);
         }
         if (this.audioCtx.state === 'suspended') {
             this.audioCtx.resume();
@@ -105,7 +134,10 @@ const SoundManager = {
     },
 
     setVolume(value) {
-        this.volume = Math.max(0, Math.min(1, value));
+        const normalized = Number(value);
+        if (!Number.isFinite(normalized)) return;
+        this.volume = Math.max(0, Math.min(1, normalized));
+        saveAudioSetting(AUDIO_VOLUME_STORAGE, this.volume);
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
@@ -113,6 +145,7 @@ const SoundManager = {
 
     toggleMute() {
         this.isMuted = !this.isMuted;
+        saveAudioSetting(SFX_MUTED_STORAGE, this.isMuted);
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
@@ -147,8 +180,8 @@ const MusicPlayer = {
     tempo: 110,
     lookahead: 25,
     scheduleAheadTime: 0.1,
-    bgmMuted: false,
-    bgmVolume: 0.1,
+    bgmMuted: loadAudioBoolean(BGM_MUTED_STORAGE),
+    bgmVolume: loadAudioNumber(BGM_VOLUME_STORAGE, 0.1),
     stepsPerBeat: 4,
     totalSteps: 64,
 
@@ -188,7 +221,7 @@ const MusicPlayer = {
 
     scheduleNote(step, time) {
         const ctx = SoundManager.audioCtx;
-        const master = SoundManager.masterGain;
+        const master = SoundManager.bgmGain;
         const beatDuration = 60 / this.tempo;
         const stepDuration = beatDuration / this.stepsPerBeat;
 
@@ -200,7 +233,7 @@ const MusicPlayer = {
             const gain = ctx.createGain();
             osc.type = 'square';
             osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.08;
+            const vol = 0.08;
             gain.gain.setValueAtTime(0.001, time);
             gain.gain.linearRampToValueAtTime(vol, time + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.5);
@@ -218,7 +251,7 @@ const MusicPlayer = {
             const gain = ctx.createGain();
             osc.type = 'sine';
             osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.25;
+            const vol = 0.25;
             gain.gain.setValueAtTime(0.001, time);
             gain.gain.linearRampToValueAtTime(vol, time + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 3);
@@ -234,7 +267,7 @@ const MusicPlayer = {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(150, time);
             osc.frequency.exponentialRampToValueAtTime(30, time + 0.1);
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.2;
+            const vol = 0.2;
             gain.gain.setValueAtTime(0.001, time);
             gain.gain.linearRampToValueAtTime(vol, time + 0.005);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
@@ -257,7 +290,7 @@ const MusicPlayer = {
             filter.type = 'lowpass';
             filter.frequency.value = 3000;
             const gain = ctx.createGain();
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.08;
+            const vol = 0.08;
             gain.gain.setValueAtTime(0.001, time);
             gain.gain.linearRampToValueAtTime(vol, time + 0.005);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
@@ -283,8 +316,18 @@ const MusicPlayer = {
         return this.bgmMuted;
     },
 
+    updateGain() {
+        if (SoundManager.bgmGain) {
+            SoundManager.bgmGain.gain.setValueAtTime(
+                this.bgmMuted ? 0 : this.bgmVolume,
+                SoundManager.audioCtx.currentTime
+            );
+        }
+    },
+
     start() {
         SoundManager.ensureAudio();
+        this.updateGain();
         const ctx = SoundManager.audioCtx;
         if (ctx.state === 'suspended') {
             ctx.resume().then(() => {
@@ -339,23 +382,39 @@ const MusicPlayer = {
     fadeOut(duration) {
         if (!this.isPlaying) return;
         duration = duration || 0.8;
-        const steps = 10;
-        const stepTime = (duration * 1000) / steps;
-        for (let i = 1; i <= steps; i++) {
-            setTimeout(() => {
-                this.isPlaying = false;
-            }, stepTime * i);
+        if (SoundManager.bgmGain) {
+            const now = SoundManager.audioCtx.currentTime;
+            SoundManager.bgmGain.gain.cancelScheduledValues(now);
+            SoundManager.bgmGain.gain.setValueAtTime(
+                this.bgmMuted ? 0 : this.bgmVolume,
+                now
+            );
+            SoundManager.bgmGain.gain.linearRampToValueAtTime(0, now + duration);
         }
-        setTimeout(() => this.stop(), duration * 1000);
+        setTimeout(() => {
+            this.stop();
+            this.updateGain();
+        }, duration * 1000);
     },
 
     toggleMute() {
         this.bgmMuted = !this.bgmMuted;
+        saveAudioSetting(BGM_MUTED_STORAGE, this.bgmMuted);
+        this.updateGain();
+    },
+
+    setMute(value) {
+        this.bgmMuted = Boolean(value);
+        saveAudioSetting(BGM_MUTED_STORAGE, this.bgmMuted);
+        this.updateGain();
     },
 
     setVolume(value) {
-        this.bgmVolume = Math.max(0, Math.min(1, value));
-        SoundManager.setVolume(SoundManager.getVolume());
+        const normalized = Number(value);
+        if (!Number.isFinite(normalized)) return;
+        this.bgmVolume = Math.max(0, Math.min(1, normalized));
+        saveAudioSetting(BGM_VOLUME_STORAGE, this.bgmVolume);
+        this.updateGain();
     },
 
     getMuteState() {
