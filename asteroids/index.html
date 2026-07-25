@@ -26,6 +26,7 @@
                     <span>Player: <span id="current-player-name">Player</span></span>
                 </div>
             </div>
+            <div id="powerup-status"></div>
             <div id="controls-row">
                 <div id="sound-controls">
                     <button id="mute-btn" title="Mute">🔊</button>
@@ -74,18 +75,19 @@
             </div>
         </div>
         <div id="touch-controls">
-            <button class="touch-btn" data-action="left" title="Left">
+            <button class="touch-btn" data-action="left" title="Left" aria-label="Left">
                 <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10L14 16V4L4 10Z" fill="#22d3ee"/></svg>
             </button>
-            <button class="touch-btn" data-action="thrust" title="Thrust">▲</button>
-            <button class="touch-btn" data-action="shoot" title="Shoot">
-                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2v6l3-3 2 2-5 5-5-5 2-2 3 3V2h4z" fill="#fbbf24"/></svg>
-            </button>
-            <button class="touch-btn" data-action="right" title="Right">
+            <button class="touch-btn" data-action="thrust" title="Thrust" aria-label="Thrust">▲</button>
+            <button class="touch-btn" data-action="right" title="Right" aria-label="Right">
                 <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#22d3ee"/></svg>
             </button>
-            <button class="touch-btn" data-action="pause" title="Pause">⏸</button>
-            <button class="touch-btn" data-action="restart" title="Restart">↻</button>
+            <button class="touch-btn" data-action="shoot" title="Shoot" aria-label="Shoot">
+                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2v6l3-3 2 2-5 5-5-5 2-2 3 3V2h4z" fill="#fbbf24"/></svg>
+            </button>
+            <button class="touch-btn" data-action="hyperespace" title="Hyperspace (H)" aria-label="Hyperspace">⇋</button>
+            <button class="touch-btn" data-action="pause" title="Pause" aria-label="Pause">⏸</button>
+            <button class="touch-btn" data-action="restart" title="Restart" aria-label="Restart">↻</button>
         </div>
     </div>
     <script src="js/constants.js"></script>

@@ -80,6 +80,14 @@ setupTouchButton('[data-action="shoot"]',
     () => { touchShoot = true; },
     () => { touchShoot = false; }
 );
+setupTouchButton('[data-action="hyperespace"]',
+    () => {
+        if (typeof game !== 'undefined' && game.state === 'PLAYING') {
+            game.tryHyperspace();
+        }
+    },
+    () => {}
+);
 setupTouchButton('[data-action="pause"]',
     () => {
         if (typeof game !== 'undefined' && (game.state === 'PLAYING' || game.state === 'PAUSED')) {

@@ -100,15 +100,22 @@ const SCORE_TABLE = {
     large: 20,
     medium: 50,
     small: 100,
+    ufoLarge: 200,
+    ufoSmall: 1000,
+    powerup: 50,
 };
 
 // ── Player ──
 const INITIAL_LIVES = 3;
+const MAX_LIVES = 6;
 
 // ── Particles ──
 const PARTICLE_COUNT_EXPLOSION = 16;
 const PARTICLE_LIFETIME = 600;
 const PARTICLE_SPEED = 5;
+const MAX_PARTICLES = 200;
+const PARTICLE_THRUST_RATE = 0.5;
+const PARTICLE_PLAYER_EXPLOSION = 32;
 
 // ── Persistence Keys ──
 const STORAGE_KEY = 'asteroid_highscores';
@@ -131,6 +138,7 @@ const INPUT_KEYS = {
     SPACE: 'Space',
     PAUSE: 'Escape',
     RESTART: 'r',
+    HYPERSPACE: 'h',
 };
 
 // ── UI Classes ──
@@ -138,3 +146,87 @@ const UI_CLASSES = {
     SCORE_FLASH: 'score-flash',
     OVERLAY_SHOW: 'overlay-show',
 };
+
+// ── Power-ups ──
+const POWERUP_TYPES = {
+    shield: {
+        duration: 8,
+        color: '#22d3ee',
+        shape: 'ring',
+        label: 'SHIELD',
+    },
+    double: {
+        duration: 10,
+        color: '#fbbf24',
+        shape: 'arrow',
+        label: 'DOUBLE',
+    },
+    life: {
+        color: '#4ade80',
+        shape: 'plus',
+        label: 'LIFE',
+    },
+};
+
+const POWERUP_DROP_RATE = {
+    large: 0.15,
+    medium: 0.10,
+    small: 0.05,
+};
+
+const POWERUP_LIFETIME = 10;
+const POWERUP_SPEED = 0.6;
+const POWERUP_RADIUS = 12;
+
+// ── Hyperspace ──
+const HYPERSPACE_COOLDOWN = 5000;
+const HYPERSPACE_SAFE_RADIUS = 60;
+const HYPERSPACE_SELF_DESTRUCT_CHANCE = 0.10;
+const HYPERSPACE_REENTRY_INVULN = 0.3;
+const HYPERSPACE_FLASH_FRAMES = 3;
+const HYPERSPACE_SEARCH_ATTEMPTS = 20;
+
+// ── UFO ──
+const UFO_SIZES = {
+    large: {
+        score: 200,
+        fireInterval: 1.1,
+        speed: 1.8,
+        r: 22,
+        minLevel: 1,
+    },
+    small: {
+        score: 1000,
+        fireInterval: 0.7,
+        speed: 2.6,
+        r: 14,
+        minLevel: 3,
+    },
+};
+
+const UFO_SPAWN_INTERVAL_MIN = 18;
+const UFO_SPAWN_INTERVAL_MAX = 30;
+const UFO_SPAWN_INTERVAL_LEVEL_REDUCTION = 1.5;
+const UFO_DIRECTION_CHANGE_MIN = 1.5;
+const UFO_DIRECTION_CHANGE_MAX = 3.0;
+const UFO_BULLET_SPEED = 4.5;
+const UFO_BULLET_LIFETIME = 1.4;
+const UFO_Y_FRACTION = 0.25;
+
+// ── BGM Intensity ──
+const BGM_INTENSITY = {
+    CALM: 0,
+    NORMAL: 1,
+    PANIC: 2,
+};
+const BGM_TEMPO = [110, 125, 140];
+const BGM_VOLUME = [0.05, 0.10, 0.15];
+const BGM_LARGE_ASTEROID_THRESHOLD = 4;
+
+// ── Game balance (computed per frame) ──
+function getBgmIntensity(level, largeAsteroids, ufoActive) {
+    if (ufoActive) return BGM_INTENSITY.PANIC;
+    if (level >= 3 || largeAsteroids < BGM_LARGE_ASTEROID_THRESHOLD / 2) return BGM_INTENSITY.NORMAL;
+    if (largeAsteroids < BGM_LARGE_ASTEROID_THRESHOLD) return BGM_INTENSITY.NORMAL;
+    return BGM_INTENSITY.CALM;
+}

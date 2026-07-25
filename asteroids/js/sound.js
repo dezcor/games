@@ -12,6 +12,8 @@ let sfxMuted = false;
 let bgmMuted = false;
 let musicScheduler = null;
 let bgmRunning = false;
+let ufoLayerGain = null;
+let ufoLayerActive = false;
 
 function getStoredNumber(key, fallback) {
     try {
@@ -57,10 +59,13 @@ function ensureAudio() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         sfxGain = audioCtx.createGain();
         bgmGain = audioCtx.createGain();
+        ufoLayerGain = audioCtx.createGain();
         sfxGain.connect(audioCtx.destination);
         bgmGain.connect(audioCtx.destination);
+        ufoLayerGain.connect(audioCtx.destination);
         updateSfxGain();
         updateBgmGain();
+        if (ufoLayerGain) ufoLayerGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
@@ -162,6 +167,15 @@ const SoundManager = {
         playSweep(400, 800, 0.4, 'sine', 0.08, 0.8);
     },
 
+    playUfoShoot() {
+        playSweep(500, 200, 0.12, 'square', 0.08);
+    },
+
+    playUfoExplode() {
+        playNoise(0.35, 0.3);
+        playSweep(180, 60, 0.3, 'sawtooth', 0.18, 0.05);
+    },
+
     playGameOver() {
         playSweep(440, 100, 0.5, 'sawtooth', 0.2);
         playSweep(300, 80, 0.4, 'sawtooth', 0.15, 0.3);
@@ -180,6 +194,24 @@ const SoundManager = {
         playTone(659, 'sine', 0.15, 0.1, 0.12);
         playTone(784, 'sine', 0.15, 0.1, 0.24);
         playTone(1047, 'sine', 0.3, 0.12, 0.36);
+    },
+
+    playPowerupSpawn() {
+        playSweep(400, 800, 0.12, 'sine', 0.08);
+    },
+
+    playPowerupPickup() {
+        playTone(523, 'triangle', 0.1, 0.12, 0);
+        playTone(784, 'triangle', 0.1, 0.12, 0.08);
+        playTone(1047, 'triangle', 0.18, 0.14, 0.16);
+    },
+
+    playHyperspace() {
+        playSweep(220, 1200, 0.25, 'sawtooth', 0.12);
+    },
+
+    playHyperspaceFail() {
+        playSweep(800, 200, 0.18, 'square', 0.08);
     },
 
     // ── API ──
@@ -202,15 +234,18 @@ const SoundManager = {
     getVolume() { return sfxVolume; }
 };
 
-// ── Music Player (procedural BGM) ──
+// ── Music Player (procedural BGM with intensity) ──
 let bgmTimer = null;
 let bgmStep = 0;
 let bgmNextNoteTime = 0;
-const tempo = 110;
+let bgmTempo = 110;
+let bgmIntensity = 0;
+let ufoLayerOsc = null;
+let ufoLayerStep = 0;
+
 const lookahead = 25;
 const stepsPerBeat = 4;
 
-// Notes: C4 (262), E4 (330), G4 (392), C5 (523)
 const melodyNotes = [261, 330, 0, 392, 0, 330, 0, 523,
                     0, 392, 0, 330, 0, 523, 0, 261];
 const bassNotes = [0, 0, 0, 261,
@@ -227,15 +262,16 @@ const snarePattern = [0, 0, 1, 0,
                       0, 0, 1, 0];
 
 function scheduleNote(step, time) {
-    const beatDuration = 60 / tempo;
+    const beatDuration = 60 / bgmTempo;
     const stepDuration = beatDuration / stepsPerBeat;
+    const intensityVol = BGM_VOLUME[bgmIntensity] || 0.10;
 
     const melodyNote = melodyNotes[step % melodyNotes.length];
     if (melodyNote > 0) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.value = melodyNote;
+        osc.type = bgmIntensity >= 2 ? 'square' : 'sawtooth';
+        osc.frequency.value = melodyNote * (bgmIntensity >= 1 ? 1.005 : 1.0);
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(0.05, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration);
@@ -260,7 +296,9 @@ function scheduleNote(step, time) {
         osc.stop(time + stepDuration * 2);
     }
 
-    if (kickPattern[step % kickPattern.length]) {
+    // Kick / snare density scales with intensity
+    const kickGain = (kickPattern[step % kickPattern.length]) * (bgmIntensity >= 1 ? 1 : 0.7);
+    if (kickGain > 0) {
         const bufferSize = audioCtx.sampleRate * 0.1;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -274,7 +312,7 @@ function scheduleNote(step, time) {
         filter.frequency.value = 300;
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.15, time + 0.005);
+        gain.gain.linearRampToValueAtTime(0.15 * kickGain, time + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
         noise.connect(filter);
         filter.connect(gain);
@@ -282,7 +320,8 @@ function scheduleNote(step, time) {
         noise.start(time);
     }
 
-    if (snarePattern[step % snarePattern.length]) {
+    const snareHit = (snarePattern[step % snarePattern.length]) * (bgmIntensity >= 1 ? 1 : 0.6);
+    if (snareHit > 0) {
         const bufferSize = audioCtx.sampleRate * 0.1;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -296,12 +335,28 @@ function scheduleNote(step, time) {
         filter.frequency.value = 1000;
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.08, time + 0.005);
+        gain.gain.linearRampToValueAtTime(0.08 * snareHit, time + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(bgmGain);
         noise.start(time);
+    }
+
+    // UFO siren layer (only when active)
+    if (ufoLayerActive && ufoLayerGain) {
+        const sirenFreq = 200 + Math.sin(time * 6) * 200;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = sirenFreq;
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(0.06, time + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 0.9);
+        osc.connect(gain);
+        gain.connect(ufoLayerGain);
+        osc.start(time);
+        osc.stop(time + stepDuration);
     }
 }
 
@@ -309,9 +364,27 @@ function schedule() {
     while (bgmNextNoteTime < audioCtx.currentTime + lookahead) {
         scheduleNote(bgmStep, bgmNextNoteTime);
         bgmStep++;
-        bgmNextNoteTime += (60 / tempo) / stepsPerBeat;
+        bgmNextNoteTime += (60 / bgmTempo) / stepsPerBeat;
     }
     bgmTimer = setTimeout(schedule, lookahead);
+}
+
+function applyBgmVolume() {
+    if (!bgmGain) return;
+    const target = BGM_VOLUME[bgmIntensity] || 0.10;
+    const now = audioCtx.currentTime;
+    bgmGain.gain.cancelScheduledValues(now);
+    bgmGain.gain.setValueAtTime(bgmGain.gain.value, now);
+    bgmGain.gain.linearRampToValueAtTime(bgmMuted ? 0 : target, now + 0.5);
+}
+
+function applyUfoLayerVolume() {
+    if (!ufoLayerGain) return;
+    const now = audioCtx.currentTime;
+    ufoLayerGain.gain.cancelScheduledValues(now);
+    ufoLayerGain.gain.setValueAtTime(ufoLayerGain.gain.value, now);
+    const target = ufoLayerActive ? 1.0 : 0.0;
+    ufoLayerGain.gain.linearRampToValueAtTime(bgmMuted ? 0 : target, now + 0.4);
 }
 
 // ── MusicPlayer API ──
@@ -323,6 +396,7 @@ const MusicPlayer = {
         bgmStep = 0;
         bgmNextNoteTime = audioCtx.currentTime + 0.1;
         schedule();
+        applyBgmVolume();
     },
 
     stop() {
@@ -331,6 +405,13 @@ const MusicPlayer = {
             bgmTimer = null;
         }
         bgmRunning = false;
+        if (ufoLayerGain) {
+            const now = audioCtx.currentTime;
+            ufoLayerGain.gain.cancelScheduledValues(now);
+            ufoLayerGain.gain.setValueAtTime(ufoLayerGain.gain.value, now);
+            ufoLayerGain.gain.linearRampToValueAtTime(0, now + 0.3);
+        }
+        ufoLayerActive = false;
     },
 
     pause() {
@@ -350,10 +431,31 @@ const MusicPlayer = {
         }
     },
 
+    setIntensity(level) {
+        const clamped = Math.max(0, Math.min(2, level | 0));
+        if (clamped === bgmIntensity) return;
+        bgmIntensity = clamped;
+        bgmTempo = BGM_TEMPO[bgmIntensity] || 110;
+        applyBgmVolume();
+    },
+
+    getIntensity() { return bgmIntensity; },
+
+    setUfoActive(active) {
+        const next = !!active;
+        if (next === ufoLayerActive) return;
+        ufoLayerActive = next;
+        applyUfoLayerVolume();
+    },
+
+    isUfoActive() { return ufoLayerActive; },
+
     toggleMute() {
         bgmMuted = !bgmMuted;
         saveAudioSetting(BGM_MUTED_STORAGE, bgmMuted);
         updateBgmGain();
+        applyBgmVolume();
+        applyUfoLayerVolume();
         return bgmMuted;
     },
 
@@ -365,6 +467,8 @@ const MusicPlayer = {
         bgmVolume = Math.max(0, Math.min(1, normalized));
         saveAudioSetting(BGM_VOLUME_STORAGE, bgmVolume);
         updateBgmGain();
+        applyBgmVolume();
+        applyUfoLayerVolume();
     },
 
     getVolume() { return bgmVolume; },
