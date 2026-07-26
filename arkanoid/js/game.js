@@ -362,21 +362,37 @@ function updateBalls() {
             }
         }
 
-        // Paddle collision
-        if (
-            ball.dy > 0 &&
-            ball.y + ball.radius >= paddle.y &&
-            ball.y + ball.radius <= paddle.y + paddle.height + 4 &&
-            ball.x >= paddle.x - ball.radius &&
-            ball.x <= paddle.x + paddle.width + ball.radius
-        ) {
-            const hitPos = (ball.x - paddle.x) / paddle.width;
-            const angle = hitPos * Math.PI * 0.7 + Math.PI * 0.15;
-            const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
-            ball.dx = Math.cos(angle) * speed;
-            ball.dy = -Math.abs(Math.sin(angle) * speed);
-            ball.y = paddle.y - ball.radius;
-            SoundManager.playPaddleHit();
+        // Paddle collision (AABB-circle so clips at the sides can't redirect the ball back along its incoming path)
+        {
+            const pClosestX = Math.max(paddle.x, Math.min(ball.x, paddle.x + paddle.width));
+            const pClosestY = Math.max(paddle.y, Math.min(ball.y, paddle.y + paddle.height));
+            const pdx = ball.x - pClosestX;
+            const pdy = ball.y - pClosestY;
+            const pdist2 = pdx * pdx + pdy * pdy;
+            if (
+                pdist2 <= ball.radius * ball.radius &&
+                ball.dy > 0 &&
+                ball.y < paddle.y + paddle.height
+            ) {
+                const pdist = Math.sqrt(pdist2);
+                if (pdy < 0 || pdist < 0.001) {
+                    ball.dy = -Math.abs(ball.dy);
+                    ball.y = paddle.y - ball.radius;
+                } else {
+                    const plen = Math.max(pdist, 0.001);
+                    const nx = pdx / plen;
+                    const ny = pdy / plen;
+                    const dot = ball.dx * nx + ball.dy * ny;
+                    if (dot < 0) {
+                        ball.dx -= 2 * dot * nx;
+                        ball.dy -= 2 * dot * ny;
+                    }
+                    const push = ball.radius - pdist + 1;
+                    ball.x += nx * push;
+                    ball.y += ny * push;
+                }
+                SoundManager.playPaddleHit();
+            }
         }
 
         // Brick collisions
@@ -409,19 +425,25 @@ function updateBalls() {
                     SoundManager.playBrickBreak();
                 }
 
-                if (brick.flashTimer > 0) {
-                    brick.flashTimer--;
-                }
-
-                // Reflect ball
-                const overlapX = ball.radius - Math.abs(distX);
-                const overlapY = ball.radius - Math.abs(distY);
-
-                if (overlapX < overlapY) {
-                    ball.dx = -ball.dx;
+                // Reflect ball and push out of brick
+                const len = Math.sqrt(distX * distX + distY * distY);
+                let nx, ny;
+                if (len > 0.001) {
+                    nx = distX / len;
+                    ny = distY / len;
                 } else {
-                    ball.dy = -ball.dy;
+                    const vlen = Math.hypot(ball.dx, ball.dy) || 1;
+                    nx = -ball.dx / vlen;
+                    ny = -ball.dy / vlen;
                 }
+                const dot = ball.dx * nx + ball.dy * ny;
+                if (dot < 0) {
+                    ball.dx -= 2 * dot * nx;
+                    ball.dy -= 2 * dot * ny;
+                }
+                const push = ball.radius - len + 1;
+                ball.x += nx * push;
+                ball.y += ny * push;
 
                 break;
             }
@@ -495,11 +517,19 @@ function drawBalls() {
     });
 }
 
+function getSpecialBrickColor(hp) {
+    const hpColors = { 3: '#fbbf24', 2: '#fb923c', 1: '#f87171' };
+    return hpColors[hp] || '#fbbf24';
+}
+
 function drawBricks() {
     bricks.forEach(brick => {
         if (!brick.alive) return;
 
         let color = brick.color;
+        if (brick.isSpecial) {
+            color = getSpecialBrickColor(brick.hp);
+        }
         if (brick.flashTimer > 0) {
             color = '#fff';
         }
@@ -609,6 +639,7 @@ function draw() {
         updateBalls();
         updatePowerUps();
         updateParticles();
+        bricks.forEach(b => { if (b.flashTimer > 0) b.flashTimer--; });
         checkLevelComplete();
     }
 
