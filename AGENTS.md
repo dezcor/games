@@ -86,6 +86,17 @@ In Asteroids, the same aliases (`jsnow` / `jonsnow` / `jon` / legacy `jsnof`) al
 
 All games have on-screen touch buttons using `touchstart`/`touchend` events with `e.preventDefault()`. Snake also supports swipe gestures on the canvas. Touch buttons toggle `keys` object state (DAS system in Tetris/Arkanoid/Space Invaders handles held keys).
 
+## Sprite loading
+
+Asteroids and Space Invaders use SVG sprites loaded via a small `SpriteLoader` helper (defined inline at the top of each game's `game.js`). It fetches the SVG text, wraps it in a Blob URL, and loads it into an `Image` once; subsequent calls return from a `Map` cache. Draw code uses `ctx.drawImage(sprite, ...)` inside the existing canvas pipeline so `shadowBlur`/`globalAlpha`/`rotate`/`filter` keep working.
+
+Assets live in `asteroids/sprites/` and `space-invaders/sprites/`:
+
+- `asteroids/`: `ship.svg` (white, hue-rotated per skin), `asteroid.svg`, `ufo.svg`, `bullet.svg`, `ufo-bullet.svg`, `powerup-{shield,double,life}.svg`
+- `space-invaders/`: `player.svg`, `alien-{small,medium,large}.svg`, `ufo.svg`, `bullet.svg`, `alien-bullet.svg`
+
+The 6 ship skins in Asteroids share a single white `ship.svg` and apply `ctx.filter = "hue-rotate(Ndeg)"` per the `SHIP_HUE_ROTATE` map in `asteroids/js/constants.js`. If a sprite fails to load (offline, 404), the code falls back to the previous canvas drawing so gameplay never breaks.
+
 ## Design system
 
 All games share:
