@@ -1,6 +1,33 @@
 const canvas = document.getElementById('invaders');
 const ctx = canvas.getContext('2d');
 
+// ── Sprite Loader ──
+const SpriteLoader = {
+    cache: new Map(),
+    async load(name, url) {
+        if (this.cache.has(name)) return this.cache.get(name);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to load sprite ${name} from ${url}: ${res.status}`);
+        const svg = await res.text();
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error(`Failed to decode sprite ${name}`));
+            img.src = blobUrl;
+        });
+        this.cache.set(name, img);
+        return img;
+    },
+    async loadAll(map) {
+        await Promise.all(Object.entries(map).map(([k, v]) => this.load(k, v)));
+    },
+    get(name) {
+        return this.cache.get(name);
+    },
+};
+
 // Global variables
 let score, lives, gameOver, isPaused, gameStarted;
 let bullets = [];
@@ -466,14 +493,25 @@ function spawnUFO() {
 
 
 function drawUFO() {
+    const sprite = SpriteLoader.get('ufo');
     ufos.forEach(ufo => {
         if (!ufo.alive) return;
 
+        if (sprite) {
+            ctx.save();
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 10;
+            ctx.drawImage(sprite, ufo.x, ufo.y, ufo.width, ufo.height);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+            return;
+        }
+
+        // Fallback: canvas drawing
         ctx.fillStyle = '#fbbf24';
         ctx.shadowColor = '#fbbf24';
         ctx.shadowBlur = 10;
 
-        // Dome
         ctx.beginPath();
         ctx.arc(ufo.x + ufo.width / 2, ufo.y + ufo.height - 2, ufo.width / 4, Math.PI, 0);
         ctx.fillStyle = '#fff';
@@ -481,11 +519,9 @@ function drawUFO() {
         ctx.fillStyle = '#fbbf24';
         ctx.shadowBlur = 0;
 
-        // Body
         ctx.fillStyle = '#fbbf24';
         ctx.fillRect(ufo.x, ufo.y + ufo.height / 2 - 2, ufo.width, ufo.height / 2 - 2);
 
-        // Bottom
         ctx.fillStyle = '#ff6b8a';
         ctx.fillRect(ufo.x + 8, ufo.y + ufo.height - 2, ufo.width - 16, 2);
         ctx.shadowBlur = 0;
@@ -736,7 +772,19 @@ function showUfoScore(ufoScore) {
 
 function drawAlien(alien) {
     const { x, y, width, height, shape, color } = alien;
+    const sprite = SpriteLoader.get(`alien-${shape}`);
 
+    if (sprite) {
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 4;
+        ctx.drawImage(sprite, x, y, width, height);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        return;
+    }
+
+    // Fallback: canvas drawing
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 4;
@@ -781,18 +829,28 @@ function draw() {
     }
 
     // Draw player
+    const playerSprite = SpriteLoader.get('player');
     if (gameTime < playerInvulnerabilityUntil && Math.floor(gameTime / 80) % 2 === 0) {
         ctx.globalAlpha = 0.35;
     }
-    ctx.fillStyle = '#4ade80';
-    ctx.shadowColor = '#4ade80';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.moveTo(playerX + PLAYER_WIDTH / 2, PLAYER_Y);
-    ctx.lineTo(playerX + PLAYER_WIDTH, PLAYER_Y + PLAYER_HEIGHT);
-    ctx.lineTo(playerX, PLAYER_Y + PLAYER_HEIGHT);
-    ctx.closePath();
-    ctx.fill();
+    if (playerSprite) {
+        ctx.save();
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 8;
+        ctx.drawImage(playerSprite, playerX, PLAYER_Y, PLAYER_WIDTH, PLAYER_HEIGHT);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    } else {
+        ctx.fillStyle = '#4ade80';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(playerX + PLAYER_WIDTH / 2, PLAYER_Y);
+        ctx.lineTo(playerX + PLAYER_WIDTH, PLAYER_Y + PLAYER_HEIGHT);
+        ctx.lineTo(playerX, PLAYER_Y + PLAYER_HEIGHT);
+        ctx.closePath();
+        ctx.fill();
+    }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
 
@@ -806,21 +864,41 @@ function draw() {
     });
 
     // Draw player bullets
+    const bulletSprite = SpriteLoader.get('bullet');
     bullets.forEach(b => {
-        ctx.fillStyle = '#fbbf24';
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 6;
-        ctx.fillRect(b.x, b.y, BULLET_WIDTH, BULLET_HEIGHT);
-        ctx.shadowBlur = 0;
+        if (bulletSprite) {
+            ctx.save();
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 6;
+            ctx.drawImage(bulletSprite, b.x, b.y, BULLET_WIDTH, BULLET_HEIGHT);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        } else {
+            ctx.fillStyle = '#fbbf24';
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(b.x, b.y, BULLET_WIDTH, BULLET_HEIGHT);
+            ctx.shadowBlur = 0;
+        }
     });
 
     // Draw alien bullets
+    const alienBulletSprite = SpriteLoader.get('alien-bullet');
     alienBullets.forEach(b => {
-        ctx.fillStyle = '#ff2060';
-        ctx.shadowColor = '#ff2060';
-        ctx.shadowBlur = 4;
-        ctx.fillRect(b.x, b.y, b.width, b.height);
-        ctx.shadowBlur = 0;
+        if (alienBulletSprite) {
+            ctx.save();
+            ctx.shadowColor = '#ff2060';
+            ctx.shadowBlur = 4;
+            ctx.drawImage(alienBulletSprite, b.x, b.y, b.width, b.height);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        } else {
+            ctx.fillStyle = '#ff2060';
+            ctx.shadowColor = '#ff2060';
+            ctx.shadowBlur = 4;
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+            ctx.shadowBlur = 0;
+        }
     });
 }
 
@@ -1128,7 +1206,22 @@ if (quickRestartBtn) {
 // ── Initialize ──
 
 selectedDifficulty = getSavedDifficulty();
-initGame();
+(async () => {
+    try {
+        await SpriteLoader.loadAll({
+            'alien-small': 'sprites/alien-small.svg',
+            'alien-medium': 'sprites/alien-medium.svg',
+            'alien-large': 'sprites/alien-large.svg',
+            player: 'sprites/player.svg',
+            ufo: 'sprites/ufo.svg',
+            bullet: 'sprites/bullet.svg',
+            'alien-bullet': 'sprites/alien-bullet.svg',
+        });
+    } catch (error) {
+        console.warn('Failed to load SVG sprites, falling back to canvas drawing:', error);
+    }
+    initGame();
+})();
 
 // Setup difficulty buttons
 setupDifficultyButtons();
