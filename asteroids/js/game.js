@@ -94,6 +94,33 @@ const reducedMotion = (() => {
     }
 })();
 
+// ── Sprite Loader ──
+const SpriteLoader = {
+    cache: new Map(),
+    async load(name, url) {
+        if (this.cache.has(name)) return this.cache.get(name);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to load sprite ${name} from ${url}: ${res.status}`);
+        const svg = await res.text();
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error(`Failed to decode sprite ${name}`));
+            img.src = blobUrl;
+        });
+        this.cache.set(name, img);
+        return img;
+    },
+    async loadAll(map) {
+        await Promise.all(Object.entries(map).map(([k, v]) => this.load(k, v)));
+    },
+    get(name) {
+        return this.cache.get(name);
+    },
+};
+
 const game = {
     canvas: null,
     ctx: null,
@@ -162,7 +189,7 @@ const game = {
         this.currentConfig = this.getSelectedConfig();
     },
 
-    init() {
+    async init() {
         this.canvas = document.getElementById('asteroids-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.canvas.width = this.width;
@@ -175,6 +202,22 @@ const game = {
         }
 
         this.updateConfig();
+
+        // Load SVG sprites
+        try {
+            await SpriteLoader.loadAll({
+                ship: 'sprites/ship.svg',
+                asteroid: 'sprites/asteroid.svg',
+                ufo: 'sprites/ufo.svg',
+                bullet: 'sprites/bullet.svg',
+                ufoBullet: 'sprites/ufo-bullet.svg',
+                powerupShield: 'sprites/powerup-shield.svg',
+                powerupDouble: 'sprites/powerup-double.svg',
+                powerupLife: 'sprites/powerup-life.svg',
+            });
+        } catch (error) {
+            console.warn('Failed to load SVG sprites, falling back to canvas drawing:', error);
+        }
 
         this.setupInput();
         this.setupUI();
@@ -1026,23 +1069,25 @@ const game = {
 
         // Bullets vs UFO
         if (this.entities.ufo) {
+            const ufo = this.entities.ufo;
             this.entities.bullets.forEach((bullet) => {
                 if (!bullet.active || bullet.offscreen) return;
-                if (checkCollision(bullet, this.entities.ufo)) {
+                if (checkCollision(bullet, ufo)) {
                     bullet.offscreen = true;
                     bullet.active = false;
-                    this.destroyUfo(this.entities.ufo);
+                    this.destroyUfo(ufo);
                 }
             });
         }
 
         // UFO vs asteroid (UFO dies on contact)
         if (this.entities.ufo) {
+            const ufo = this.entities.ufo;
             for (const a of this.entities.asteroids) {
                 if (a.dead) continue;
-                if (checkCollision(this.entities.ufo, a)) {
+                if (checkCollision(ufo, a)) {
                     a.hit();
-                    this.destroyUfo(this.entities.ufo);
+                    this.destroyUfo(ufo);
                     break;
                 }
             }
@@ -1303,10 +1348,6 @@ class Ship {
     }
 
     draw(ctx, effects) {
-        if (this.invulnerable > 0 && Math.floor(this.invulnerable * 60) % 4 > 0) {
-            // still draw shield if active while blinking
-        }
-
         // Shield ring
         if (effects && effects.shield > 0) {
             const alpha = 0.5 + Math.sin(performance.now() / 100) * 0.2;
@@ -1324,35 +1365,60 @@ class Ship {
 
         if (this.invulnerable > 0 && Math.floor(this.invulnerable * 60) % 4 > 0) return;
 
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
+        const shipSprite = SpriteLoader.get('ship');
+        const color = getShipColor(game.shipSkin);
 
-        ctx.strokeStyle = getShipColor(game.shipSkin);
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = getShipColor(game.shipSkin);
-        ctx.beginPath();
-        ctx.moveTo(15, 0);
-        ctx.lineTo(-10, 10);
-        ctx.lineTo(-5, 0);
-        ctx.lineTo(-10, -10);
-        ctx.closePath();
-        ctx.stroke();
-
-        if (this.thrusting) {
-            const flameLength = 15 + Math.random() * 10;
-            ctx.strokeStyle = '#fbbf24';
-            ctx.shadowColor = '#fbbf24';
+        if (shipSprite) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            ctx.drawImage(shipSprite, -15, -15, 30, 30);
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = color;
+            ctx.fillRect(-20, -20, 40, 40);
+            ctx.globalCompositeOperation = 'source-over';
+            if (this.thrusting) {
+                const flameLength = 15 + Math.random() * 10;
+                ctx.strokeStyle = '#fbbf24';
+                ctx.shadowColor = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-7, 0);
+                ctx.lineTo(-flameLength, 0);
+                ctx.stroke();
+            }
+            ctx.restore();
+        } else {
+            // Fallback: canvas drawing
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.strokeStyle = color;
             ctx.lineWidth = 2;
-
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = color;
             ctx.beginPath();
-            ctx.moveTo(-7, 0);
-            ctx.lineTo(-flameLength, 0);
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, 10);
+            ctx.lineTo(-5, 0);
+            ctx.lineTo(-10, -10);
+            ctx.closePath();
             ctx.stroke();
+            if (this.thrusting) {
+                const flameLength = 15 + Math.random() * 10;
+                ctx.strokeStyle = '#fbbf24';
+                ctx.shadowColor = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-7, 0);
+                ctx.lineTo(-flameLength, 0);
+                ctx.stroke();
+            }
+            ctx.restore();
         }
-
-        ctx.restore();
     }
 }
 
@@ -1390,44 +1456,46 @@ class Asteroid {
     }
 
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
+        if (!this.colorIndex) this.colorIndex = Math.floor(Math.random() * 3);
+        const color = GAME_CONFIG.asteroidColors[this.colorIndex];
+        const sprite = SpriteLoader.get('asteroid');
+        const shadowBlur = this.type === 'large' ? 10 : (this.type === 'medium' ? 6 : 3);
 
-        ctx.strokeStyle = GAME_CONFIG.asteroidColors[Math.floor(Math.random() * 3)];
-        ctx.lineWidth = this.type === 'large' ? 3 : (this.type === 'medium' ? 2 : 1);
-        ctx.shadowBlur = this.type === 'large' ? 10 : (this.type === 'medium' ? 6 : 3);
-        ctx.shadowColor = ctx.strokeStyle;
+        if (sprite) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.shadowColor = color;
+            ctx.shadowBlur = shadowBlur;
+            const size = this.r * 2;
+            ctx.drawImage(sprite, -this.r, -this.r, size, size);
+            ctx.restore();
+        } else {
+            // Fallback: canvas drawing
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
 
-        ctx.beginPath();
-        const points = this.type === 'large' ? 12 : (this.type === 'medium' ? 10 : 8);
-        for (let i = 0; i < points; i++) {
-            const angle = (i / points) * Math.PI * 2;
-            const mut = 0.6 + Math.random() * 0.4;
-            const px = Math.cos(angle) * this.r * mut;
-            const py = Math.sin(angle) * this.r * mut;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.stroke();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = this.type === 'large' ? 3 : (this.type === 'medium' ? 2 : 1);
+            ctx.shadowBlur = shadowBlur;
+            ctx.shadowColor = color;
 
-        if (this.type === 'large') {
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = '#fff';
-            ctx.shadowBlur = 0;
-            for (let i = 0; i < 3; i++) {
-                const angle = (i / 3) * Math.PI * 2 + this.rotation;
-                const cratX = Math.cos(angle) * this.r * 0.5;
-                const cratY = Math.sin(angle) * this.r * 0.5;
-                ctx.beginPath();
-                ctx.arc(cratX, cratY, this.r * 0.15, 0, Math.PI * 2);
-                ctx.fill();
+            ctx.beginPath();
+            const points = this.type === 'large' ? 12 : (this.type === 'medium' ? 10 : 8);
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2;
+                const mut = 0.6 + Math.random() * 0.4;
+                const px = Math.cos(angle) * this.r * mut;
+                const py = Math.sin(angle) * this.r * mut;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
             }
-            ctx.globalAlpha = 1.0;
-        }
+            ctx.closePath();
+            ctx.stroke();
 
-        ctx.restore();
+            ctx.restore();
+        }
     }
 }
 
@@ -1455,10 +1523,15 @@ class Bullet {
     }
 
     draw(ctx) {
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-        ctx.fill();
+        const sprite = SpriteLoader.get('bullet');
+        if (sprite) {
+            ctx.drawImage(sprite, this.x - 2, this.y - 2, 4, 4);
+        } else {
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -1483,12 +1556,21 @@ class UfoBullet {
     }
 
     draw(ctx) {
-        ctx.fillStyle = '#f87171';
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = '#f87171';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fill();
+        const sprite = SpriteLoader.get('ufoBullet');
+        if (sprite) {
+            ctx.save();
+            ctx.shadowColor = '#f87171';
+            ctx.shadowBlur = 8;
+            ctx.drawImage(sprite, this.x - this.r, this.y - this.r, this.r * 2, this.r * 2);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = '#f87171';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#f87171';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -1545,30 +1627,34 @@ class Ufo {
 
     draw(ctx) {
         const blink = reducedMotion ? 1 : (0.7 + Math.sin(performance.now() / 120) * 0.3);
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.strokeStyle = '#f87171';
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#f87171';
-        ctx.globalAlpha = blink;
-        ctx.beginPath();
-        // Saucer shape: ellipse with two arcs
-        ctx.ellipse(0, 0, this.r, this.r * 0.4, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.ellipse(0, -this.r * 0.3, this.r * 0.55, this.r * 0.3, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // Lights
-        if (this.size === 'large' && !reducedMotion) {
-            for (let i = -2; i <= 2; i++) {
-                ctx.beginPath();
-                ctx.arc(i * (this.r * 0.2), this.r * 0.05, 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = i % 2 === 0 ? '#fbbf24' : '#22d3ee';
-                ctx.fill();
-            }
+        const sprite = SpriteLoader.get('ufo');
+        if (sprite) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.globalAlpha = blink;
+            ctx.shadowColor = '#f87171';
+            ctx.shadowBlur = 12;
+            const w = this.r * 2.2;
+            const h = this.r * 0.9;
+            ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
+            ctx.restore();
+        } else {
+            // Fallback
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.strokeStyle = '#f87171';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#f87171';
+            ctx.globalAlpha = blink;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.r, this.r * 0.4, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(0, -this.r * 0.3, this.r * 0.55, this.r * 0.3, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
         }
-        ctx.restore();
     }
 }
 
@@ -1605,40 +1691,54 @@ class PowerUp {
     draw(ctx) {
         const blink = this.life < 3 && Math.floor(this.life * 8) % 2 === 0;
         if (blink) return;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.strokeStyle = this.def.color;
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = this.def.color;
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath();
-        ctx.arc(0, 0, this.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        // Icon by shape
-        if (this.def.shape === 'ring') {
+
+        const spriteName = `powerup${this.type.charAt(0).toUpperCase() + this.type.slice(1)}`;
+        const sprite = SpriteLoader.get(spriteName);
+
+        if (sprite) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.shadowColor = this.def.color;
+            ctx.shadowBlur = 10;
+            const size = this.r * 2.4;
+            ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+            ctx.restore();
+        } else {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.strokeStyle = this.def.color;
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.def.color;
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
-            ctx.arc(0, 0, this.r * 0.55, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+            ctx.fill();
             ctx.stroke();
-        } else if (this.def.shape === 'arrow') {
-            ctx.beginPath();
-            ctx.moveTo(0, -this.r * 0.55);
-            ctx.lineTo(this.r * 0.45, 0);
-            ctx.lineTo(0, this.r * 0.55);
-            ctx.lineTo(-this.r * 0.45, 0);
-            ctx.closePath();
-            ctx.stroke();
-        } else if (this.def.shape === 'plus') {
-            ctx.beginPath();
-            ctx.moveTo(-this.r * 0.55, 0);
-            ctx.lineTo(this.r * 0.55, 0);
-            ctx.moveTo(0, -this.r * 0.55);
-            ctx.lineTo(0, this.r * 0.55);
-            ctx.stroke();
+            if (this.def.shape === 'ring') {
+                ctx.beginPath();
+                ctx.arc(0, 0, this.r * 0.55, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (this.def.shape === 'arrow') {
+                ctx.beginPath();
+                ctx.moveTo(0, -this.r * 0.55);
+                ctx.lineTo(this.r * 0.45, 0);
+                ctx.lineTo(0, this.r * 0.55);
+                ctx.lineTo(-this.r * 0.45, 0);
+                ctx.closePath();
+                ctx.stroke();
+            } else if (this.def.shape === 'plus') {
+                ctx.beginPath();
+                ctx.moveTo(-this.r * 0.55, 0);
+                ctx.lineTo(this.r * 0.55, 0);
+                ctx.moveTo(0, -this.r * 0.55);
+                ctx.lineTo(0, this.r * 0.55);
+                ctx.stroke();
+            }
+            ctx.restore();
         }
-        ctx.restore();
     }
 }
 
