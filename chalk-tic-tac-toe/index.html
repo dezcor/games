@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Gato — Tris de tiza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- definición del filtro chalky (referenciado por filter:url(#chalky)) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="chalky" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <canvas id="dust"></canvas>
+
+  <div class="stage">
+
+    <!-- ══ PANEL DE TIZA ══ -->
+    <aside class="panel">
+      <header class="masthead rise">
+        <h1>El Gato
+          <svg class="squig" width="96" height="16" viewBox="0 0 96 16">
+            <path d="M2 9 Q 16 2 30 9 T 58 9 T 94 7" fill="none" stroke="#f2ecdd" stroke-width="2.6"
+              stroke-linecap="round" />
+          </svg>
+        </h1>
+        <p class="tagline">Tris de tiza sobre pizarra</p>
+        <svg class="cat" id="cat" data-mood="neutral" viewBox="0 0 96 86" aria-hidden="true">
+          <path d="M 16 26 L 12 8 L 33 17 Z" fill="#f2ecdd" />
+          <path d="M 80 26 L 84 8 L 63 17 Z" fill="#f2ecdd" />
+          <circle cx="48" cy="47" r="31" fill="#f2ecdd" />
+          <path d="M 31 22 Q 48 15 65 22" fill="none" stroke="#8a5a35" stroke-width="4" stroke-linecap="round" />
+          <circle class="eye" cx="37" cy="43" r="3.1" />
+          <circle class="eye blink" cx="59" cy="43" r="3.1" />
+          <path class="mouth" d="M 41 59 Q 47 61 53 59" />
+          <path d="M 48 50 L 45 55 L 51 55 Z" fill="#ff7d6e" />
+          <g class="whisk">
+            <path d="M 26 51 L 9 47 M 26 56 L 9 56 M 26 61 L 9 61" fill="none" stroke-width="1.8"
+              stroke-linecap="round" />
+            <path d="M 70 51 L 87 47 M 70 56 L 87 56 M 70 61 L 87 61" fill="none" stroke-width="1.8"
+              stroke-linecap="round" />
+          </g>
+          <text class="think" x="80" y="16" font-size="15" fill="#f2ecdd" font-family="Nunito, sans-serif"
+            font-weight="800">…</text>
+        </svg>
+      </header>
+
+      <section class="chalkbox sec rise" style="animation-delay:.1s">
+        <h2>Dificultad</h2>
+        <div class="diff-row">
+          <button class="diff" data-diff="easy"><span class="dot"></span><span><b>Fácil</b><small>El gato juega al
+                azar</small></span></button>
+          <button class="diff" data-diff="normal"><span class="dot"></span><span><b>Normal</b><small>Gana si puede ·
+                bloquea tus jugadas</small></span></button>
+          <button class="diff" data-diff="hard"><span class="dot"></span><span><b>Imposible</b><small>Minimax —
+                invencible</small></span></button>
+        </div>
+        <p class="diff-note">Cambiar de nivel reinicia la partida y el marcador.</p>
+      </section>
+
+      <section class="chalkbox sec rise" style="animation-delay:.18s">
+        <h2>Marcador</h2>
+        <div class="tallies">
+          <div class="tally you"><span class="num" id="numYou">0</span><span class="lbl">Tú (X)</span><span
+              class="marks" id="mkYou"></span></div>
+          <div class="tally cat"><span class="num" id="numCat">0</span><span class="lbl">Gato (O)</span><span
+              class="marks" id="mkCat"></span></div>
+          <div class="tally tie"><span class="num" id="numTie">0</span><span class="lbl">Empate</span><span
+              class="marks" id="mkTie"></span></div>
+        </div>
+        <div class="tallies-foot"><span id="round">Ronda 1</span><span id="streak"></span></div>
+        <div class="controls-row">
+          <button class="btn btn-ghost" id="btnMenu">← Menú</button>
+          <button class="btn" id="btnNew">Nueva ronda</button>
+          <button class="btn btn-ghost" id="btnMute">Sonido</button>
+          <button class="btn btn-ghost" id="btnReset">Borrar</button>
+        </div>
+        <p class="howto">Eres la <b>X</b>. El gato juega con la <b>O</b>. Alcanza tres en fila para ganar — y en
+          <b>Imposible</b> tu única victoria es empatar.
+        </p>
+      </section>
+    </aside>
+
+    <!-- ══ TABLERO ══ -->
+    <main class="arena rise" style="animation-delay:.08s">
+      <div class="frame">
+        <div class="board play" id="board" data-winner="">
+          <svg class="grid-svg" id="gridSvg" viewBox="0 0 300 300" aria-hidden="true"></svg>
+          <div class="cells" id="cells"></div>
+          <svg class="winline" id="winline" viewBox="0 0 300 300" style="display:none"></svg>
+        </div>
+      </div>
+      <div class="status" id="status" data-winner="">
+        <span class="msg" id="statusMsg">Tu jugada</span>
+        <span class="sub" id="statusSub">El gato espera</span>
+        <button class="btn" id="btnNext">Otra vez</button>
+      </div>
+      <div class="tray">
+        <span class="stick" style="--tilt:-3deg"></span>
+        <span class="stick xc" style="--tilt:2deg"></span>
+        <span class="stick oc" style="--tilt:-2deg"></span>
+        <span class="sponge"></span>
+        <span class="eraser-txt">tiza y goma</span>
+      </div>
+      <p class="credit"><kbd>1</kbd>–<kbd>9</kbd> juegan por fila &nbsp;·&nbsp; <kbd>N</kbd> nueva ronda &nbsp;·&nbsp;
+        <kbd>M</kbd> sonido &nbsp;·&nbsp; <kbd>B</kbd> borrar
+      </p>
+    </main>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+
+</html>
