@@ -175,6 +175,12 @@
             --card-shadow: rgba(244, 114, 182, 0.12);
         }
 
+        /* Chalk Tic-Tac-Toe card accent */
+        .game-card.chalk {
+            --card-glow: linear-gradient(135deg, #f2ecdd, #ff7d6e, #85d1ff);
+            --card-shadow: rgba(242, 236, 221, 0.12);
+        }
+
 
         /* ── Icon ── */
         .game-icon {
@@ -272,6 +278,15 @@
         }
         .game-card.asteroids .play-btn:hover {
             box-shadow: 0 6px 24px rgba(244, 114, 182, 0.4);
+        }
+
+        /* Chalk Tic-Tac-Toe play button */
+        .game-card.chalk .play-btn {
+            background: linear-gradient(135deg, #f2ecdd, #ff7d6e, #85d1ff);
+            box-shadow: 0 4px 16px rgba(242, 236, 221, 0.25);
+        }
+        .game-card.chalk .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(242, 236, 221, 0.4);
         }
 
         /* ── Footer ── */
@@ -377,6 +392,13 @@
                 <div class="game-icon">☄️</div>
                 <div class="game-title">Asteroids</div>
                 <div class="game-desc">Destroy asteroids, survive the void.</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+
+            <a class="game-card chalk" href="chalk-tic-tac-toe/index.html">
+                <div class="game-icon">🐈</div>
+                <div class="game-title">El Gato</div>
+                <div class="game-desc">Chalk tic-tac-toe vs an unbeatable cat AI.</div>
                 <span class="play-btn">PLAY</span>
             </a>
         </div>
