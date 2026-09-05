@@ -181,6 +181,12 @@
             --card-shadow: rgba(242, 236, 221, 0.12);
         }
 
+        /* Una pregunta rara card accent */
+        .game-card.rare {
+            --card-glow: linear-gradient(135deg, #D946EF, #8B5CF6);
+            --card-shadow: rgba(217, 70, 239, 0.12);
+        }
+
 
         /* ── Icon ── */
         .game-icon {
@@ -287,6 +293,15 @@
         }
         .game-card.chalk .play-btn:hover {
             box-shadow: 0 6px 24px rgba(242, 236, 221, 0.4);
+        }
+
+        /* Una pregunta rara play button */
+        .game-card.rare .play-btn {
+            background: linear-gradient(135deg, #D946EF, #8B5CF6);
+            box-shadow: 0 4px 16px rgba(217, 70, 239, 0.25);
+        }
+        .game-card.rare .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(217, 70, 239, 0.4);
         }
 
         /* ── Footer ── */
@@ -399,6 +414,13 @@
                 <div class="game-icon">🐈</div>
                 <div class="game-title">El Gato</div>
                 <div class="game-desc">Chalk tic-tac-toe vs an unbeatable cat AI.</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+
+            <a class="game-card rare" href="una-pregunta-rara/index.html">
+                <div class="game-icon">🌙</div>
+                <div class="game-title">Una pregunta rara</div>
+                <div class="game-desc">A private little game of questions. Answers vanish.</div>
                 <span class="play-btn">PLAY</span>
             </a>
         </div>
