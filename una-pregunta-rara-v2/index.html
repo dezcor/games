@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Una pregunta rara</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <section class="screen" id="screen-start">
+      <h1 class="title">Tengo una pregunta rara.</h1>
+      <p class="subtitle">Pero primero necesito saber quién eres.</p>
+      <form id="name-form" class="form" novalidate>
+        <label class="label" for="name">Escribe tu nombre</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="80"
+          placeholder="Escribe tu nombre"
+          aria-label="Escribe tu nombre">
+        <button class="btn primary" type="submit">Continuar</button>
+      </form>
+      <p class="footnote">No necesitas iniciar sesión.</p>
+    </section>
+
+    <section class="screen" id="screen-rejected" hidden>
+      <p class="rejected-msg">Parece que este juego no era para esa persona. 👀</p>
+      <button class="btn ghost" id="btn-restart">Volver al inicio</button>
+    </section>
+
+    <section class="screen" id="screen-intro" hidden>
+      <div class="intro-card">
+        <p class="intro-line">Ah...</p>
+        <p class="intro-line">Entonces sí eres tú.</p>
+        <p class="intro-line">Este juego tiene algunas preguntas raras.</p>
+        <p class="intro-line">Responde lo primero que pienses.</p>
+        <p class="intro-line">Nadie verá tus respuestas. Ni siquiera yo.</p>
+        <button class="btn primary" id="btn-start">Empezar</button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-question" hidden>
+      <div class="progress">
+        <div class="progress-row">
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <span class="progress-label" id="progressLabel">1 / 7</span>
+        </div>
+      </div>
+
+      <h2 class="question" id="questionText" aria-live="polite">…</h2>
+
+      <textarea
+        id="answer"
+        class="answer"
+        rows="7"
+        maxlength="500"
+        placeholder="Escribe lo que realmente piensas..."
+        aria-label="Escribe lo que realmente piensas">
+      </textarea>
+
+      <p class="count" id="count" aria-live="polite">0/500</p>
+
+      <div class="actions">
+        <button class="btn ghost" id="btn-skip">Prefiero no responder</button>
+        <button class="btn primary" id="btn-continue">Continuar →</button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-final" hidden>
+      <h2 class="final-title">Listo.</h2>
+      <p class="final-line">
+        Todo lo que respondiste se queda aquí…<br>
+        y desaparece cuando cierres esta página.
+      </p>
+      <p class="final-line">Gracias por jugar, <span id="finalName"></span>. ✨</p>
+      <p class="final-note">Algunas preguntas quizá no necesitaban respuesta.</p>
+      <button class="btn primary" id="btn-finish">Terminar</button>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

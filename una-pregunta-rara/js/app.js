@@ -42,23 +42,62 @@ const TOTAL = 7;
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+function isWithinAllowedHours() {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 23 || hour < 6;
+}
+
 // In-memory session state (never persisted)
 let sessionQuestions = [];
 let currentIndex = 0;
 
 const $ = (id) => document.getElementById(id);
+const container = document.querySelector('.container');
 
 const screens = {
   start: $('screen-start'),
   wrong: $('screen-wrong'),
   intro: $('screen-intro'),
   question: $('screen-question'),
-  final: $('screen-final')
+  final: $('screen-final'),
+  locked: $('screen-locked')
 };
 
+function setCardMode(enabled) {
+  if (container) {
+    container.classList.toggle('card-mode', enabled);
+  }
+}
+
 function showScreen(name) {
-  Object.values(screens).forEach((s) => s.classList.remove('active'));
-  screens[name].classList.add('active');
+  Object.values(screens).forEach((s) => {
+    if (s) s.classList.remove('active');
+  });
+  if (screens[name]) {
+    screens[name].classList.add('active');
+  }
+}
+
+function showLockedScreen() {
+  const locked = $('screen-locked');
+  if (!locked) return;
+  setCardMode(true);
+  showScreen('locked');
+}
+
+function bind(id, eventName, handler) {
+  const el = $(id);
+  if (el) {
+    el.addEventListener(eventName, handler);
+  }
+}
+
+function focusIfPresent(id) {
+  const el = $(id);
+  if (el) {
+    el.focus();
+  }
 }
 
 function shuffle(arr) {
@@ -71,20 +110,31 @@ function shuffle(arr) {
 }
 
 // --- Start ---
-$('name-form').addEventListener('submit', (e) => {
+bind('name-form', 'submit', (e) => {
   e.preventDefault();
-  const normalized = $('name-input').value.trim().toLowerCase();
-  $('name-input').value = '';
+  if (!isWithinAllowedHours()) {
+    showLockedScreen();
+    return;
+  }
+
+  const nameInput = $('name-input');
+  if (!nameInput) return;
+
+  const normalized = nameInput.value.trim().toLowerCase();
+  nameInput.value = '';
   if (normalized === EXPECTED_NAME) {
+    setCardMode(true);
     showIntro();
   } else {
+    setCardMode(true);
     showScreen('wrong');
   }
 });
 
-$('btn-back').addEventListener('click', () => {
+bind('btn-back', 'click', () => {
+  setCardMode(false);
   showScreen('start');
-  $('name-input').focus();
+  focusIfPresent('name-input');
 });
 
 // --- Intro ---
@@ -101,7 +151,7 @@ function showIntro() {
   }
 }
 
-$('btn-start-game').addEventListener('click', startSession);
+bind('btn-start-game', 'click', startSession);
 
 // --- Session ---
 function startSession() {
@@ -113,23 +163,33 @@ function startSession() {
 
 function renderQuestion() {
   showScreen('question');
-  $('question-text').textContent = sessionQuestions[currentIndex];
+  const questionText = $('question-text');
+  if (questionText) {
+    questionText.textContent = sessionQuestions[currentIndex];
+  }
+
   const answer = $('answer-input');
-  answer.value = '';
-  $('char-count').textContent = '0 / ' + MAX_CHARS;
-  updateProgress();
-  answer.focus();
+  if (answer) {
+    answer.value = '';
+    $('char-count').textContent = '0 / ' + MAX_CHARS;
+    updateProgress();
+    answer.focus();
+  }
 }
 
 function updateProgress() {
   const n = currentIndex + 1;
-  $('progress-label').textContent = n + ' de ' + TOTAL;
-  $('progress-fill').style.width = (n / TOTAL) * 100 + '%';
+  const label = $('progress-label');
+  const fill = $('progress-fill');
+  if (label) label.textContent = n + ' de ' + TOTAL;
+  if (fill) fill.style.width = (n / TOTAL) * 100 + '%';
 }
 
 function advance() {
-  // Discard the current answer immediately — it only ever lived in memory.
-  $('answer-input').value = '';
+  const answer = $('answer-input');
+  if (answer) {
+    answer.value = '';
+  }
   currentIndex++;
   if (currentIndex >= TOTAL) {
     showScreen('final');
@@ -138,24 +198,34 @@ function advance() {
   }
 }
 
-$('btn-continue').addEventListener('click', advance);
-$('btn-skip').addEventListener('click', advance);
+bind('btn-continue', 'click', advance);
+bind('btn-skip', 'click', advance);
 
-$('answer-input').addEventListener('input', () => {
-  const len = $('answer-input').value.length;
-  $('char-count').textContent = len + ' / ' + MAX_CHARS;
-});
+const answerInput = $('answer-input');
+if (answerInput) {
+  answerInput.addEventListener('input', () => {
+    const len = answerInput.value.length;
+    const counter = $('char-count');
+    if (counter) counter.textContent = len + ' / ' + MAX_CHARS;
+  });
+}
 
 // --- Final ---
-$('btn-finish').addEventListener('click', () => {
+bind('btn-finish', 'click', () => {
   // Clear all temporary state so nothing can be recovered.
   sessionQuestions = [];
   currentIndex = 0;
-  $('answer-input').value = '';
+  const answer = $('answer-input');
+  if (answer) answer.value = '';
   showScreen('start');
-  $('name-input').focus();
+  focusIfPresent('name-input');
 });
 
 // --- Init ---
-showScreen('start');
-$('name-input').focus();
+setCardMode(false);
+if (!isWithinAllowedHours()) {
+  showLockedScreen();
+} else {
+  showScreen('start');
+  focusIfPresent('name-input');
+}
