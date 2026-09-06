@@ -33,7 +33,7 @@ const QUESTIONS = [
   "Si pudiéramos pasar un día juntos sin consecuencias ni interpretaciones, ¿qué haríamos?",
   "¿Crees que quedó algo pendiente entre nosotros?",
   "¿Hay algo de mí que todavía te dé curiosidad?",
-  "¿Qué te hace sentir más vivo/a en este momento?",
+  "¿Qué te hace sentir más viva en este momento?",
   "¿Qué pequeña cosa te hace feliz sin que nadie lo note?",
   "¿Qué cosa de la vida adulta te parece más rara de lo que pensabas?",
   "¿Cuál es tu mayor miedo real o tonto?",
@@ -53,7 +53,7 @@ const QUESTIONS = [
   "¿Qué cosa te da un poquito de ansiedad por pensarla demasiado?",
   "¿Qué te gustaría hacer antes de cumplir 30?",
   "¿Qué superstición o ritual tienes aunque no quieras admitirlo?",
-  "¿Qué te parece más importante: ser amado o ser comprendido?",
+  "¿Qué te parece más importante: sentirte amada o sentirte comprendida?",
   "¿Qué película, serie o libro te cambió la forma de pensar?",
   "¿Qué te gustaría cambiar de tu vida actual si pudieras?",
   "¿Qué te hace sentir más libre?",
@@ -70,17 +70,17 @@ const QUESTIONS = [
   "¿Qué te parece más difícil: empezar o mantenerse?",
   "¿Qué te gustaría aprender de alguien que admires mucho?",
   "¿Qué te daría más tranquilidad en una noche tormentosa?",
-  "¿Qué cosa te hace sentir más adulto/a?",
+  "¿Qué cosa te hace sentir más adulta?",
   "¿Qué te gustaría ser capaz de hacer sin miedo?",
   "¿Qué secreto pequeño te gustaría confesarle a alguien?",
   "¿Cuál es la mejor decisión que has tomado hasta ahora?",
   "¿Qué te gustaría que cambiara de la sociedad?",
   "¿Qué te persigue de la infancia y todavía no logras soltar?",
-  "¿Qué te hace sentir más conectado/a con la gente?",
+  "¿Qué te hace sentir más conectada con la gente?",
   "¿Qué sería lo más loco que harías por una persona que te importa?",
-  "¿Qué te deja más intrigado/a de la vida?",
+  "¿Qué misterio de la vida te da más curiosidad?",
   "¿Qué te gustaría que te preguntaran más seguido?",
-  "¿Qué te da más energía cuando estás cansado/a?",
+  "¿Qué te devuelve la energía cuando estás cansada?",
   "¿Qué crees que nadie se imagina de ti?",
   "¿Qué harías si pudieras vivir una semana sin responsabilidades?",
   "¿Qué cosa de ti te gustaría que cambiaran otras personas?",
@@ -90,13 +90,13 @@ const QUESTIONS = [
   "¿Qué harías si te dieran una segunda oportunidad para empezar de cero?",
   "¿Qué tipo de persona te atrae más y por qué?",
   "¿Qué te parece una verdadera prueba de cariño?",
-  "¿Qué te hace sentir más seguro/a de alguien?",
+  "¿Qué te hace sentir segura con alguien?",
   "¿Hay algo que te gustaría decirle a alguien y no has dicho?",
   "¿Qué cosa te gustaría que se quedara para siempre?",
-  "¿Qué te hace sentir más vivo/a al hablar con otra persona?",
+  "¿Qué conversación te hace sentir más viva?",
   "¿Qué sería lo más hermoso que alguien te pudiera decir ahora mismo?",
-  "¿Qué te hace desear más acercarte a alguien?",
-  "¿Qué te hace sentir más encontrado/a contigo mismo/a?",
+  "¿Qué hace que quieras acercarte más a alguien?",
+  "¿Qué te hace sentir más en paz contigo misma?",
   "¿Qué te gustaría que te regalaran sin que fuera algo material?",
   "¿Qué te da más miedo de la madurez?",
   "¿Qué cosa pequeña te hace sentir que alguien te conoce de verdad?",
@@ -106,19 +106,19 @@ const QUESTIONS = [
   "¿Qué te hace sentir que las cosas valen la pena?",
   "¿Qué harías si supieras que mañana todo cambia para siempre?",
   "¿Qué detalle de alguien te resulta muy atractivo aunque no lo exprese?",
-  "¿Qué te hace sentir más tranquilo/a cuando estás bajo presión?",
+  "¿Qué te ayuda a mantener la calma cuando estás bajo presión?",
   "¿Qué te gustaría experimentar por primera vez en la vida?",
   "¿Qué te gustaría dejar de hacer por vergüenza?",
   "¿Qué te parece más intenso: un silencio cómodo o una discusión sincera?",
-  "¿Qué te calmaria en medio de un momento de caos?",
+  "¿Qué te calmaría en medio de un momento de caos?",
   "¿Qué te parece más valioso en una amistad?",
   "¿Cuál es la frase que más te ha impactado escuchar?",
   "¿Qué cosa te hace sentir que la vida tiene sentido?",
   "¿Qué te gustaría decirle a la versión de ti que era más inocente?",
-  "¿Qué te hace sentir más observado/a por alguien?",
+  "¿Qué te hace sentir que alguien te está observando de verdad?",
   "¿Qué te gustaría hacer sin pensar en la opinión de los demás?",
   "¿Qué te parece más revelador de una persona: su humor o su silencio?",
-  "¿Qué te gustaría descubrir de ti mismo/a en el próximo año?",
+  "¿Qué te gustaría descubrir de ti misma durante el próximo año?",
   "¿Qué te da más alegría sin que lo vean los demás?",
   "¿Qué te haría más difícil decir adiós?",
   "¿Qué te gusta más de una persona: su presencia o su forma de hablar?",
@@ -130,29 +130,29 @@ const QUESTIONS = [
   "¿Qué te gustaría cambiar de la forma en que te relacionas con la gente?",
   "¿Qué te gustaría que te dijeran un día antes de dormir?",
   "¿Qué tienes miedo de perder aunque intentes no mostrarlo?",
-  "¿Qué te hace sentir más orgulloso/a de ti?",
+  "¿De qué te sientes más orgullosa?",
   "¿Cuál es la mayor contradicción de tu personalidad?",
   "¿Qué te parece más romántico: una acción o una palabra?",
   "¿Qué te gustaría hacer aunque nadie te lo pida?",
   "¿Qué te da más ganas de empezar de nuevo?",
   "¿Qué cosa de ti te gustaría descubrir en otra persona?",
   "¿Qué te parece más raro: la gente que se guarda todo o la gente que lo dice todo?",
-  "¿Qué te hace sentir que alguien te realmente ve?",
+  "¿Qué te hace sentir que alguien realmente te ve?",
   "¿Qué te gustaría aprender a hacer mejor en la vida?",
   "¿Qué te hace querer abrazar a alguien sin decir nada?",
-  "¿Qué te hace sentir más agradecido/a de la vida?",
+  "¿Qué agradeces más de tu vida?",
   "¿Qué es lo más difícil que has superado?",
   "¿Qué te gustaría que la gente recordara primero de ti?",
   "¿Qué te hace sentir más libre en una conversación?",
   "¿Qué te gustaría que alguien te preguntara en una cita?",
   "¿Qué te da más curiosidad por una persona?",
   "¿Qué te parece más importante para sostener una relación?",
-  "¿Qué te hace sentir más cercano/a a alguien?",
+  "¿Qué te hace sentir más cercana a alguien?",
   "¿Qué te gustaría poder hacer sin que nadie te juzgara?",
   "¿Qué te ha hecho crecer aunque no lo esperaras?",
   "¿Qué te gustaría que alguien entendiera sin que te lo explicaran?",
   "¿Qué cosa de ti es más difícil de explicar?",
-  "¿Qué te gustaría hacer si tuvieras un día entero solo/a para ti?",
+  "¿Qué harías si tuvieras un día entero solo para ti?",
   "¿Qué te hace querer cuidar a alguien más de lo que sueles cuidar a otros?",
   "¿Qué sensación te hace recordar a alguien especial?",
   "¿Qué te gustaría que cambiaran de los caminos que tomas?",
@@ -161,7 +161,7 @@ const QUESTIONS = [
   "¿Qué te hace sentir más cerca de un lugar?",
   "¿Qué no harías nunca aunque te lo pidieran?",
   "¿Qué te gustaría volver a experimentar aunque sabes que no volverá?",
-  "¿Qué te hace sentir más humano/a?",
+  "¿Qué te hace sentir más humana?",
   "¿Qué te gustaría que te dijeran en público y en privado?",
   "¿Qué te ha enseñado a no dar nada por sentado?",
   "¿Qué te gustaría que te permitieran hacer sin culpa?",
@@ -179,6 +179,24 @@ const MAX_CHARS = 500;
 const TOTAL = 7;
 const ENABLE_TIME_LOCK = false; // set to true to restore the nightly-only restriction
 
+const TOPIC_KEYS = ['relacion', 'nostalgia', 'miedo', 'futuro', 'personalidad', 'curiosidad'];
+const TOPIC_LABELS = {
+  relacion: 'relación',
+  nostalgia: 'nostalgia',
+  miedo: 'miedo',
+  futuro: 'futuro',
+  personalidad: 'personalidad',
+  curiosidad: 'curiosidad'
+};
+const TOPIC_DESCRIPTIONS = {
+  relacion: 'Parece que lo que más te hizo pensar fue lo que sentías y compartías con otra persona.',
+  nostalgia: 'Tu sesión estuvo marcada por recuerdos, pasado y lo que todavía te pesa o te acompaña.',
+  miedo: 'Lo que más dominó fue lo que te inquieta, te asusta o te hace dudar.',
+  futuro: 'Más que mirar atrás, pareció que te importaba pensar en lo que viene.',
+  personalidad: 'Lo que más salió fue tu forma de ser, de sentirte y de entenderte a ti misma.',
+  curiosidad: 'Tu sesión giró mucho en torno a lo que te interesa, te intriga y te gustaría descubrir.'
+};
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function isWithinAllowedHours() {
@@ -194,6 +212,8 @@ function isWithinAllowedHours() {
 // In-memory session state (never persisted)
 let sessionQuestions = [];
 let currentIndex = 0;
+let sessionTopicStats = Object.fromEntries(TOPIC_KEYS.map((key) => [key, 0]));
+let sessionSkipped = 0;
 
 const $ = (id) => document.getElementById(id);
 const container = document.querySelector('.container');
@@ -250,6 +270,97 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function resetSessionAnalysis() {
+  sessionTopicStats = Object.fromEntries(TOPIC_KEYS.map((key) => [key, 0]));
+  sessionSkipped = 0;
+}
+
+const ANSWER_TOPIC_PATTERNS = {
+  relacion: ['amor', 'pareja', 'cariño', 'querer', 'quiero', 'extraño', 'juntos', 'nosotros', 'confianza', 'beso', 'abrazo', 'persona importante', 'me gusta alguien'],
+  nostalgia: ['recuerdo', 'extraño', 'antes', 'pasado', 'infancia', 'niñez', 'cuando era', 'volvería', 'volvier', 'aquella vez', 'nostalgia', 'abuela', 'familia'],
+  miedo: ['miedo', 'temor', 'ansiedad', 'nerviosa', 'preocupa', 'preocupación', 'insegura', 'duda', 'perder', 'fracaso', 'culpa', 'vergüenza', 'difícil'],
+  futuro: ['futuro', 'mañana', 'algún día', 'sueño', 'meta', 'metas', 'quiero lograr', 'espero', 'viajar', 'aprender', 'cambiar', 'plan', 'próximo'],
+  personalidad: ['soy', 'siento', 'pienso', 'carácter', 'forma de ser', 'tímida', 'extrovertida', 'orgullosa', 'feliz', 'tranquila', 'libre', 'yo misma'],
+  curiosidad: ['curiosidad', 'pregunta', 'descubrir', 'conocer', 'interesa', 'intriga', 'misterio', 'saber', 'entender', 'por qué', 'cómo funciona']
+};
+
+function normalizeText(text) {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function getQuestionTopic(question) {
+  const text = normalizeText(question);
+
+  if (/(me conociste|gusta|parecidos|pareja|alguien|carino|cerca|relacion|somos|seguro|cercano|atrae|importa|sentir mas|compartias|nosotros|quedo algo pendiente|algo pendiente)/i.test(text)) {
+    return 'relacion';
+  }
+
+  if (/(recuerdo|nostalgia|pasado|infancia|revivir|volver a|antes|viejo|recordar|momento nuestro|habria sido|quedo algo pendiente)/i.test(text)) {
+    return 'nostalgia';
+  }
+
+  if (/(miedo|ansiedad|temor|asust|inquieta|vulnerable|perder|dudar|miedo de|temor|dificil|adios|no mostrarlo|nervios|problema)/i.test(text)) {
+    return 'miedo';
+  }
+
+  if (/(manana|futuro|proximo ano|cumplir|una semana|si pudieras|volver a|vivir un ano|cuando no estes|tiempo|cambiar de la sociedad|caminos|dia entero|antes de|ahora mismo)/i.test(text)) {
+    return 'futuro';
+  }
+
+  if (/(forma de ser|persona|que crees|que te|que harias|te hace sentir|te gustaria|te parece|seas|contradiccion|ideali|entender|nadie|te hace sentir mas|que cosa de ti|como te|eres para ti|tu yo|quieres|te vale|te hace|te gustaria que)/i.test(text)) {
+    return 'personalidad';
+  }
+
+  if (/(curiosidad|intrigado|darte cuenta|aprender|descubrir|experimentar|preguntaran|interesa|gustaria aprender|te da mas curiosidad|que te gustaria|que te|que harias|que te hace)/i.test(text)) {
+    return 'curiosidad';
+  }
+
+  return 'personalidad';
+}
+
+function getAnswerTopic(answer, question) {
+  const text = normalizeText(answer);
+  if (text.split(/\s+/).filter(Boolean).length < 3) {
+    return getQuestionTopic(question);
+  }
+
+  const scores = Object.fromEntries(TOPIC_KEYS.map((key) => [key, 0]));
+  Object.entries(ANSWER_TOPIC_PATTERNS).forEach(([topic, patterns]) => {
+    patterns.forEach((pattern) => {
+      if (text.includes(normalizeText(pattern))) {
+        scores[topic] += 1;
+      }
+    });
+  });
+
+  const [topic, score] = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+  return score > 0 ? topic : getQuestionTopic(question);
+}
+
+function recordAnsweredQuestion(question, answer) {
+  const topic = getAnswerTopic(answer, question);
+  if (sessionTopicStats[topic] !== undefined) {
+    sessionTopicStats[topic] += 1;
+  }
+}
+
+function renderFinalSummary() {
+  const [dominantTopic, count] = Object.entries(sessionTopicStats).sort((a, b) => b[1] - a[1])[0] || ['personalidad', 0];
+  const label = $('final-topic-label');
+  const description = $('final-topic-description');
+
+  if (label) {
+    label.textContent = 'Tema dominante: ' + (TOPIC_LABELS[dominantTopic] || 'personalidad') + (count > 0 ? ' (' + count + ')' : '');
+  }
+
+  if (description) {
+    description.textContent = TOPIC_DESCRIPTIONS[dominantTopic] || TOPIC_DESCRIPTIONS.personalidad;
+  }
 }
 
 // --- Start ---
@@ -324,6 +435,7 @@ function buildSessionQuestions() {
 function startSession() {
   sessionQuestions = buildSessionQuestions();
   currentIndex = 0;
+  resetSessionAnalysis();
   renderQuestion();
 }
 
@@ -351,21 +463,31 @@ function updateProgress() {
   if (fill) fill.style.width = (n / TOTAL) * 100 + '%';
 }
 
-function advance() {
+function advance(skip = false) {
   const answer = $('answer-input');
+  const value = answer ? answer.value.trim() : '';
+
+  if (value) {
+    recordAnsweredQuestion(sessionQuestions[currentIndex], value);
+  } else if (skip) {
+    sessionSkipped += 1;
+  }
+
   if (answer) {
     answer.value = '';
   }
+
   currentIndex++;
   if (currentIndex >= TOTAL) {
+    renderFinalSummary();
     showScreen('final');
   } else {
     renderQuestion();
   }
 }
 
-bind('btn-continue', 'click', advance);
-bind('btn-skip', 'click', advance);
+bind('btn-continue', 'click', () => advance(false));
+bind('btn-skip', 'click', () => advance(true));
 
 const answerInput = $('answer-input');
 if (answerInput) {
@@ -381,6 +503,7 @@ bind('btn-finish', 'click', () => {
   // Clear all temporary state so nothing can be recovered.
   sessionQuestions = [];
   currentIndex = 0;
+  resetSessionAnalysis();
   const answer = $('answer-input');
   if (answer) answer.value = '';
   showScreen('start');
