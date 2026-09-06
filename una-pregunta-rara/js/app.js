@@ -39,10 +39,15 @@ const FINAL_QUESTION = "Si supieras con absoluta certeza que nunca voy a leer es
 
 const MAX_CHARS = 500;
 const TOTAL = 7;
+const ENABLE_TIME_LOCK = false; // set to true to restore the nightly-only restriction
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function isWithinAllowedHours() {
+  if (!ENABLE_TIME_LOCK) {
+    return true;
+  }
+
   const now = new Date();
   const hour = now.getHours();
   return hour >= 23 || hour < 6;
