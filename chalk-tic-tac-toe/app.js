@@ -571,6 +571,8 @@ document
   .querySelectorAll(".diff")
   .forEach((b) => b.classList.toggle("active", b.dataset.diff === diff));
 grid = Array(9).fill(null);
+turn = "X";
+over = false;
 renderBoard();
 setStatus("start");
 renderTallies();
