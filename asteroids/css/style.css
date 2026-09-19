@@ -1006,13 +1006,6 @@ body::after {
     opacity: 1;
 }
 
-/* ── Board wrapper zoom (set via JS) ── */
-#board-wrapper.zoomable {
-    touch-action: pinch-zoom;
-    transform-origin: center top;
-    will-change: transform;
-}
-
 /* ── Portrait layout ── */
 @media (max-width: 500px) and (orientation: portrait) {
     #game-container {
@@ -1024,8 +1017,7 @@ body::after {
         justify-content: center;
     }
     #best-score,
-    #name-input-container,
-    #player-display {
+    #name-input-container {
         display: none !important;
     }
     #top-ui {

@@ -15,7 +15,7 @@ const DIFFICULTY_PRESETS = {
         maxBullets: 6,
         fireRate: 300,
         invulnTime: 1000,
-        rotationSpeed: 0.40,
+        rotationSpeed: 1.5,
         thrust: 0.12,
         friction: 0.995,
     },
@@ -30,7 +30,7 @@ const DIFFICULTY_PRESETS = {
         maxBullets: 5,
         fireRate: 200,
         invulnTime: 600,
-        rotationSpeed: 0.45,
+        rotationSpeed: 2.0,
         thrust: 0.15,
         friction: 0.99,
     },
@@ -45,7 +45,7 @@ const DIFFICULTY_PRESETS = {
         maxBullets: 4,
         fireRate: 150,
         invulnTime: 500,
-        rotationSpeed: 0.50,
+        rotationSpeed: 2.5,
         thrust: 0.18,
         friction: 0.98,
     },
@@ -60,7 +60,7 @@ const DIFFICULTY_PRESETS = {
         maxBullets: 3,
         fireRate: 100,
         invulnTime: 300,
-        rotationSpeed: 0.55,
+        rotationSpeed: 3.0,
         thrust: 0.2,
         friction: 0.97,
     },
@@ -82,7 +82,7 @@ const GAME_CONFIG = {
     maxBullets: 5,
     fireRate: 200,
     invulnTime: 600,
-    rotationSpeed: 0.45,
+    rotationSpeed: 2.0,
     thrust: 0.15,
     friction: 0.99,
 };
@@ -93,7 +93,6 @@ const ASTEROID_VERTICES_MIN = 8;
 const ASTEROID_VERTICES_MAX = 12;
 const ASTEROID_INITIAL_COUNT = 5;
 const EXTRA_ASTEROID_PER_LEVEL = 3;
-const ASTEROID_SPREAD = 60;
 
 // ── Score ──
 const SCORE_TABLE = {
@@ -208,23 +207,6 @@ const TUTORIAL_STEPS = [
 const SHAKE_DURATION = 300;
 const SHAKE_INTENSITY = 5;
 
-// ── Input Mapping ──
-const INPUT_KEYS = {
-    LEFT: 'ArrowLeft',
-    RIGHT: 'ArrowRight',
-    UP: 'ArrowUp',
-    SPACE: 'Space',
-    PAUSE: 'Escape',
-    RESTART: 'r',
-    HYPERSPACE: 'h',
-};
-
-// ── UI Classes ──
-const UI_CLASSES = {
-    SCORE_FLASH: 'score-flash',
-    OVERLAY_SHOW: 'overlay-show',
-};
-
 // ── Power-ups ──
 const POWERUP_TYPES = {
     shield: {
@@ -261,7 +243,6 @@ const HYPERSPACE_COOLDOWN = 5000;
 const HYPERSPACE_SAFE_RADIUS = 60;
 const HYPERSPACE_SELF_DESTRUCT_CHANCE = 0.10;
 const HYPERSPACE_REENTRY_INVULN = 0.3;
-const HYPERSPACE_FLASH_FRAMES = 3;
 const HYPERSPACE_SEARCH_ATTEMPTS = 20;
 
 // ── UFO ──
@@ -304,7 +285,6 @@ const BGM_LARGE_ASTEROID_THRESHOLD = 4;
 // ── Game balance (computed per frame) ──
 function getBgmIntensity(level, largeAsteroids, ufoActive) {
     if (ufoActive) return BGM_INTENSITY.PANIC;
-    if (level >= 3 || largeAsteroids < BGM_LARGE_ASTEROID_THRESHOLD / 2) return BGM_INTENSITY.NORMAL;
-    if (largeAsteroids < BGM_LARGE_ASTEROID_THRESHOLD) return BGM_INTENSITY.NORMAL;
+    if (level >= 3 || largeAsteroids < BGM_LARGE_ASTEROID_THRESHOLD) return BGM_INTENSITY.NORMAL;
     return BGM_INTENSITY.CALM;
 }
