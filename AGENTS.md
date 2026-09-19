@@ -92,10 +92,10 @@ Asteroids and Space Invaders use SVG sprites loaded via a small `SpriteLoader` h
 
 Assets live in `asteroids/sprites/` and `space-invaders/sprites/`:
 
-- `asteroids/`: `ship.svg` (white, hue-rotated per skin), `asteroid.svg`, `ufo.svg`, `bullet.svg`, `ufo-bullet.svg`, `powerup-{shield,double,life}.svg`
+- `asteroids/`: `ship.svg` (white, tinted per skin via `source-in` compositing), `asteroid.svg`, `ufo.svg`, `bullet.svg`, `ufo-bullet.svg`, `powerup-{shield,double,life}.svg`
 - `space-invaders/`: `player.svg`, `alien-{small,medium,large}.svg`, `ufo.svg`, `bullet.svg`, `alien-bullet.svg`
 
-The 6 ship skins in Asteroids share a single white `ship.svg` and apply `ctx.filter = "hue-rotate(Ndeg)"` per the `SHIP_HUE_ROTATE` map in `asteroids/js/constants.js`. If a sprite fails to load (offline, 404), the code falls back to the previous canvas drawing so gameplay never breaks.
+The 6 ship skins in Asteroids share a single white `ship.svg` and are tinted per skin using `globalCompositeOperation = 'source-in'` with the skin color from the `SHIP_SKINS` array (via `getShipColor()` in `asteroids/js/game.js`). If a sprite fails to load (offline, 404), the code falls back to the previous canvas drawing so gameplay never breaks.
 
 ## Design system
 

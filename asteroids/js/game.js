@@ -637,6 +637,8 @@ const game = {
         this.score = 0;
         this.lives = config.lives;
         this.level = 1;
+        this.achievementState.maxScore = 0;
+        this.achievementState.maxLevel = 1;
         this.shipEffects.shield = 0;
         this.shipEffects.double = 0;
         this.entities.asteroids = [];
@@ -694,6 +696,8 @@ const game = {
         this.score = 0;
         this.lives = this.currentConfig?.lives || GAME_CONFIG.lives;
         this.level = 1;
+        this.achievementState.maxScore = 0;
+        this.achievementState.maxLevel = 1;
         this.shipEffects.shield = 0;
         this.shipEffects.double = 0;
 
@@ -769,15 +773,28 @@ const game = {
     },
 
     updateHud() {
-        const scoreEl = document.getElementById('score');
-        const livesEl = document.getElementById('lives');
-        const levelEl = document.getElementById('level');
-        const bestEl = document.getElementById('best-score-value');
+        if (!this._hud) {
+            this._hud = {
+                score: document.getElementById('score'),
+                lives: document.getElementById('lives'),
+                level: document.getElementById('level'),
+                best: document.getElementById('best-score-value'),
+            };
+            this._hudPrev = { score: -1, lives: -1, level: -1, best: -1 };
+        }
+        const h = this._hud;
+        const prev = this._hudPrev;
+        const best = this.highScores[0]?.score || 0;
 
-        if (scoreEl) scoreEl.textContent = `Score: ${this.score}`;
-        if (livesEl) livesEl.textContent = `Lives: ${this.lives}`;
-        if (levelEl) levelEl.textContent = `Level: ${this.level}`;
-        if (bestEl) bestEl.textContent = this.highScores[0]?.score || 0;
+        if (h.score && prev.score !== this.score) h.score.textContent = `Score: ${this.score}`;
+        if (h.lives && prev.lives !== this.lives) h.lives.textContent = `Lives: ${this.lives}`;
+        if (h.level && prev.level !== this.level) h.level.textContent = `Level: ${this.level}`;
+        if (h.best && prev.best !== best) h.best.textContent = best;
+
+        prev.score = this.score;
+        prev.lives = this.lives;
+        prev.level = this.level;
+        prev.best = best;
     },
 
     updatePowerupHud() {
@@ -894,7 +911,7 @@ const game = {
         ship.hyperspaceCooldownUntil = now + HYPERSPACE_COOLDOWN;
         this.achievementState.hyperspaceSafe = true;
         if (!reducedMotion) {
-            this.entities.effects.push(new FlashEffect(ship.x, ship.y, '#ffffff', 0.15, HYPERSPACE_FLASH_FRAMES));
+            this.entities.effects.push(new FlashEffect(ship.x, ship.y, '#ffffff', 0.15));
         }
         this.checkAchievements();
     },
@@ -914,7 +931,6 @@ const game = {
             this.updateHud();
         }
         this.updatePowerupHud();
-        window.__lastPowerup = { type, time: performance.now(), effects: { ...this.shipEffects } };
     },
 
     trySpawnUfo(dt) {
@@ -1743,13 +1759,12 @@ class PowerUp {
 }
 
 class FlashEffect {
-    constructor(x, y, color, life, frames) {
+    constructor(x, y, color, life) {
         this.x = x;
         this.y = y;
         this.color = color;
         this.life = life;
         this.maxLife = life;
-        this.frames = frames;
         this.dead = false;
     }
 
