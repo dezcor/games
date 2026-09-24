@@ -175,6 +175,12 @@
             --card-shadow: rgba(244, 114, 182, 0.12);
         }
 
+        /* Minesweeper card accent */
+        .game-card.minesweeper {
+            --card-glow: linear-gradient(135deg, #ef4444, #f87171, #fbbf24);
+            --card-shadow: rgba(239, 68, 68, 0.12);
+        }
+
         /* Chalk Tic-Tac-Toe card accent */
         .game-card.chalk {
             --card-glow: linear-gradient(135deg, #f2ecdd, #ff7d6e, #85d1ff);
@@ -284,6 +290,15 @@
         }
         .game-card.asteroids .play-btn:hover {
             box-shadow: 0 6px 24px rgba(244, 114, 182, 0.4);
+        }
+
+        /* Minesweeper play button */
+        .game-card.minesweeper .play-btn {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+        }
+        .game-card.minesweeper .play-btn:hover {
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
         }
 
         /* Chalk Tic-Tac-Toe play button */
@@ -407,6 +422,13 @@
                 <div class="game-icon">☄️</div>
                 <div class="game-title">Asteroids</div>
                 <div class="game-desc">Destroy asteroids, survive the void.</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+
+            <a class="game-card minesweeper" href="minesweeper/index.html">
+                <div class="game-icon">💣</div>
+                <div class="game-title">Minesweeper</div>
+                <div class="game-desc">Dodge the mines, clear the board.</div>
                 <span class="play-btn">PLAY</span>
             </a>
 
