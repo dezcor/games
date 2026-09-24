@@ -7,7 +7,7 @@ let audioCtx = null;
 let sfxGain = null;
 let bgmGain = null;
 let sfxVolume = 0.7;
-let bgmVolume = 0.1;
+let bgmVolume = 1.0;
 let sfxMuted = false;
 let bgmMuted = false;
 let musicScheduler = null;
@@ -48,8 +48,12 @@ function updateSfxGain() {
     if (sfxGain) sfxGain.gain.setValueAtTime(sfxMuted ? 0 : sfxVolume, audioCtx.currentTime);
 }
 
+function getBgmTarget() {
+    return (BGM_VOLUME[bgmIntensity] || 0.08) * bgmVolume;
+}
+
 function updateBgmGain() {
-    if (bgmGain) bgmGain.gain.setValueAtTime(bgmMuted ? 0 : bgmVolume, audioCtx.currentTime);
+    if (bgmGain) bgmGain.gain.setValueAtTime(bgmMuted ? 0 : getBgmTarget(), audioCtx.currentTime);
 }
 
 // ── Initialize ──
@@ -244,7 +248,7 @@ function schedule() {
 
 function applyBgmVolume() {
     if (!bgmGain) return;
-    const target = BGM_VOLUME[bgmIntensity] || 0.08;
+    const target = getBgmTarget();
     const now = audioCtx.currentTime;
     bgmGain.gain.cancelScheduledValues(now);
     bgmGain.gain.setValueAtTime(bgmGain.gain.value, now);

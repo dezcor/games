@@ -55,8 +55,9 @@ function setupTouchButton(selector, onStart, onEnd) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
+        const pt = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+        const x = (pt.clientX - rect.left) * scaleX;
+        const y = (pt.clientY - rect.top) * scaleY;
         const c = Math.floor((x - BOARD_PADDING) / CELL_SIZE);
         const r = Math.floor((y - BOARD_PADDING) / CELL_SIZE);
         if (r < 0 || r >= game.board.rows || c < 0 || c >= game.board.cols) return null;
