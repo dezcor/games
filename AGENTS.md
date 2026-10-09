@@ -13,7 +13,8 @@ npx serve .
 ## Structure
 
 - `index.html` — games hub listing (links to all games)
-- `snake/` — self-contained Snake game
+- `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`). Each game sets its palette and fonts as `:root` tokens.
+- `snake/` — self-contained Snake game (only shared file: `../shared/arcade.css`)
   - Scripts loaded in order: `sound.js` → `game.js`
   - `SnakeGame` class extends `Game` base
 - `tetris/` — Tetris with modular JS
@@ -84,7 +85,7 @@ In Asteroids, the same aliases (`jsnow` / `jonsnow` / `jon` / legacy `jsnof`) al
 
 ## Touch controls
 
-All games have on-screen touch buttons using `touchstart`/`touchend` events with `e.preventDefault()`. Snake also supports swipe gestures on the canvas. Touch buttons toggle `keys` object state (DAS system in Tetris/Arkanoid/Space Invaders handles held keys).
+All games have on-screen touch controls made of `.touch-btn[data-action]` elements, using `touchstart`/`touchend` events with `e.preventDefault()`. Directional input is a joystick: four `.joy-zone` wedges (`joy-up/right/down/left`, or only `joy-left`/`joy-right` inside `.joystick--h` for paddles). Actions are round arcade caps (`.cap`) inside an `.arcade-key` wrapper with a printed `.arcade-label`. A pressed control gets the `pressed` class, which tilts the stick through sibling selectors. Keep `data-action` values in sync with the JS handlers. Snake also supports swipe gestures on the canvas. Touch buttons toggle `keys` object state (DAS system in Tetris/Arkanoid/Space Invaders handles held keys).
 
 ## Sprite loading
 
@@ -99,18 +100,23 @@ The 6 ship skins in Asteroids share a single white `ship.svg` and are tinted per
 
 ## Design system
 
-All games share:
-- `Press Start 2P` + `Inter` fonts
-- `#1a1028` background with radial gradient accent
-- CRT scanline overlay (`body::after`)
-- `fadeUp` entrance animation
-- `backdrop-filter: blur()` on overlays
-- Pill-shaped buttons and UI controls
-- `rgba(255,255,255,0.06)` button backgrounds
-- `#fbbf24` focus outlines
-- `prefers-reduced-motion` support
-- Identical sound control UI (mute SFX, mute BGM, volume slider)
-- High scores table with medals, name, score, date
+Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids and Minesweeper use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
+
+Shared across games:
+- Sound control UI (mute SFX, mute BGM, volume slider) with persisted settings
+- High scores table with medals, name, score, date (`.hs-*` classes)
 - `setupTouchButton()` helper for touch/mouse events
+- `prefers-reduced-motion` support and `:focus-visible` outlines
+- Overlays that hide with `display` from the JS: keep the same ids, because the JS toggles them
+
+Per-game identity:
+- Snake: phosphor terminal (VT323), green screen and a red joystick ball
+- Tetris: teal/coral neon (Orbitron) with a perspective grid; `North` theme overrides the tokens
+- Arkanoid: steel frame and hazard stripes (Bungee), horizontal paddle joystick
+- Space Invaders: cream 1978 cabinet with printed labels and a red FIRE cap (Press Start 2P)
+- Asteroids: oscilloscope graticule and vector glow (Share Tech Mono)
+- Minesweeper: olive field plates, hazard tape and stencil titles (Saira Stencil One); canvas numbers still use Press Start 2P
+- El Gato: chalkboard and wooden frame (Caveat + Nunito)
+- Una pregunta rara: midnight letter, serif type and ruled paper (Instrument Serif + Caveat)
 
 ## No tests, no CI, no linting, no formatting config

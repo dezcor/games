@@ -283,14 +283,17 @@ h1 .squig {
   transform: translateX(4px);
 }
 
+/* piloto de cabina: cúpula apagada que se enciende con su color */
 .diff .dot {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  border: 2.5px solid var(--c);
   flex: 0 0 auto;
+  background: radial-gradient(circle at 36% 30%, #ffffff 0 10%, var(--c) 42%, rgba(0, 0, 0, 0.45) 100%);
+  opacity: 0.4;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
   transition:
-    background 0.18s,
+    opacity 0.18s,
     box-shadow 0.18s;
 }
 
@@ -325,8 +328,8 @@ h1 .squig {
 }
 
 .diff.active .dot {
-  background: var(--c);
-  box-shadow: 0 0 10px var(--c);
+  opacity: 1;
+  box-shadow: 0 0 14px var(--c), 0 3px 0 rgba(0, 0, 0, 0.4);
 }
 
 .diff-note {
@@ -425,58 +428,35 @@ h1 .squig {
   font-weight: 600;
 }
 
-.btn {
+/* ── botones de cabina montados en la madera: caps con etiqueta de tiza ── */
+.c-chalk  { --cap: #f2ecdd; --cap-hi: #ffffff; --cap-lo: #a9a391; --cap-ink: #28402f; }
+.c-blue   { --cap: #85d1ff; --cap-hi: #e3f5ff; --cap-lo: #2d6d96; --cap-ink: #0f2a3a; }
+.c-yellow { --cap: #ffd97a; --cap-hi: #fff3c9; --cap-lo: #9a7a2a; --cap-ink: #3a2a08; }
+.c-wood   { --cap: #8a5a35; --cap-hi: #b98a5e; --cap-lo: #4a2d15; --cap-ink: #f2ecdd; }
+
+.cap {
   font-family: "Nunito", sans-serif;
   font-weight: 800;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--chalk);
-  background: transparent;
-  border: 2px solid var(--chalk);
-  border-radius: 10px;
-  padding: 10px 16px;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition:
-    transform 0.18s,
-    box-shadow 0.18s,
-    background 0.18s,
-    border-color 0.18s;
 }
 
-.btn:hover {
-  transform: translateY(-2px) rotate(-0.6deg);
-  box-shadow: 0 0 16px rgba(242, 236, 221, 0.28);
+.arcade-label {
+  font-family: "Nunito", sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(242, 236, 221, 0.78);
 }
 
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn-ghost {
-  border-color: rgba(242, 236, 221, 0.4);
-  font-size: 12px;
-  padding: 7px 11px;
-  color: rgba(242, 236, 221, 0.75);
-}
-
-.btn-ghost:hover {
-  border-color: var(--chalk);
-  color: var(--chalk);
-  box-shadow: none;
-  transform: translateX(3px);
-}
-
-.btn-ghost.off {
+.cap.off {
   opacity: 0.55;
-  text-decoration: line-through;
+  filter: grayscale(0.6);
 }
 
 .controls-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
   margin-top: 4px;
 }
 
@@ -818,17 +798,21 @@ kbd {
   margin-top: 2px;
 }
 
+/* "Otra vez" aparece al terminar la ronda; el color sigue al ganador */
 #btnNext {
+  --cap-size: 58px;
+  --barrel: 6px;
   position: absolute;
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
+  margin-top: -29px;
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   opacity: 0;
   pointer-events: none;
-  transition:
-    opacity 0.3s,
-    transform 0.3s;
-  border-color: var(--chalk);
+  transition: opacity 0.3s;
 }
 
 .status.done #btnNext {
@@ -836,19 +820,25 @@ kbd {
   pointer-events: auto;
 }
 
-.board[data-winner="you"] #btnNext {
-  border-color: var(--x);
-  color: var(--x);
+.status[data-winner="you"] #btnNext {
+  --cap: var(--x);
+  --cap-hi: #ffd0c8;
+  --cap-lo: #8a3024;
+  --cap-ink: #3a0f09;
 }
 
-.board[data-winner="cat"] #btnNext {
-  border-color: var(--o);
-  color: var(--o);
+.status[data-winner="cat"] #btnNext {
+  --cap: var(--o);
+  --cap-hi: #e3f5ff;
+  --cap-lo: #2d6d96;
+  --cap-ink: #0f2a3a;
 }
 
-.board[data-winner="tie"] #btnNext {
-  border-color: var(--easy);
-  color: var(--easy);
+.status[data-winner="tie"] #btnNext {
+  --cap: var(--easy);
+  --cap-hi: #fff3c9;
+  --cap-lo: #9a7a2a;
+  --cap-ink: #3a2a08;
 }
 
 /* repisa de tiza */

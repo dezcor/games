@@ -52,7 +52,7 @@
         .container {
             text-align: center;
             padding: 48px 24px 40px;
-            max-width: 640px;
+            max-width: 680px;
             width: 100%;
             animation: fadeUp 0.6s ease-out;
         }
@@ -98,20 +98,20 @@
             flex-wrap: wrap;
         }
 
-        /* ── Game Card ── */
+        /* ── Game Card: cada tarjeta lleva el color de su juego ── */
         .game-card {
             position: relative;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            padding: 36px 28px 28px;
+            padding: 30px 28px 26px;
             width: 270px;
             text-decoration: none;
             color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
             overflow: hidden;
         }
@@ -145,54 +145,54 @@
             transform: translateY(-2px);
         }
 
-        /* Tetris card accent */
+        /* Colores por juego: --cap alimenta el botón PLAY de cada tarjeta */
         .game-card.tetris {
-            --card-glow: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
-            --card-shadow: rgba(56, 189, 248, 0.12);
+            --card-glow: linear-gradient(135deg, #5ef2c2, #ff6f8e);
+            --card-shadow: rgba(94, 242, 194, 0.14);
+            --cap: #5ef2c2; --cap-hi: #dcfff4; --cap-lo: #137b62; --cap-ink: #04201a;
         }
 
-        /* Space Invaders card accent */
         .game-card.spaceinvaders {
-            --card-glow: linear-gradient(135deg, #4ade80, #ff6b8a, #fbbf24);
-            --card-shadow: rgba(74, 222, 128, 0.12);
+            --card-glow: linear-gradient(135deg, #e5322d, #ffd23f);
+            --card-shadow: rgba(229, 50, 45, 0.14);
+            --cap: #e5322d; --cap-hi: #ffb4ac; --cap-lo: #7a120e; --cap-ink: #2a0503;
         }
 
-        /* Snake card accent */
         .game-card.snake {
-            --card-glow: linear-gradient(135deg, #4ade80, #22d3ee, #38bdf8);
-            --card-shadow: rgba(74, 222, 128, 0.12);
+            --card-glow: linear-gradient(135deg, #8dff9a, #2c7a46);
+            --card-shadow: rgba(141, 255, 154, 0.12);
+            --cap: #3ddc84; --cap-hi: #d2ffe4; --cap-lo: #0b5a2f; --cap-ink: #03140a;
         }
 
-        /* Arkanoid card accent */
         .game-card.arkanoid {
-            --card-glow: linear-gradient(135deg, #22d3ee, #818cf8, #c084fc);
-            --card-shadow: rgba(34, 211, 238, 0.12);
+            --card-glow: linear-gradient(135deg, #ff7a1a, #ffd60a);
+            --card-shadow: rgba(255, 122, 26, 0.14);
+            --cap: #ff7a1a; --cap-hi: #ffd6b0; --cap-lo: #7a2c05; --cap-ink: #2a0f02;
         }
 
-        /* Asteroids card accent */
         .game-card.asteroids {
-            --card-glow: linear-gradient(135deg, #f472b6, #fbbf24, #a855f7);
-            --card-shadow: rgba(244, 114, 182, 0.12);
+            --card-glow: linear-gradient(135deg, #6ef3ff, #ff4fd8);
+            --card-shadow: rgba(110, 243, 255, 0.14);
+            --cap: #6ef3ff; --cap-hi: #e6fdff; --cap-lo: #1b6f80; --cap-ink: #03262e;
         }
 
-        /* Minesweeper card accent */
         .game-card.minesweeper {
-            --card-glow: linear-gradient(135deg, #ef4444, #f87171, #fbbf24);
-            --card-shadow: rgba(239, 68, 68, 0.12);
+            --card-glow: linear-gradient(135deg, #f2c417, #8f8457);
+            --card-shadow: rgba(242, 196, 23, 0.12);
+            --cap: #f2c417; --cap-hi: #fff3b0; --cap-lo: #7d6306; --cap-ink: #14120a;
         }
 
-        /* Chalk Tic-Tac-Toe card accent */
         .game-card.chalk {
-            --card-glow: linear-gradient(135deg, #f2ecdd, #ff7d6e, #85d1ff);
+            --card-glow: linear-gradient(135deg, #f2ecdd, #85d1ff);
             --card-shadow: rgba(242, 236, 221, 0.12);
+            --cap: #f2ecdd; --cap-hi: #ffffff; --cap-lo: #a9a391; --cap-ink: #28402f;
         }
 
-        /* Una pregunta rara card accent */
         .game-card.rare {
-            --card-glow: linear-gradient(135deg, #D946EF, #8B5CF6);
-            --card-shadow: rgba(217, 70, 239, 0.12);
+            --card-glow: linear-gradient(135deg, #ffb87a, #e9a6b9);
+            --card-shadow: rgba(255, 184, 122, 0.12);
+            --cap: #e9a6b9; --cap-hi: #fbe0ea; --cap-lo: #8a4a5c; --cap-ink: #2b1520;
         }
-
 
         /* ── Icon ── */
         .game-icon {
@@ -223,100 +223,46 @@
             max-width: 220px;
         }
 
-        /* ── Play Button ── */
+        /* ── Botón PLAY: botón de cabina redondo con bisel y barril ── */
         .play-btn {
-            margin-top: 6px;
-            padding: 10px 32px;
+            margin-top: 8px;
+            display: grid;
+            place-items: center;
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
             font-family: 'Press Start 2P', monospace;
-            font-size: 11px;
-            font-weight: 400;
-            color: #1a1028;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            letter-spacing: 0.5px;
+            font-size: 10px;
+            line-height: 1;
+            letter-spacing: 0.04em;
+            color: var(--cap-ink);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+            background:
+                radial-gradient(ellipse 55% 30% at 50% 24%, var(--cap-hi), transparent 100%),
+                radial-gradient(circle at 50% 50%, var(--cap) 0 58%, var(--cap-lo) 100%);
+            box-shadow:
+                0 0 0 3px #e5e7eb,
+                0 0 0 5px #4b5563,
+                0 0 0 6px #0b0812,
+                0 8px 0 var(--cap-lo),
+                0 16px 22px rgba(0, 0, 0, 0.5),
+                inset 0 2px 2px rgba(255, 255, 255, 0.35);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
         }
 
         .game-card:hover .play-btn {
-            transform: scale(1.05);
+            transform: translateY(-2px);
         }
 
-        .play-btn:active {
-            transform: scale(0.97);
-        }
-
-        /* Tetris play button */
-        .game-card.spaceinvaders .play-btn {
-            background: linear-gradient(135deg, #4ade80, #ff6b8a);
-            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.25);
-        }
-        .game-card.spaceinvaders .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
-        }
-        .game-card.tetris .play-btn {
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
-        }
-        .game-card.spaceinvaders .play-btn:hover {
-    box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
-}
-.game-card.tetris .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
-        }
-
-        /* Snake play button */
-        .game-card.snake .play-btn {
-            background: linear-gradient(135deg, #4ade80, #22d3ee);
-            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.25);
-        }
-        .game-card.snake .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
-        }
-
-        /* Arkanoid play button */
-        .game-card.arkanoid .play-btn {
-            background: linear-gradient(135deg, #22d3ee, #818cf8);
-            box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
-        }
-        .game-card.arkanoid .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4), 0 6px 24px rgba(129, 140, 248, 0.2);
-        }
-
-        /* Asteroids play button */
-        .game-card.asteroids .play-btn {
-            background: linear-gradient(135deg, #f472b6, #fbbf24, #a855f7);
-            box-shadow: 0 4px 16px rgba(244, 114, 182, 0.25);
-        }
-        .game-card.asteroids .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(244, 114, 182, 0.4);
-        }
-
-        /* Minesweeper play button */
-        .game-card.minesweeper .play-btn {
-            background: linear-gradient(135deg, #ef4444, #f87171);
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
-        }
-        .game-card.minesweeper .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Chalk Tic-Tac-Toe play button */
-        .game-card.chalk .play-btn {
-            background: linear-gradient(135deg, #f2ecdd, #ff7d6e, #85d1ff);
-            box-shadow: 0 4px 16px rgba(242, 236, 221, 0.25);
-        }
-        .game-card.chalk .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(242, 236, 221, 0.4);
-        }
-
-        /* Una pregunta rara play button */
-        .game-card.rare .play-btn {
-            background: linear-gradient(135deg, #D946EF, #8B5CF6);
-            box-shadow: 0 4px 16px rgba(217, 70, 239, 0.25);
-        }
-        .game-card.rare .play-btn:hover {
-            box-shadow: 0 6px 24px rgba(217, 70, 239, 0.4);
+        .game-card:active .play-btn {
+            transform: translateY(6px);
+            box-shadow:
+                0 0 0 3px #e5e7eb,
+                0 0 0 5px #4b5563,
+                0 0 0 6px #0b0812,
+                0 2px 0 var(--cap-lo),
+                0 6px 10px rgba(0, 0, 0, 0.5),
+                inset 0 3px 4px rgba(0, 0, 0, 0.25);
         }
 
         /* ── Footer ── */
@@ -337,7 +283,7 @@
             .game-card {
                 width: 88%;
                 max-width: 320px;
-                padding: 28px 24px 24px;
+                padding: 26px 24px 22px;
             }
             .logo {
                 font-size: 22px;
@@ -365,7 +311,7 @@
                 padding: 32px 16px 28px;
             }
             .game-card {
-                padding: 24px 20px 20px;
+                padding: 22px 20px 18px;
             }
         }
 

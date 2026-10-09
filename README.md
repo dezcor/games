@@ -143,6 +143,8 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 
 ```
 ├── index.html          # Hub principal
+├── shared/
+│   └── arcade.css      # Kit de cabina: botones redondos, palanca y panel de control
 ├── AGENTS.md           # Instrucciones para OpenCode
 ├── BACKLOG.md          # Backlog de Asteroids
 ├── tetris_backlog.md   # Backlog de Tetris

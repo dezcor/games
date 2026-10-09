@@ -10,6 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="../shared/arcade.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -82,10 +83,22 @@
         </div>
         <div class="tallies-foot"><span id="round">Ronda 1</span><span id="streak"></span></div>
         <div class="controls-row">
-          <button class="btn btn-ghost" id="btnMenu">← Menú</button>
-          <button class="btn" id="btnNew">Nueva ronda</button>
-          <button class="btn btn-ghost" id="btnMute">Sonido</button>
-          <button class="btn btn-ghost" id="btnReset">Borrar</button>
+          <div class="arcade-key is-sm">
+            <button class="cap c-wood" id="btnMenu" aria-label="Menú">←</button>
+            <span class="arcade-label">MENÚ</span>
+          </div>
+          <div class="arcade-key">
+            <button class="cap c-chalk" id="btnNew" aria-label="Nueva ronda">↻</button>
+            <span class="arcade-label">NUEVA RONDA</span>
+          </div>
+          <div class="arcade-key is-sm">
+            <button class="cap c-blue" id="btnMute" aria-label="Sonido">🔊</button>
+            <span class="arcade-label">SONIDO</span>
+          </div>
+          <div class="arcade-key is-sm">
+            <button class="cap c-yellow" id="btnReset" aria-label="Borrar marcador">⌫</button>
+            <span class="arcade-label">BORRAR</span>
+          </div>
         </div>
         <p class="howto">Eres la <b>X</b>. El gato juega con la <b>O</b>. Alcanza tres en fila para ganar — y en
           <b>Imposible</b> tu única victoria es empatar.
@@ -105,7 +118,7 @@
       <div class="status" id="status" data-winner="">
         <span class="msg" id="statusMsg">Tu jugada</span>
         <span class="sub" id="statusSub">El gato espera</span>
-        <button class="btn" id="btnNext">Otra vez</button>
+        <button class="cap c-chalk" id="btnNext" aria-label="Otra vez">Otra<br>vez</button>
       </div>
       <div class="tray">
         <span class="stick" style="--tilt:-3deg"></span>

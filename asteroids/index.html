@@ -7,12 +7,13 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/arcade.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="game-container">
-        <a href="../index.html" id="menu-btn">← Menu</a>
+        <a href="../index.html" id="menu-btn">◂ MENU</a>
         <div id="top-ui">
             <div id="info-row">
                 <div id="score" aria-live="polite">Score: 0</div>
@@ -26,11 +27,24 @@
             <div id="powerup-status"></div>
             <div id="controls-row">
                 <div id="sound-controls">
-                    <button id="mute-btn" title="Mute" aria-label="Mute sound effects" aria-pressed="false">🔊</button>
-                    <button id="bgm-mute-btn" title="Mute Music" aria-label="Mute music" aria-pressed="false">🎵</button>
+                    <div class="arcade-key is-sm">
+                        <button id="mute-btn" class="touch-btn cap c-vector" title="Mute" aria-label="Mute sound effects" aria-pressed="false">🔊</button>
+                        <span class="arcade-label">SFX</span>
+                    </div>
+                    <div class="arcade-key is-sm">
+                        <button id="bgm-mute-btn" class="touch-btn cap c-magenta" title="Mute Music" aria-label="Mute music" aria-pressed="false">🎵</button>
+                        <span class="arcade-label">MUSIC</span>
+                    </div>
                     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
                 </div>
-                <button id="pause-btn" aria-label="Pause" aria-pressed="false">Pause</button>
+                <div class="arcade-key is-sm">
+                    <button id="pause-btn" class="touch-btn cap c-white" aria-label="Pause" aria-pressed="false">II</button>
+                    <span class="arcade-label">PAUSE</span>
+                </div>
+                <div class="arcade-key is-sm">
+                    <button class="touch-btn cap c-amber" data-action="restart" title="Restart" aria-label="Restart">↻</button>
+                    <span class="arcade-label">RESTART</span>
+                </div>
             </div>
         </div>
         <div id="board-wrapper">
@@ -44,18 +58,10 @@
                 <div id="difficulty-selection">
                     <p class="hint">SELECT DIFFICULTY</p>
                     <div class="difficulty-buttons">
-                        <button id="diff-btn-easy" data-diff="easy" class="diff-btn" style="border-color: #4ade80; color: #4ade80;">
-                            FÁCIL
-                        </button>
-                        <button id="diff-btn-normal" data-diff="normal" class="diff-btn active" style="border-color: #fbbf24; color: #fbbf24;">
-                            NORMAL
-                        </button>
-                        <button id="diff-btn-hard" data-diff="hard" class="diff-btn" style="border-color: #f87171; color: #f87171;">
-                            DIFÍCIL
-                        </button>
-                        <button id="diff-btn-insane" data-diff="insane" class="diff-btn" style="border-color: #d946ef; color: #d946ef;">
-                            LOCO
-                        </button>
+                        <button id="diff-btn-easy" data-diff="easy" class="diff-btn">FÁCIL</button>
+                        <button id="diff-btn-normal" data-diff="normal" class="diff-btn active">NORMAL</button>
+                        <button id="diff-btn-hard" data-diff="hard" class="diff-btn">DIFÍCIL</button>
+                        <button id="diff-btn-insane" data-diff="insane" class="diff-btn">LOCO</button>
                     </div>
                 </div>
 
@@ -71,7 +77,7 @@
                     <ul id="achievements-list" role="list"></ul>
                 </div>
                 <button id="achievements-btn" type="button" aria-expanded="false" aria-controls="achievements-panel">Achievements</button>
-                <button id="start-btn">START</button>
+                <button id="start-btn" class="touch-btn cap is-xl is-ring c-vector">START</button>
 
                 <div id="game-over-card" style="display:none;">
                     <h1 id="game-over-title">GAME OVER</h1>
@@ -79,7 +85,7 @@
                         <div id="final-score">Score: 0</div>
                         <div id="final-level">Level: 1</div>
                     </div>
-                    <button id="quick-restart-btn">PLAY AGAIN</button>
+                    <button id="quick-restart-btn" class="touch-btn cap is-xl is-ring c-magenta">PLAY<br>AGAIN</button>
                     <div id="high-scores-table">
                         <h3>Top 5 Records</h3>
                         <table id="high-scores-list"></table>
@@ -115,20 +121,26 @@
                 <div id="achievement-toast-text"></div>
             </div>
         </div>
-        <div id="touch-controls">
-            <button class="touch-btn" data-action="left" title="Left" aria-label="Left">
-                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10L14 16V4L4 10Z" fill="#22d3ee"/></svg>
-            </button>
-            <button class="touch-btn" data-action="thrust" title="Thrust" aria-label="Thrust">▲</button>
-            <button class="touch-btn" data-action="right" title="Right" aria-label="Right">
-                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M16 10L6 4V16L16 10Z" fill="#22d3ee"/></svg>
-            </button>
-            <button class="touch-btn" data-action="shoot" title="Shoot" aria-label="Shoot">
-                <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2v6l3-3 2 2-5 5-5-5 2-2 3 3V2h4z" fill="#fbbf24"/></svg>
-            </button>
-            <button class="touch-btn" data-action="hyperespace" title="Hyperspace (H)" aria-label="Hyperspace">⇋</button>
-            <button class="touch-btn" data-action="pause" title="Pause" aria-label="Pause">⏸</button>
-            <button class="touch-btn" data-action="restart" title="Restart" aria-label="Restart">↻</button>
+
+        <div id="touch-controls" class="deck">
+            <div class="stick-key">
+                <div class="joystick" role="group" aria-label="Ship controls">
+                    <button class="touch-btn joy-zone joy-left" data-action="left" title="Turn left" aria-label="Left"></button>
+                    <button class="touch-btn joy-zone joy-up" data-action="thrust" title="Thrust" aria-label="Thrust"></button>
+                    <button class="touch-btn joy-zone joy-right" data-action="right" title="Turn right" aria-label="Right"></button>
+                    <span class="joy-gate" aria-hidden="true"></span>
+                    <span class="joy-shaft" aria-hidden="true"><span class="joy-ball"></span></span>
+                </div>
+                <span class="arcade-label">TURN · THRUST</span>
+            </div>
+            <div class="arcade-key is-lg">
+                <button class="touch-btn cap c-magenta" data-action="shoot" title="Shoot" aria-label="Shoot">●</button>
+                <span class="arcade-label">FIRE</span>
+            </div>
+            <div class="arcade-key">
+                <button class="touch-btn cap c-vector" data-action="hyperespace" title="Hyperspace (H)" aria-label="Hyperspace">⇋</button>
+                <span class="arcade-label">HYPER</span>
+            </div>
         </div>
     </div>
     <script src="js/constants.js"></script>
