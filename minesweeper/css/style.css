@@ -128,8 +128,7 @@ body {
     margin-bottom: 12px;
 }
 
-#info-row,
-#controls-row {
+#info-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -156,11 +155,12 @@ body {
     color: var(--khaki);
 }
 
+/* El JS pone el color del nivel en línea: el fondo debe contrastar con él */
 #difficulty-label {
     padding: 2px 8px;
-    color: var(--hazard-ink);
-    background: var(--hazard);
-    border-radius: 2px;
+    color: var(--khaki);
+    background: var(--olive-dk);
+    border: 1px solid var(--olive-lt);
 }
 
 #name-input-container {

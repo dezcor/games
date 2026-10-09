@@ -132,8 +132,7 @@ body::after {
     margin-bottom: 12px;
 }
 
-#info-row,
-#controls-row {
+#info-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -470,7 +469,7 @@ body::after {
         letter-spacing: 0.04em;
     }
     #player-name {
-        width: 80px;
+        width: 110px;
     }
     #next-canvas {
         width: 36px;
@@ -488,6 +487,14 @@ body::after {
     }
     #overlay-title {
         font-size: 16px;
+    }
+}
+
+/* Tablero tan alto como permita la pantalla, para que el panel de botones quede a la vista */
+@media (max-height: 760px) {
+    #board-wrapper {
+        max-width: min(280px, max(220px, calc((100vh - 330px) / 1.6667)));
+        max-width: min(280px, max(220px, calc((100dvh - 330px) / 1.6667)));
     }
 }
 

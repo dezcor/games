@@ -106,8 +106,7 @@ body::after {
     margin-bottom: 12px;
 }
 
-#info-row,
-#controls-row {
+#info-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -443,7 +442,7 @@ body::after {
         font-size: 9px;
     }
     #player-name {
-        width: 80px;
+        width: 110px;
     }
     #overlay-title {
         font-size: 18px;

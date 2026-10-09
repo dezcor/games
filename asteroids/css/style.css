@@ -119,8 +119,7 @@ body::after {
     margin-bottom: 12px;
 }
 
-#info-row,
-#controls-row {
+#info-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -372,6 +371,7 @@ body::after {
     display: none;
     flex-direction: column;
     justify-content: center;
+    justify-content: safe center;
     align-items: center;
     gap: 14px;
     padding: 16px;
@@ -916,7 +916,7 @@ body::after {
         font-size: 12px;
     }
     #player-name {
-        width: 84px;
+        width: 110px;
     }
     #overlay-title {
         font-size: 22px;
@@ -958,6 +958,44 @@ body::after {
     }
     #overlay-title {
         font-size: 18px;
+    }
+}
+
+/* Teléfonos bajos: el overlay de inicio debe caber y el botón START no debe cortarse */
+@media (max-height: 700px) {
+    #overlay-title {
+        font-size: 20px;
+    }
+    .hint {
+        display: none;
+    }
+    #pause-overlay {
+        gap: 8px;
+    }
+    .skin-swatch {
+        width: 22px;
+        height: 22px;
+    }
+    #start-btn {
+        --cap-size: 84px;
+        --barrel: 7px;
+        font-size: 11px;
+    }
+}
+
+/* Pantallas muy bajas: START, logros y dificultad caben dentro del overlay */
+@media (max-height: 600px) {
+    #start-btn {
+        --cap-size: 72px;
+        --barrel: 6px;
+        font-size: 10px;
+    }
+    #achievements-btn {
+        margin-top: 0;
+        padding: 4px 12px;
+    }
+    .diff-btn {
+        padding: 5px 9px 3px;
     }
 }
 
