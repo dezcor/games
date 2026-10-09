@@ -1,0 +1,453 @@
+/* ═══════════════════════════════════════════════════════════════
+   Cabina arcade · piezas físicas compartidas por los juegos
+   Cada juego define sus materiales (tokens en :root) y su tipografía.
+   Aquí viven: botón redondo con barril, bisel metálico, palanca
+   (4 direcciones o 2) y panel de control.
+   ═══════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --cap: #e11d48;
+    --cap-hi: #fda4af;
+    --cap-lo: #7f1030;
+    --cap-ink: rgba(20, 8, 12, 0.7);
+    --cap-size: 60px;
+    --barrel: 6px;
+
+    --joy-size: 118px;
+    --ball: #e11d48;
+    --ball-hi: #fecdd3;
+    --ball-lo: #7f1d1d;
+
+    --bezel-hi: #e5e7eb;
+    --bezel-lo: #4b5563;
+    --deck: #15131c;
+    --deck-edge: #2a2633;
+    --deck-lo: #07060b;
+    --label: #d4d4d8;
+    --focus: #fbbf24;
+    --label-font: 'Press Start 2P', monospace;
+}
+
+/* ── Base de los controles (los caps también la necesitan si no llevan .touch-btn) ── */
+.touch-btn,
+.cap {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.touch-btn:focus-visible,
+.cap:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+}
+
+/* ── Colores de botón listos: <button class="cap c-red"> ── */
+.c-red     { --cap: #e11d48; --cap-hi: #fda4af; --cap-lo: #7f1030; }
+.c-yellow  { --cap: #facc15; --cap-hi: #fef9c3; --cap-lo: #854d0e; }
+.c-green   { --cap: #22c55e; --cap-hi: #bbf7d0; --cap-lo: #14532d; }
+.c-blue    { --cap: #3b82f6; --cap-hi: #bfdbfe; --cap-lo: #1e3a8a; }
+.c-cyan    { --cap: #22d3ee; --cap-hi: #cffafe; --cap-lo: #155e75; }
+.c-orange  { --cap: #f97316; --cap-hi: #fed7aa; --cap-lo: #9a3412; }
+.c-magenta { --cap: #d946ef; --cap-hi: #f5d0fe; --cap-lo: #86198f; }
+.c-white   { --cap: #f4f4f5; --cap-hi: #ffffff; --cap-lo: #a1a1aa; }
+.c-black   { --cap: #2a2a30; --cap-hi: #6b6b76; --cap-lo: #0a0a0d; --cap-ink: #f4f4f5; }
+
+/* ── Botón redondo con barril ── */
+.cap {
+    position: relative;
+    z-index: 1;
+    width: var(--cap-size);
+    height: var(--cap-size);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    /* El JS a veces pone display:block al mostrar START: el texto debe seguir centrado */
+    text-align: center;
+    font-family: var(--label-font);
+    font-size: calc(var(--cap-size) * 0.3);
+    line-height: 1;
+    color: var(--cap-ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    background:
+        radial-gradient(ellipse 55% 30% at 50% 24%, var(--cap-hi), transparent 100%),
+        radial-gradient(circle at 50% 50%, var(--cap) 0 58%, var(--cap-lo) 100%);
+    box-shadow:
+        0 var(--barrel) 0 var(--cap-lo),
+        0 calc(var(--barrel) + 8px) 16px rgba(0, 0, 0, 0.55),
+        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+    transition: transform 70ms ease-out, box-shadow 70ms ease-out, filter 150ms ease;
+}
+
+.cap:active,
+.cap.pressed {
+    transform: translateY(calc(var(--barrel) - 1px));
+    box-shadow:
+        0 1px 0 var(--cap-lo),
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        inset 0 3px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Botón iluminado (activo o seleccionado) */
+.cap.is-lit {
+    filter: brightness(1.18);
+    box-shadow:
+        0 var(--barrel) 0 var(--cap-lo),
+        0 calc(var(--barrel) + 8px) 16px rgba(0, 0, 0, 0.55),
+        0 0 20px 3px var(--cap),
+        inset 0 2px 2px rgba(255, 255, 255, 0.45);
+}
+
+.cap.is-lit:active,
+.cap.is-lit.pressed {
+    filter: brightness(1.05);
+}
+
+/* ── Conjunto: botón + bisel fijo + etiqueta impresa ── */
+.arcade-key {
+    --bezel: 8px;
+    position: relative;
+    display: grid;
+    justify-items: center;
+    /* El hueco cubre el bisel y su sombra inferior (4px) antes de la etiqueta */
+    row-gap: calc(var(--bezel) + 6px);
+    padding-top: var(--bezel);
+}
+
+/* Bisel metálico: queda fijo mientras el botón baja */
+.arcade-key::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: calc(var(--cap-size) + var(--bezel) * 2);
+    height: calc(var(--cap-size) + var(--bezel) * 2);
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: conic-gradient(
+        from 200deg,
+        var(--bezel-hi), var(--bezel-lo) 12%,
+        var(--bezel-hi) 25%, var(--bezel-lo) 40%,
+        var(--bezel-hi) 57%, var(--bezel-lo) 74%,
+        var(--bezel-hi) 90%, var(--bezel-lo)
+    );
+    box-shadow: 0 4px 0 var(--deck-lo), 0 8px 14px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.arcade-label {
+    font-family: var(--label-font);
+    font-size: 8px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--label);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Variante pequeña para controles de sonido o pausa */
+.arcade-key.is-sm {
+    --cap-size: 38px;
+    --barrel: 3px;
+    --bezel: 4px;
+}
+
+.arcade-key.is-sm .cap {
+    font-size: 14px;
+}
+
+/* Variante grande (START / reiniciar en overlays) */
+.arcade-key.is-xl,
+.cap.is-xl {
+    --cap-size: 96px;
+    --barrel: 9px;
+    --bezel: 10px;
+}
+
+.arcade-key.is-xl .cap,
+.cap.is-xl {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+}
+
+/* Variante mediana para acciones principales (p. ej. soltar pieza) */
+.arcade-key.is-lg {
+    --cap-size: 72px;
+    --barrel: 8px;
+    --bezel: 9px;
+}
+
+/* Bisel en sombra para botones sueltos que se ocultan por completo (overlays) */
+.cap.is-ring {
+    --ring:
+        0 0 0 3px var(--bezel-hi),
+        0 0 0 6px var(--bezel-lo),
+        0 0 0 8px var(--deck-lo);
+    box-shadow:
+        var(--ring),
+        0 var(--barrel) 0 var(--cap-lo),
+        0 calc(var(--barrel) + 8px) 16px rgba(0, 0, 0, 0.55),
+        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+}
+
+.cap.is-ring:active,
+.cap.is-ring.pressed {
+    box-shadow:
+        var(--ring),
+        0 1px 0 var(--cap-lo),
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        inset 0 3px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dentro de overlays en columna flex los controles no deben encogerse */
+.cap,
+.arcade-key,
+.stick-key,
+.joystick {
+    flex-shrink: 0;
+}
+
+/* Bloque de palanca con etiqueta impresa debajo */
+.stick-key {
+    display: grid;
+    justify-items: center;
+    row-gap: 14px;
+}
+
+/* ── Palanca de 4 direcciones ── */
+.joystick {
+    position: relative;
+    width: var(--joy-size);
+    height: var(--joy-size);
+    flex: none;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 42%, #24242b 0%, #0c0c10 62%, #040405 100%);
+    box-shadow:
+        0 0 0 3px var(--bezel-hi),
+        0 0 0 5px var(--bezel-lo),
+        0 0 0 7px var(--bezel-hi),
+        0 0 0 9px var(--deck-lo),
+        0 16px 22px rgba(0, 0, 0, 0.6),
+        inset 0 6px 14px rgba(0, 0, 0, 0.8);
+}
+
+.joy-gate {
+    position: absolute;
+    inset: 24%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #050506 0 52%, #1d1d24 80%, #2b2b33 100%);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Zonas táctiles: cuñas que parten del centro (no se solapan) */
+.joy-zone {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+.joy-zone::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 35%, rgba(255, 255, 255, 0.14) 100%);
+    opacity: 0;
+    transition: opacity 80ms ease-out;
+}
+
+.joy-zone:active::after,
+.joy-zone.pressed::after,
+.joy-zone:focus-visible::after {
+    opacity: 1;
+}
+
+/* El contorno de foco se recorta con clip-path: el realce de la cuña lo sustituye */
+.joy-zone:focus-visible {
+    outline: none;
+}
+
+.joy-up    { clip-path: polygon(50% 50%, 0 0, 100% 0); }
+.joy-right { clip-path: polygon(50% 50%, 100% 0, 100% 100%); }
+.joy-down  { clip-path: polygon(50% 50%, 100% 100%, 0 100%); }
+.joy-left  { clip-path: polygon(50% 50%, 0 100%, 0 0); }
+
+/* Palanca: pivota desde la base y se inclina hacia donde se empuja */
+.joy-shaft {
+    position: absolute;
+    left: 50%;
+    bottom: 50%;
+    width: 16%;
+    height: 34%;
+    margin-left: -8%;
+    transform-origin: 50% 100%;
+    border-radius: 5px 5px 3px 3px;
+    background: linear-gradient(90deg, #020203, #55555f 38%, #26262d 62%, #030304);
+    pointer-events: none;
+    z-index: 2;
+    transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.joy-ball {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: calc(var(--joy-size) * 0.3);
+    height: calc(var(--joy-size) * 0.3);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 36% 30%, var(--ball-hi) 0 6%, var(--ball) 38%, var(--ball-lo) 100%);
+    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.6), inset -3px -4px 6px rgba(0, 0, 0, 0.35);
+}
+
+.joy-left:active ~ .joy-shaft,
+.joy-left.pressed ~ .joy-shaft {
+    transform: rotate(-16deg);
+}
+
+.joy-right:active ~ .joy-shaft,
+.joy-right.pressed ~ .joy-shaft {
+    transform: rotate(16deg);
+}
+
+.joy-up:active ~ .joy-shaft,
+.joy-up.pressed ~ .joy-shaft {
+    transform: translateY(-9px);
+}
+
+.joy-down:active ~ .joy-shaft,
+.joy-down.pressed ~ .joy-shaft {
+    transform: translateY(7px);
+}
+
+/* ── Palanca horizontal (paleta): solo izquierda y derecha ── */
+.joystick--h {
+    width: calc(var(--joy-size) * 1.5);
+    height: calc(var(--joy-size) * 0.66);
+    border-radius: 999px;
+}
+
+.joystick--h .joy-gate {
+    inset: 30% 14%;
+    border-radius: 999px;
+}
+
+.joystick--h .joy-left {
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.joystick--h .joy-right {
+    clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+}
+
+.joystick--h .joy-shaft {
+    height: 40%;
+}
+
+.joystick--h .joy-ball {
+    width: calc(var(--joy-size) * 0.26);
+    height: calc(var(--joy-size) * 0.26);
+}
+
+/* ── Panel de control: contenedor de palanca y botones ── */
+.deck {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 18px 22px;
+    width: 100%;
+    max-width: 380px;
+    margin-top: 16px;
+    padding: 22px 22px 16px;
+    border: 1px solid var(--deck-edge);
+    border-radius: 24px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%),
+        var(--deck);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 -6px 14px rgba(0, 0, 0, 0.45),
+        0 18px 30px -16px rgba(0, 0, 0, 0.9);
+}
+
+/* Tornillos en las esquinas */
+.deck::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 6px 6px, var(--bezel-hi) 0 1.5px, var(--bezel-lo) 2.5px, transparent 3.5px),
+        radial-gradient(circle at calc(100% - 6px) 6px, var(--bezel-hi) 0 1.5px, var(--bezel-lo) 2.5px, transparent 3.5px),
+        radial-gradient(circle at 6px calc(100% - 6px), var(--bezel-hi) 0 1.5px, var(--bezel-lo) 2.5px, transparent 3.5px),
+        radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), var(--bezel-hi) 0 1.5px, var(--bezel-lo) 2.5px, transparent 3.5px);
+    opacity: 0.55;
+}
+
+/* Filas de sonido y utilidades de la barra superior */
+.arcade-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* ── Pantallas pequeñas ── */
+@media (max-width: 380px) {
+    :root {
+        --joy-size: 100px;
+        --cap-size: 52px;
+    }
+}
+
+@media (max-height: 640px) {
+    :root {
+        --joy-size: 96px;
+        --cap-size: 50px;
+    }
+    .deck {
+        margin-top: 10px;
+        padding: 14px 16px 10px;
+    }
+}
+
+/* ── Accesibilidad ── */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cap,
+    .joy-shaft,
+    .joy-zone::after {
+        transition: none;
+    }
+}

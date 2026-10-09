@@ -458,11 +458,13 @@ btnMute.addEventListener("click", toggleMute);
 function toggleMute() {
   soundOn = !soundOn;
   btnMute.classList.toggle("off", !soundOn);
-  btnMute.textContent = soundOn ? "Sonido" : "Silencio";
+  btnMute.textContent = soundOn ? "🔊" : "🔇";
+  btnMute.setAttribute("aria-pressed", String(!soundOn));
   save();
   if (soundOn) sfx.ui();
 }
-btnMute.textContent = soundOn ? "Sonido" : "Silencio";
+btnMute.textContent = soundOn ? "🔊" : "🔇";
+btnMute.setAttribute("aria-pressed", String(!soundOn));
 btnMute.classList.toggle("off", !soundOn);
 
 document.addEventListener("keydown", (e) => {
