@@ -137,14 +137,7 @@ body::after {
     text-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
 }
 
-/* ── Sonido ── */
-#controls-row {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 14px;
-}
-
+/* ── Sonido: panel plegable en la barra superior ── */
 #sound-controls {
     display: flex;
     align-items: flex-start;

@@ -13,7 +13,8 @@ npx serve .
 ## Structure
 
 - `index.html` — games hub listing (links to all games)
-- `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`). Each game sets its palette and fonts as `:root` tokens.
+- `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`), top bar (`.top-bar`) with the sound popover. Each game sets its palette and fonts as `:root` tokens.
+- `shared/sound-menu.js` — toggles the sound popover (`#sound-controls`) opened by the `.sound-toggle` button.
 - `snake/` — self-contained Snake game (only shared file: `../shared/arcade.css`)
   - Scripts loaded in order: `sound.js` → `game.js`
   - `SnakeGame` class extends `Game` base
@@ -103,7 +104,7 @@ The 6 ship skins in Asteroids share a single white `ship.svg` and are tinted per
 Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids and Minesweeper use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
 
 Shared across games:
-- Sound control UI (mute SFX, mute BGM, volume slider) with persisted settings
+- Sound controls (mute SFX, mute BGM, volume slider) in a popover opened by the ♪ button in the top bar (`shared/sound-menu.js`), with persisted settings
 - High scores table with medals, name, score, date (`.hs-*` classes)
 - `setupTouchButton()` helper for touch/mouse events
 - `prefers-reduced-motion` support and `:focus-visible` outlines
