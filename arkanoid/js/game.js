@@ -60,6 +60,25 @@ function spawnBall() {
     });
 }
 
+function ballSpeed(ball) {
+    return Math.hypot(ball.dx, ball.dy) || 1;
+}
+
+// Keeps trajectories playable: no near-horizontal crawls that bounce side to side
+// forever, and no locked vertical channels between bricks or walls.
+function clampBallAngle(ball) {
+    const speed = ballSpeed(ball);
+    const minDy = speed * MIN_VERTICAL_SHARE;
+    if (Math.abs(ball.dy) < minDy) {
+        ball.dy = Math.sign(ball.dy || 1) * minDy;
+        ball.dx = Math.sign(ball.dx || 1) * Math.sqrt(Math.max(speed * speed - ball.dy * ball.dy, 0));
+    } else if (Math.abs(ball.dx) < speed * 0.05) {
+        // Escape perfect vertical loops: nudge sideways without changing speed
+        ball.dx = (Math.random() < 0.5 ? -1 : 1) * speed * 0.1;
+        ball.dy = Math.sign(ball.dy || -1) * Math.sqrt(Math.max(speed * speed - ball.dx * ball.dx, 0));
+    }
+}
+
 function loadLevel(lvl) {
     const layout = getBrickLayout(lvl);
     currentLayout = layout;
@@ -260,12 +279,25 @@ function applyPowerUp(type) {
     if (type === POWER_UP_TYPES.MULTI_BALL) {
         const originalBall = balls[0];
         if (originalBall) {
+            const speed = ballSpeed(originalBall);
+            const baseAngle = Math.atan2(originalBall.dy, originalBall.dx);
+            const sx = Math.max(BALL_RADIUS, Math.min(canvas.width - BALL_RADIUS, originalBall.x));
+            const sy = Math.max(BALL_RADIUS, Math.min(canvas.height - BALL_RADIUS, originalBall.y));
             for (let i = 0; i < 2; i++) {
+                const spread = (i === 0 ? 1 : -1) * (Math.PI / 7);
+                let ndx = Math.cos(baseAngle + spread);
+                let ndy = Math.sin(baseAngle + spread);
+                // If the source ball is heading down, launch the clones upward so the
+                // power-up isn't wasted on balls that would die right away with it.
+                if (originalBall.dy > 0 && ndy > 0) {
+                    ndy = -Math.max(Math.abs(ndy), 0.5);
+                }
+                const nlen = Math.hypot(ndx, ndy) || 1;
                 balls.push({
-                    x: originalBall.x,
-                    y: originalBall.y,
-                    dx: originalBall.dx + (i === 0 ? 1 : -1) * 1,
-                    dy: originalBall.dy,
+                    x: sx,
+                    y: sy,
+                    dx: (ndx / nlen) * speed,
+                    dy: (ndy / nlen) * speed,
                     radius: BALL_RADIUS,
                 });
             }
@@ -362,37 +394,27 @@ function updateBalls() {
             }
         }
 
-        // Paddle collision (AABB-circle so clips at the sides can't redirect the ball back along its incoming path)
-        {
-            const pClosestX = Math.max(paddle.x, Math.min(ball.x, paddle.x + paddle.width));
-            const pClosestY = Math.max(paddle.y, Math.min(ball.y, paddle.y + paddle.height));
-            const pdx = ball.x - pClosestX;
-            const pdy = ball.y - pClosestY;
-            const pdist2 = pdx * pdx + pdy * pdy;
-            if (
-                pdist2 <= ball.radius * ball.radius &&
-                ball.dy > 0 &&
-                ball.y < paddle.y + paddle.height
-            ) {
-                const pdist = Math.sqrt(pdist2);
-                if (pdy < 0 || pdist < 0.001) {
-                    ball.dy = -Math.abs(ball.dy);
-                    ball.y = paddle.y - ball.radius;
-                } else {
-                    const plen = Math.max(pdist, 0.001);
-                    const nx = pdx / plen;
-                    const ny = pdy / plen;
-                    const dot = ball.dx * nx + ball.dy * ny;
-                    if (dot < 0) {
-                        ball.dx -= 2 * dot * nx;
-                        ball.dy -= 2 * dot * ny;
-                    }
-                    const push = ball.radius - pdist + 1;
-                    ball.x += nx * push;
-                    ball.y += ny * push;
-                }
-                SoundManager.playPaddleHit();
-            }
+        // Paddle: classic position-based bounce. The ball always leaves upward, at an
+        // angle set by where it lands on the paddle, and at the same speed it arrived.
+        // This replaces physical corner normals, so sweeping the paddle or clipping its
+        // sides can no longer fling the ball sideways, make it faster, or slide it along
+        // the paddle edge without ever bouncing back up.
+        if (
+            ball.dy > 0 &&
+            ball.y + ball.radius >= paddle.y &&
+            ball.y - ball.radius <= paddle.y + paddle.height &&
+            ball.x + ball.radius >= paddle.x &&
+            ball.x - ball.radius <= paddle.x + paddle.width
+        ) {
+            const halfW = paddle.width / 2 + ball.radius;
+            const hit = Math.max(-1, Math.min(1, (ball.x - (paddle.x + paddle.width / 2)) / halfW));
+            const angle = hit * PADDLE_MAX_BOUNCE + (Math.random() * 2 - 1) * PADDLE_JITTER;
+            const speed = ballSpeed(ball);
+            ball.dx = speed * Math.sin(angle);
+            ball.dy = -speed * Math.cos(angle);
+            ball.y = paddle.y - ball.radius;
+            ball.x = Math.max(ball.radius, Math.min(canvas.width - ball.radius, ball.x));
+            SoundManager.playPaddleHit();
         }
 
         // Brick collisions
@@ -444,6 +466,7 @@ function updateBalls() {
                 const push = ball.radius - len + 1;
                 ball.x += nx * push;
                 ball.y += ny * push;
+                clampBallAngle(ball);
 
                 break;
             }
