@@ -25,9 +25,9 @@ npx serve .
 - `chalk-tic-tac-toe/` — El Gato (tris de tiza), hexagonal layout in `js/`
   - Pure domain in `js/domain/board.js` (rules), `js/domain/ai.js` (cat opponent: easy random, normal heuristic, hard minimax that never loses) and `js/domain/game.js` (round, score, streak, persistence); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js`
-- `tetris/` — Tetris with modular JS
-  - Script load order (HTML order): `constants.js` → `tetriminos.js` → `input.js` → `sound.js` → `game.js`
-  - Flat functions (no classes), module-level state (`player`, `grid`, `keys`)
+- `tetris/` — Tetris, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`pieces.js`, `board.js`, `scoring.js`, `highScores.js`, `das.js`, `tetris.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 12×20 grid, 20px blocks
 - `arkanoid/` — Arkanoid/Breakout with levels
   - Script load order: `constants.js` → `bricks.js` → `input.js` → `sound.js` → `game.js`
