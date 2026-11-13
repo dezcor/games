@@ -1,3 +1,8 @@
+/**
+ * SoundAdapter — SoundManager + MusicPlayer, all synthesized via Web Audio API.
+ * The composition root (game.js) builds the SoundPort over these.
+ */
+
 // ── Persistence keys ──
 const SNAKE_SFX_VOLUME = 'snake_audio_volume';
 const SNAKE_SFX_MUTED = 'snake_sfx_muted';
