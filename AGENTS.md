@@ -39,9 +39,9 @@ npx serve .
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 800×600 canvas
   - 4 difficulty presets, ship skins, 5 achievements, tutorial
-- `space-invaders/` — Space Invaders with levels
-  - Script load order: `constants.js` → `input.js` → `sound.js` → `game.js`
-  - Flat functions, module-level state
+- `space-invaders/` — Space Invaders with levels, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`invaders.js` state machine, `aliens.js`, `ufo.js`, `particles.js`, `highscores.js`; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM HUD, input, keyboard, touch, sound, frame loop, repository); composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Aliens speed up as fewer remain, difficulty increases per level
   - Board: 240×400 canvas
 
