@@ -69,6 +69,7 @@ class CatGame {
   }
 
   newGame(difficulty) {
+    if (!DIFFICULTIES.includes(difficulty)) return;
     this.sound.ui();
     this.difficulty = difficulty;
     this.score = { you: 0, cat: 0, tie: 0 };

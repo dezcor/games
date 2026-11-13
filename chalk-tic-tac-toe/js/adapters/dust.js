@@ -39,8 +39,13 @@ const DustAdapter = {
     this.height = this.canvas.height = innerHeight;
   },
 
+  /** Decorative only: users who ask for reduced motion get a still, empty canvas. */
+  reducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  },
+
   start() {
-    if (this.running) return;
+    if (this.running || this.reducedMotion()) return;
     this.running = true;
     this.rafId = requestAnimationFrame(() => this.frame());
   },
@@ -53,6 +58,7 @@ const DustAdapter = {
 
   /** Puff of 16 particles at (x, y), used when a mark lands. */
   burst(x, y, color) {
+    if (!this.running) return;
     for (let i = 0; i < 16; i++) {
       const a = Math.random() * Math.PI * 2;
       const sp = 0.6 + Math.random() * 2.4;

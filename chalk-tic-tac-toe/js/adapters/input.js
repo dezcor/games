@@ -22,6 +22,8 @@ const InputAdapter = {
     });
 
     document.addEventListener("keydown", (event) => {
+      // Browser shortcuts (Ctrl+B, Ctrl+N, ⌘+M…) and held keys must not trigger game actions.
+      if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
       const key = event.key;
       if (key === "n" || key === "N") {
         handlers.onNewRound();

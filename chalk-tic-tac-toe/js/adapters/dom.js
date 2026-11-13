@@ -43,6 +43,8 @@ const DomRendererAdapter = {
       btnMute: document.getElementById("btnMute"),
       diffButtons: document.querySelectorAll(".diff"),
     };
+    // Announce turn changes and results to screen readers.
+    this.els.status.setAttribute("aria-live", "polite");
     this.buildGrid();
   },
 
@@ -84,6 +86,7 @@ const DomRendererAdapter = {
     const cell = this.els.cells.children[index];
     cell.classList.remove("empty");
     cell.classList.add(who === "X" ? "x" : "o");
+    cell.setAttribute("aria-label", `casilla ${index + 1}: ${who}`);
     cell.querySelector(".ghost")?.remove();
     cell.appendChild(this.createMark(who));
     const r = cell.getBoundingClientRect();
