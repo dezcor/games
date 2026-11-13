@@ -29,9 +29,9 @@ npx serve .
   - Script load order (HTML order): `constants.js` → `tetriminos.js` → `input.js` → `sound.js` → `game.js`
   - Flat functions (no classes), module-level state (`player`, `grid`, `keys`)
   - Board: 12×20 grid, 20px blocks
-- `arkanoid/` — Arkanoid/Breakout with levels
-  - Script load order: `constants.js` → `bricks.js` → `input.js` → `sound.js` → `game.js`
-  - Flat functions, module-level state
+- `arkanoid/` — Arkanoid/Breakout with levels, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`levels.js` brick layouts, `physics.js` ball rules, `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - 3 levels with different brick layouts, special bricks, power-ups
   - Board: 480×400 canvas
 - `asteroids/` — Asteroids with power-ups, UFO, achievements

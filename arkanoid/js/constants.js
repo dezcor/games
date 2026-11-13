@@ -1,3 +1,7 @@
+// Board size (must match the <canvas> width/height in index.html)
+const BOARD_WIDTH = 480;
+const BOARD_HEIGHT = 400;
+
 const COLS = 10;
 const ROWS = 6;
 const BLOCK_SIZE = 44;
@@ -29,3 +33,44 @@ const POWER_UP_COLORS = {
     'multi-ball': '#22d3ee',
     'extra-life': '#4ade80',
 };
+
+const BRICK_LAYOUTS = [
+    {
+        rows: 4,
+        cols: 8,
+        grid: [
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+        ],
+        speed: BASE_SPEED,
+    },
+    {
+        rows: 5,
+        cols: 8,
+        grid: [
+            [0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+        ],
+        speed: BASE_SPEED + 0.5,
+    },
+    {
+        rows: 6,
+        cols: 8,
+        grid: [
+            [0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+        ],
+        speed: BASE_SPEED + 1,
+    },
+];
+
+const SPECIAL_BRICK_CHANCES = [0.1, 0.15, 0.2];
