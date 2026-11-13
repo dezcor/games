@@ -22,6 +22,9 @@ npx serve .
 - `minesweeper/` — Minesweeper, hexagonal layout in `js/`
   - Pure domain in `js/domain/board.js` + `js/domain/game.js`; port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js`
+- `chalk-tic-tac-toe/` — El Gato (tris de tiza), hexagonal layout in `js/`
+  - Pure domain in `js/domain/board.js` (rules), `js/domain/ai.js` (cat opponent: easy random, normal heuristic, hard minimax that never loses) and `js/domain/game.js` (round, score, streak, persistence); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js`
 - `tetris/` — Tetris with modular JS
   - Script load order (HTML order): `constants.js` → `tetriminos.js` → `input.js` → `sound.js` → `game.js`
   - Flat functions (no classes), module-level state (`player`, `grid`, `keys`)
@@ -81,6 +84,7 @@ Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for 
 - `asteroid_ship_skin` — Asteroids selected ship color (`cyan`/`amber`/`green`/`pink`/`white`/`magenta`)
 - `asteroid_achievements` — Asteroids achievements map (JSON `{ id: { unlocked, date } }`)
 - `asteroid_tutorial_dismissed` — Asteroids tutorial "do not show again" flag
+- `gatoState` — El Gato state (JSON `{ diff, score, round, soundOn }`)
 
 ## Easter egg
 
