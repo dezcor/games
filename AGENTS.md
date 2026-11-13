@@ -15,9 +15,13 @@ npx serve .
 - `index.html` — games hub listing (links to all games)
 - `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`), top bar (`.top-bar`) with the sound popover. Each game sets its palette and fonts as `:root` tokens.
 - `shared/sound-menu.js` — toggles the sound popover (`#sound-controls`) opened by the `.sound-toggle` button.
-- `snake/` — self-contained Snake game (only shared file: `../shared/arcade.css`)
-  - Scripts loaded in order: `sound.js` → `game.js`
-  - `SnakeGame` class extends `Game` base
+- `snake/` — self-contained Snake game (only shared file: `../shared/arcade.css`), hexagonal layout in `js/`
+  - Pure domain state machine in `js/domain/snake.js` (no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/snake.js` → `js/ports/*` → `js/adapters/*` → `js/game.js`
+  - Input (keyboard + touch) is wired post-construction through `window.game.input`
+- `minesweeper/` — Minesweeper, hexagonal layout in `js/`
+  - Pure domain in `js/domain/board.js` + `js/domain/game.js`; port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js`
 - `tetris/` — Tetris with modular JS
   - Script load order (HTML order): `constants.js` → `tetriminos.js` → `input.js` → `sound.js` → `game.js`
   - Flat functions (no classes), module-level state (`player`, `grid`, `keys`)
