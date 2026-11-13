@@ -12,7 +12,9 @@
         'right': [1, 0],
     };
 
-    document.querySelectorAll('.touch-btn').forEach((btn) => {
+    // Only data-action buttons are game controls. The ♪ and mute buttons also carry
+    // .touch-btn for styling; preventing touchstart on them would suppress their click.
+    document.querySelectorAll('.touch-btn[data-action]').forEach((btn) => {
         const action = btn.dataset.action;
 
         const onStart = () => {

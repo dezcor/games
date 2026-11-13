@@ -151,9 +151,14 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 ├── space-invaders-backlog.md   # Backlog de Space Invaders
 ├── snake/
 │   ├── index.html
-│   ├── game.js         # Lógica del juego (clase SnakeGame)
-│   ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
-│   └── style.css
+│   ├── style.css
+│   └── js/
+│       ├── constants.js        # Constantes (tablero, velocidad, serpiente inicial)
+│       ├── domain/
+│       │   └── snake.js        # Máquina de estados pura (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos: repository, renderer, input, sound, clock
+│       ├── adapters/           # localStorage, canvas, teclado, touch, sonido y frame (rAF)
+│       └── game.js             # Composition root: cablea dominio y adaptadores
 ├── arkanoid/
 │   ├── index.html
 │   ├── favicon.svg

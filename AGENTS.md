@@ -15,7 +15,7 @@ npx serve .
 - `index.html` — games hub listing (links to all games)
 - `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`), top bar (`.top-bar`) with the sound popover. Each game sets its palette and fonts as `:root` tokens.
 - `shared/sound-menu.js` — toggles the sound popover (`#sound-controls`) opened by the `.sound-toggle` button.
-- `snake/` — self-contained Snake game (only shared file: `../shared/arcade.css`), hexagonal layout in `js/`
+- `snake/` — self-contained Snake game (shared files: `../shared/arcade.css`, `../shared/sound-menu.js`), hexagonal layout in `js/`
   - Pure domain state machine in `js/domain/snake.js` (no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/snake.js` → `js/ports/*` → `js/adapters/*` → `js/game.js`
   - Input (keyboard + touch) is wired post-construction through `window.game.input`
