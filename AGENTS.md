@@ -34,9 +34,9 @@ npx serve .
   - Flat functions, module-level state
   - 3 levels with different brick layouts, special bricks, power-ups
   - Board: 480×400 canvas
-- `asteroids/` — Asteroids with power-ups, UFO, achievements
-  - Script load order: `constants.js` → `input.js` → `sound.js` → `game.js`
-  - Single class-style `game = { ... }` object with methods
+- `asteroids/` — Asteroids with power-ups, UFO, achievements, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`ship`, `asteroid`, `bullets`, `ufo`, `powerups`, `hyperspace`, `collision`, `difficulty`, `skins`, `achievements`, `scores` rules and the `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM UI, keyboard, touch, pinch-zoom, effects, repository, clock, sound); composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 800×600 canvas
   - 4 difficulty presets, ship skins, 5 achievements, tutorial
 - `space-invaders/` — Space Invaders with levels
