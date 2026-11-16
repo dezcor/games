@@ -616,14 +616,6 @@ body::after {
     }
 }
 
-/* Tablero tan alto como permita la pantalla, para que el panel de botones quede a la vista */
-@media (max-height: 760px) {
-    #board-wrapper {
-        max-width: min(380px, max(240px, calc((100vh - 360px) / 1.6667 + 28px)));
-        max-width: min(380px, max(240px, calc((100dvh - 360px) / 1.6667 + 28px)));
-    }
-}
-
 @media (max-width: 380px) {
     .diff-btn {
         font-size: 7px;
@@ -645,4 +637,13 @@ body::after {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ── Medidas del tablero para shared/layout.css ── */
+:root {
+    --board-ar: 0.6;
+    --board-px: 34px;
+    --board-py: 36px;
+    --board-cap: 500px;
+    --slot-min: 260px;
 }

@@ -490,14 +490,6 @@ body::after {
     }
 }
 
-/* Tablero tan alto como permita la pantalla, para que el panel de botones quede a la vista */
-@media (max-height: 760px) {
-    #board-wrapper {
-        max-width: min(280px, max(220px, calc((100vh - 330px) / 1.6667)));
-        max-width: min(280px, max(220px, calc((100dvh - 330px) / 1.6667)));
-    }
-}
-
 @media (min-width: 500px) {
     #game-container {
         max-width: 400px;
@@ -534,3 +526,12 @@ body.north-theme {
 body.north-theme .c-mint  { --cap: #88ccff; --cap-hi: #e4f4ff; --cap-lo: #2f5e8f; --cap-ink: #0a1224; }
 body.north-theme .c-coral { --cap: #5f8fd0; --cap-hi: #c4dcf4; --cap-lo: #22406a; --cap-ink: #0a1224; }
 body.north-theme .c-amber { --cap: #cfe9ff; --cap-hi: #ffffff; --cap-lo: #5e7f9e; --cap-ink: #0a1224; }
+
+/* ── Medidas del tablero para shared/layout.css ── */
+:root {
+    --board-ar: 0.6;
+    --board-px: 4px;
+    --board-py: 4px;
+    --board-cap: 480px;
+    --slot-min: 300px;
+}

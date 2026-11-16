@@ -475,3 +475,12 @@ body::after {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ── Medidas del tablero para shared/layout.css ── */
+:root {
+    --board-ar: 1.2;
+    --board-px: 28px;
+    --board-py: 34px;
+    --board-cap: 920px;
+    --slot-min: 240px;
+}

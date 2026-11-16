@@ -14,7 +14,9 @@ npx serve .
 
 - `index.html` — games hub listing (links to all games)
 - `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`), top bar (`.top-bar`) with the sound popover. Each game sets its palette and fonts as `:root` tokens.
+- `shared/layout.css` — responsive layout for the six arcade games, loaded AFTER each game's own stylesheet. The board lives in a `.board-slot` (a size container) and is sized with container units so it always fits. Three layouts: column (portrait), short landscape (stick left, board centre, buttons right; `.top-bar` and `.deck` dissolve with `display: contents`) and wide desktop (board plus a side column with HUD, `.key-help` keyboard legend and deck). Each game declares `--board-ar`, `--board-px`, `--board-py`, `--board-cap` and `--slot-min` in its `:root`; Minesweeper updates `--board-ar` from JS because its board ratio changes per difficulty.
 - `shared/sound-menu.js` — toggles the sound popover (`#sound-controls`) opened by the `.sound-toggle` button.
+- `shared/key-press.js` — mirrors the keyboard on the on-screen controls: while a key listed in a control's `data-keys` (space-separated `KeyboardEvent.code` values) is held, the control gets the `pressed` class. Visual only; keep `data-keys` in sync with each game's keyboard adapter.
 - `snake/` — self-contained Snake game (shared files: `../shared/arcade.css`, `../shared/sound-menu.js`), hexagonal layout in `js/`
   - Pure domain state machine in `js/domain/snake.js` (no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/`; composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/snake.js` → `js/ports/*` → `js/adapters/*` → `js/game.js`
