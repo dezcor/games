@@ -31,7 +31,7 @@
                         <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
                     </div>
                 </div>
-                <button id="pause-btn" class="touch-btn cap is-sm c-hazard" aria-label="Pause" aria-pressed="false">II</button>
+                <button id="pause-btn" data-keys="KeyP Escape" class="touch-btn cap is-sm c-hazard" aria-label="Pause" aria-pressed="false">II</button>
             </div>
         </div>
         <div id="top-ui">
@@ -60,7 +60,7 @@
                         </div>
                     </div>
 
-                    <button id="start-btn" class="touch-btn cap is-xl is-ring c-hazard">START</button>
+                    <button id="start-btn" data-keys="Enter Space" class="touch-btn cap is-xl is-ring c-hazard">START</button>
 
                     <div id="game-over-card" style="display:none;">
                         <h1 id="game-over-title">GAME OVER</h1>
@@ -80,15 +80,15 @@
 
         <div id="touch-controls" class="deck">
             <div class="arcade-key">
-                <button class="touch-btn cap c-flag" data-action="flag" title="Flag mode" aria-label="Flag mode">⚑</button>
+                <button class="touch-btn cap c-flag" data-action="flag" data-keys="KeyF" title="Flag mode" aria-label="Flag mode">⚑</button>
                 <span class="arcade-label">FLAG</span>
             </div>
             <div class="arcade-key">
-                <button class="touch-btn cap c-hazard" data-action="pause" title="Pause" aria-label="Pause">II</button>
+                <button class="touch-btn cap c-hazard" data-action="pause" data-keys="KeyP Escape" title="Pause" aria-label="Pause">II</button>
                 <span class="arcade-label">PAUSE</span>
             </div>
             <div class="arcade-key">
-                <button class="touch-btn cap c-khaki" data-action="restart" title="Restart" aria-label="Restart">↻</button>
+                <button class="touch-btn cap c-khaki" data-action="restart" data-keys="KeyR" title="Restart" aria-label="Restart">↻</button>
                 <span class="arcade-label">RESTART</span>
             </div>
         </div>
@@ -103,6 +103,7 @@
         </dl>
     </div>
     <script src="../shared/sound-menu.js"></script>
+    <script src="../shared/key-press.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/domain/board.js"></script>
     <script src="js/domain/game.js"></script>

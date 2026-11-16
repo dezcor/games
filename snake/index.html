@@ -42,7 +42,7 @@
                     <h1>GAME OVER</h1>
                     <div class="final-score" id="final-score-text">Score: 0</div>
                     <div class="arcade-key is-xl">
-                        <button class="cap c-green restart-btn" onclick="window.resetGame()" aria-label="Restart game">↻</button>
+                        <button class="cap c-green restart-btn" data-keys="Space" onclick="window.resetGame()" aria-label="Restart game">↻</button>
                         <span class="arcade-label">RESTART</span>
                     </div>
                 </div>
@@ -50,15 +50,15 @@
         </div>
         <div id="touch-controls" class="deck">
             <div class="joystick" role="group" aria-label="Direction">
-                <button class="touch-btn joy-zone joy-up" data-action="up" aria-label="Move up"></button>
-                <button class="touch-btn joy-zone joy-right" data-action="right" aria-label="Move right"></button>
-                <button class="touch-btn joy-zone joy-down" data-action="down" aria-label="Move down"></button>
-                <button class="touch-btn joy-zone joy-left" data-action="left" aria-label="Move left"></button>
+                <button class="touch-btn joy-zone joy-up" data-action="up" data-keys="ArrowUp KeyW" aria-label="Move up"></button>
+                <button class="touch-btn joy-zone joy-right" data-action="right" data-keys="ArrowRight KeyD" aria-label="Move right"></button>
+                <button class="touch-btn joy-zone joy-down" data-action="down" data-keys="ArrowDown KeyS" aria-label="Move down"></button>
+                <button class="touch-btn joy-zone joy-left" data-action="left" data-keys="ArrowLeft KeyA" aria-label="Move left"></button>
                 <span class="joy-gate" aria-hidden="true"></span>
                 <span class="joy-shaft" aria-hidden="true"><span class="joy-ball"></span></span>
             </div>
             <div class="arcade-key">
-                <button class="touch-btn cap c-green" data-action="restart" aria-label="Restart">↻</button>
+                <button class="touch-btn cap c-green" data-action="restart" data-keys="Space" aria-label="Restart">↻</button>
                 <span class="arcade-label">RESTART</span>
             </div>
         </div>
@@ -69,6 +69,7 @@
         </dl>
     </div>
     <script src="../shared/sound-menu.js"></script>
+    <script src="../shared/key-press.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/domain/snake.js"></script>
     <script src="js/ports/repository.js"></script>
