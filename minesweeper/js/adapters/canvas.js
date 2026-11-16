@@ -18,6 +18,12 @@ const CanvasRendererAdapter = {
         const preset = this.game.config;
         this.canvas.width = preset.cols * CELL_SIZE + BOARD_PADDING * 2;
         this.canvas.height = preset.rows * CELL_SIZE + BOARD_PADDING * 2;
+        // shared/layout.css sizes the board from its aspect ratio, which changes per difficulty
+        const ratio = (this.canvas.width / this.canvas.height).toFixed(4);
+        if (ratio !== this.boardRatio) {
+            this.boardRatio = ratio;
+            document.documentElement.style.setProperty('--board-ar', ratio);
+        }
     },
 
     // ── Board drawing ──

@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/arcade.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../shared/layout.css">
 </head>
 <body>
     <div id="game-container">
@@ -43,33 +44,35 @@
                 </div>
             </div>
         </div>
-        <div id="board-wrapper">
-            <canvas id="minesweeper-canvas" aria-label="Minesweeper game board"></canvas>
-            <div id="pause-overlay">
-                <h1 id="overlay-title">MINESWEEPER</h1>
+        <div class="board-slot">
+            <div id="board-wrapper">
+                <canvas id="minesweeper-canvas" aria-label="Minesweeper game board"></canvas>
+                <div id="pause-overlay">
+                    <h1 id="overlay-title">MINESWEEPER</h1>
 
-                <!-- Difficulty Selection -->
-                <div id="difficulty-selection">
-                    <p class="hint">SELECT DIFFICULTY</p>
-                    <div class="difficulty-buttons">
-                        <button id="diff-btn-easy" data-diff="easy" class="diff-btn">FÁCIL</button>
-                        <button id="diff-btn-normal" data-diff="normal" class="diff-btn active">NORMAL</button>
-                        <button id="diff-btn-hard" data-diff="hard" class="diff-btn">DIFÍCIL</button>
+                    <!-- Difficulty Selection -->
+                    <div id="difficulty-selection">
+                        <p class="hint">SELECT DIFFICULTY</p>
+                        <div class="difficulty-buttons">
+                            <button id="diff-btn-easy" data-diff="easy" class="diff-btn">FÁCIL</button>
+                            <button id="diff-btn-normal" data-diff="normal" class="diff-btn active">NORMAL</button>
+                            <button id="diff-btn-hard" data-diff="hard" class="diff-btn">DIFÍCIL</button>
+                        </div>
                     </div>
-                </div>
 
-                <button id="start-btn" class="touch-btn cap is-xl is-ring c-hazard">START</button>
+                    <button id="start-btn" class="touch-btn cap is-xl is-ring c-hazard">START</button>
 
-                <div id="game-over-card" style="display:none;">
-                    <h1 id="game-over-title">GAME OVER</h1>
-                    <div id="game-over-stats">
-                        <div id="final-score">Score: 0</div>
-                        <div id="final-time">Time: 0s</div>
-                    </div>
-                    <button id="quick-restart-btn" class="touch-btn cap is-xl is-ring c-flag">PLAY<br>AGAIN</button>
-                    <div id="high-scores-table">
-                        <h3>Top 5 Records</h3>
-                        <table id="high-scores-list"></table>
+                    <div id="game-over-card" style="display:none;">
+                        <h1 id="game-over-title">GAME OVER</h1>
+                        <div id="game-over-stats">
+                            <div id="final-score">Score: 0</div>
+                            <div id="final-time">Time: 0s</div>
+                        </div>
+                        <button id="quick-restart-btn" class="touch-btn cap is-xl is-ring c-flag">PLAY<br>AGAIN</button>
+                        <div id="high-scores-table">
+                            <h3>Top 5 Records</h3>
+                            <table id="high-scores-list"></table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,6 +92,15 @@
                 <span class="arcade-label">RESTART</span>
             </div>
         </div>
+        <dl class="key-help" aria-label="Keyboard controls">
+            <dt><kbd>Click</kbd></dt><dd>Reveal</dd>
+            <dt><kbd>Right click</kbd></dt><dd>Flag</dd>
+            <dt><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></dt><dd>Move cursor</dd>
+            <dt><kbd>Enter</kbd></dt><dd>Reveal</dd>
+            <dt><kbd>F</kbd></dt><dd>Flag</dd>
+            <dt><kbd>P</kbd></dt><dd>Pause</dd>
+            <dt><kbd>R</kbd></dt><dd>Restart</dd>
+        </dl>
     </div>
     <script src="../shared/sound-menu.js"></script>
     <script src="js/constants.js"></script>

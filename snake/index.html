@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/arcade.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../shared/layout.css">
 </head>
 <body>
     <div class="game-container">
@@ -34,14 +35,16 @@
             <div id="score" aria-live="polite">0</div>
             <div id="highScore">BEST: 0</div>
         </div>
-        <div class="board-wrapper">
-            <canvas id="gameCanvas" width="400" height="400" aria-label="Snake game board"></canvas>
-            <div id="game-over" class="hidden">
-                <h1>GAME OVER</h1>
-                <div class="final-score" id="final-score-text">Score: 0</div>
-                <div class="arcade-key is-xl">
-                    <button class="cap c-green restart-btn" onclick="window.resetGame()" aria-label="Restart game">↻</button>
-                    <span class="arcade-label">RESTART</span>
+        <div class="board-slot">
+            <div class="board-wrapper">
+                <canvas id="gameCanvas" width="400" height="400" aria-label="Snake game board"></canvas>
+                <div id="game-over" class="hidden">
+                    <h1>GAME OVER</h1>
+                    <div class="final-score" id="final-score-text">Score: 0</div>
+                    <div class="arcade-key is-xl">
+                        <button class="cap c-green restart-btn" onclick="window.resetGame()" aria-label="Restart game">↻</button>
+                        <span class="arcade-label">RESTART</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,6 +62,11 @@
                 <span class="arcade-label">RESTART</span>
             </div>
         </div>
+        <dl class="key-help" aria-label="Keyboard controls">
+            <dt><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></dt><dd>Steer</dd>
+            <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Steer</dd>
+            <dt><kbd>Space</kbd></dt><dd>Restart</dd>
+        </dl>
     </div>
     <script src="../shared/sound-menu.js"></script>
     <script src="js/constants.js"></script>

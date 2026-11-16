@@ -1,0 +1,295 @@
+/* ═══════════════════════════════════════════════════════════════
+   Disposición adaptable de las cabinas (se carga DESPUÉS del CSS del juego)
+
+   Tres disposiciones, sin scroll durante la partida:
+   1. Columna (móvil vertical, ventanas estrechas): barra, marcador,
+      tablero tan grande como quepa y panel de control abajo.
+   2. Apaisado bajo (móvil horizontal): palanca a la izquierda, tablero
+      al centro a toda la altura y botones a la derecha.
+   3. Escritorio ancho: tablero a toda la altura y columna lateral con
+      marcador, leyenda de teclas y panel de control.
+
+   Cada juego declara en su :root:
+     --board-ar   proporción ancho/alto del canvas (número)
+     --board-px   relleno + borde horizontal del marco del tablero
+     --board-py   relleno + borde vertical del marco del tablero
+     --board-cap  ancho máximo del tablero
+     --slot-min   alto mínimo del hueco del tablero en columna
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --side-w: 340px;
+    --land-side: 168px;
+}
+
+body {
+    min-height: 100dvh;
+}
+
+/* ── 1. Columna ── */
+/* Grid y no flex: en una columna flex las unidades cqh del hueco valen 0 */
+:is(#game-container, .game-container) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(var(--slot-min, 280px), 1fr) auto auto;
+    justify-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: min(100%, calc(var(--board-cap, 720px) + 24px));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+}
+
+/* Hueco flexible: el tablero se ajusta a su ancho y a su alto */
+.board-slot {
+    container-type: size;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+:is(#board-wrapper, .board-wrapper) {
+    flex: none;
+    max-width: none;
+    width: min(
+        100cqw,
+        calc((100cqh - var(--board-py, 0px)) * var(--board-ar, 1) + var(--board-px, 0px)),
+        var(--board-cap, 720px)
+    );
+}
+
+#touch-controls {
+    margin-top: 12px;
+}
+
+/* Pantallas de 320–340 px: palanca y botones caben en una sola fila */
+@media (max-width: 340px) {
+    :root {
+        --cap-size: 48px;
+    }
+
+    #touch-controls {
+        gap: 12px 10px;
+        padding: 16px 10px 12px;
+    }
+
+    #touch-controls .joystick {
+        --joy-size: 80px;
+    }
+
+    #touch-controls .arcade-key.is-lg {
+        --cap-size: 56px;
+        --barrel: 6px;
+    }
+}
+
+/* ── Leyenda de teclas: solo con ratón y teclado ── */
+.key-help {
+    display: none;
+    grid-template-columns: auto 1fr auto 1fr;
+    align-items: center;
+    gap: 7px 8px;
+    width: 100%;
+    max-width: var(--side-w);
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border: 1px solid var(--deck-edge);
+    border-radius: 14px;
+    background: var(--deck);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: left;
+    color: var(--label);
+}
+
+.key-help dt {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.key-help dd {
+    margin: 0;
+    opacity: 0.85;
+}
+
+.key-help kbd {
+    min-width: 22px;
+    padding: 3px 6px;
+    border: 1px solid var(--bezel-lo);
+    border-bottom-width: 3px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    font: 600 11px/1.1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    text-align: center;
+    color: var(--label);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .key-help {
+        display: grid;
+    }
+}
+
+/* ── 2. Apaisado bajo: palanca · tablero · botones ── */
+@media (orientation: landscape) and (max-height: 560px) {
+    :is(#game-container, .game-container) {
+        display: grid;
+        grid-template-columns: minmax(var(--land-side), 1fr) auto minmax(var(--land-side), 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        column-gap: 12px;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-width: none;
+        padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    }
+
+    /* La barra se reparte: menú a la izquierda, herramientas a la derecha */
+    .top-bar {
+        display: contents;
+    }
+
+    .top-bar > :first-child {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        align-self: center;
+    }
+
+    .top-bar > :last-child {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        align-self: center;
+    }
+
+    :is(#top-ui, .score-row) {
+        grid-column: 1;
+        grid-row: 2;
+        align-self: start;
+        width: 100%;
+        min-width: 0;
+        margin: 8px 0 0;
+    }
+
+    .board-slot {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        height: 100%;
+        min-height: 0;
+        width: min(
+            calc(100vw - var(--land-side) * 2 - 48px),
+            calc((100vh - 16px - var(--board-py, 0px)) * var(--board-ar, 1) + var(--board-px, 0px))
+        );
+    }
+
+    /* El panel se disuelve: sus piezas van a los lados del tablero */
+    #touch-controls {
+        display: contents;
+    }
+
+    #touch-controls::before,
+    #touch-controls::after {
+        content: none;
+    }
+
+    #touch-controls > * {
+        grid-row: 2;
+        justify-self: center;
+    }
+
+    #touch-controls > :first-child {
+        grid-column: 1;
+        align-self: end;
+        margin-bottom: 10px;
+    }
+
+    #touch-controls > :nth-child(2) {
+        grid-column: 3;
+        align-self: end;
+        margin-bottom: 10px;
+    }
+
+    #touch-controls > :nth-child(3) {
+        grid-column: 3;
+        align-self: start;
+        margin-top: 14px;
+    }
+
+    .key-help {
+        display: none;
+    }
+}
+
+/* Móviles muy bajos: controles compactos y sin campo de nombre */
+@media (orientation: landscape) and (max-height: 340px) {
+    :root {
+        --cap-size: 46px;
+    }
+
+    #touch-controls .joystick {
+        --joy-size: 84px;
+    }
+
+    #touch-controls .arcade-label,
+    #name-input-container,
+    #next-piece-container span {
+        display: none;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 600px) {
+    :root {
+        --land-side: 132px;
+    }
+}
+
+/* ── 3. Escritorio ancho: tablero grande + columna lateral ── */
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 561px) {
+    :is(#game-container, .game-container) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--side-w);
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+        column-gap: 28px;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        padding: 14px 16px;
+        max-width: min(
+            100%,
+            calc((100vh - 96px - var(--board-py, 0px)) * var(--board-ar, 1) + var(--board-px, 0px) + var(--side-w) + 60px),
+            calc(var(--board-cap, 720px) + var(--side-w) + 60px)
+        );
+    }
+
+    .top-bar {
+        grid-column: 1 / -1;
+    }
+
+    .board-slot {
+        grid-column: 1;
+        grid-row: 2 / -1;
+        min-height: 0;
+        height: 100%;
+    }
+
+    :is(#top-ui, .score-row) {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .key-help {
+        grid-column: 2;
+        grid-row: 3;
+        margin-top: 0;
+    }
+
+    #touch-controls {
+        grid-column: 2;
+        grid-row: 4;
+        align-self: end;
+        justify-self: center;
+    }
+}

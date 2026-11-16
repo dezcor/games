@@ -526,7 +526,9 @@ kbd {
 
 .board {
   position: relative;
-  width: min(100%, 520px);
+  /* También limitado por el alto: en móvil apaisado el tablero entra completo */
+  width: min(100%, 520px, max(240px, calc(100vh - 190px)));
+  width: min(100%, 520px, max(240px, calc(100dvh - 190px)));
   aspect-ratio: 1;
   margin: 0 auto;
   background: radial-gradient(120% 100% at 30% 20%, #2b4433, var(--board2));

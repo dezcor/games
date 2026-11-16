@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/arcade.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../shared/layout.css">
 </head>
 <body>
     <div id="game-container">
@@ -50,20 +51,22 @@
                 <button class="diff-btn" data-diff="insane">Insane</button>
             </div>
         </div>
-        <div id="board-wrapper">
-            <canvas id="invaders" width="240" height="400" aria-label="Space Invaders game board"></canvas>
-            <div id="level-banner" style="display:none;"></div>
-            <div id="pause-overlay">
-                <h1 id="overlay-title">SPACE INVADERS</h1>
-                <div id="game-over-stats" style="display:none;">
-                    <div id="final-score">Score: 0</div>
-                    <div id="final-level">Level: 1</div>
-                </div>
-                <button id="start-btn" class="touch-btn cap is-xl is-ring c-fire">START</button>
-                <button id="quick-restart-btn" class="touch-btn cap is-xl is-ring c-yellow" style="display:none;">PLAY<br>AGAIN</button>
-                <div id="high-scores-table" style="display:none;">
-                    <h3>Top 5 Records</h3>
-                    <table id="high-scores-list"></table>
+        <div class="board-slot">
+            <div id="board-wrapper">
+                <canvas id="invaders" width="240" height="400" aria-label="Space Invaders game board"></canvas>
+                <div id="level-banner" style="display:none;"></div>
+                <div id="pause-overlay">
+                    <h1 id="overlay-title">SPACE INVADERS</h1>
+                    <div id="game-over-stats" style="display:none;">
+                        <div id="final-score">Score: 0</div>
+                        <div id="final-level">Level: 1</div>
+                    </div>
+                    <button id="start-btn" class="touch-btn cap is-xl is-ring c-fire">START</button>
+                    <button id="quick-restart-btn" class="touch-btn cap is-xl is-ring c-yellow" style="display:none;">PLAY<br>AGAIN</button>
+                    <div id="high-scores-table" style="display:none;">
+                        <h3>Top 5 Records</h3>
+                        <table id="high-scores-list"></table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,6 +89,13 @@
                 <span class="arcade-label">RESTART</span>
             </div>
         </div>
+        <dl class="key-help" aria-label="Keyboard controls">
+            <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Move</dd>
+            <dt><kbd>Space</kbd></dt><dd>Fire</dd>
+            <dt><kbd>Enter</kbd></dt><dd>Start</dd>
+            <dt><kbd>P</kbd></dt><dd>Pause</dd>
+            <dt><kbd>R</kbd></dt><dd>Restart</dd>
+        </dl>
     </div>
     <script src="../shared/sound-menu.js"></script>
     <script src="js/constants.js"></script>
