@@ -29,6 +29,7 @@ Arcade clásico con asteroides fragmentables, power-ups, OVNI e hiperespacio.
 - Tutorial inicial 4 pasos (descartable, con persistencia)
 - Pinch-zoom y double-tap reset en portrait
 - Top 5 high scores persistentes con nombre de jugador
+- **Easter egg:** ingresá "jsnow" / "jonsnow" / "jon" / "jsnof" como nombre para obtener la medalla de oro en la tabla de high scores
 
 ### 🧱 Tetris
 
@@ -73,6 +74,37 @@ Shooter retro con aliens que disparan, UFO bonus, niveles de dificultad y pantal
 - Pantalla de game over con score final, nivel alcanzado y reinicio rápido
 - Controles táctiles con botón de pausa incluido
 - Top 5 high scores persistentes con nombre de jugador
+
+### 💣 Minesweeper
+
+Buscador de minas con 3 dificultades, cursor de teclado y tabla de high scores.
+
+- 3 dificultades: Fácil (9×9, 10 minas), Normal (16×16, 40 minas) y Difícil (16×24, 70 minas)
+- Tablero con celdas de 24px
+- Scoring: 10 pts por bandera, 5 pts por celda revelada, 500 pts de bonus por ganar
+- Volumen SFX, BGM y mute persistentes
+- Top 5 high scores persistentes con nombre de jugador
+- Dificultad persistente
+
+### 🐱 El Gato (Tris de tiza)
+
+Tris de tiza sobre pizarra contra un gato que juega con la O.
+
+- Tablero 3×3 con 8 líneas ganadoras
+- 3 dificultades: fácil (aleatorio), normal (heurística) y difícil (minimax, nunca pierde)
+- El gato "piensa" 520 ms + jitter de 480 ms antes de jugar
+- Marcador de victorias/derrotas/empates, ronda y racha persistentes
+- Sonido persistente
+
+### 🌙 Una pregunta rara
+
+Una pequeña experiencia privada de preguntas. Las respuestas existen solo en memoria y se descartan al avanzar; no hay historial ni almacenamiento.
+
+- Nombre esperado almacenado como códigos de caracteres (nunca literal)
+- 7 preguntas por sesión, con cierre final y resumen de temas
+- Sin localStorage, sessionStorage, cookies, URLs, logs ni red
+- Disponible solo de 11:00 PM a 6:00 AM (restricción desactivada en la build actual)
+- Sin controles arcade
 
 ## Controles
 
@@ -125,6 +157,29 @@ Shooter retro con aliens que disparan, UFO bonus, niveles de dificultad y pantal
 | R | Reiniciar |
 | Touch | Botones en pantalla (incluye pausa y reinicio) |
 
+### Minesweeper
+| Tecla | Acción |
+|-------|--------|
+| ↑ ↓ ← → | Mover cursor |
+| Enter / Espacio | Revelar celda |
+| F | Bandeja |
+| R | Reiniciar |
+| P / Escape | Pausa |
+| 1 / 2 / 3 | Dificultad (Fácil / Normal / Difícil) |
+
+### El Gato
+| Tecla | Acción |
+|-------|--------|
+| 1-9 | Elegir celda |
+| N | Nueva ronda |
+| M | Sonido |
+| B | Borrar marcador |
+
+### Una pregunta rara
+| Tecla | Acción |
+|-------|--------|
+| (sin teclado) | Botones en pantalla: Continuar, Empezar, Responder, Enviar |
+
 ## Servir localmente
 
 ```sh
@@ -144,7 +199,8 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 ```
 ├── index.html          # Hub principal
 ├── shared/
-│   └── arcade.css      # Kit de cabina: botones redondos, palanca y panel de control
+│   ├── arcade.css      # Kit de cabina: botones redondos, palanca y panel de control
+│   └── sound-menu.js   # Popover de sonido (SFX/BGM/volumen)
 ├── AGENTS.md           # Instrucciones para OpenCode
 ├── BACKLOG.md          # Backlog de Asteroids
 ├── tetris_backlog.md   # Backlog de Tetris
@@ -154,8 +210,7 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 │   ├── style.css
 │   └── js/
 │       ├── constants.js        # Constantes (tablero, velocidad, serpiente inicial)
-│       ├── domain/
-│       │   └── snake.js        # Máquina de estados pura (sin DOM, localStorage ni audio)
+│       ├── domain/             # Máquina de estados pura (sin DOM, localStorage ni audio)
 │       ├── ports/              # Contratos: repository, renderer, input, sound, clock
 │       ├── adapters/           # localStorage, canvas, teclado, touch, sonido y frame (rAF)
 │       └── game.js             # Composition root: cablea dominio y adaptadores
@@ -164,38 +219,66 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 │   ├── favicon.svg
 │   ├── css/style.css
 │   └── js/
-│       ├── constants.js    # Constantes (tamaño, colores, power-ups)
-│       ├── bricks.js       # Layouts de niveles y bricks especiales
-│       ├── input.js        # Captura de teclado
-│       ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
-│       └── game.js         # Lógica del juego
+│       ├── constants.js        # Constantes (tamaño, colores, power-ups)
+│       ├── domain/             # levels, physics, game (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas, DOM UI, input, sound, repository, clock
+│       └── game.js             # Composition root
 ├── asteroids/
 │   ├── index.html
 │   ├── favicon.svg
 │   ├── css/style.css
+│   ├── sprites/                # ship.svg, asteroid.svg, ufo.svg, bullet.svg, ufo-bullet.svg, powerup-*.svg
 │   └── js/
-│       ├── constants.js    # Constantes (dificultad, power-ups, UFO, BGM, achievements, skins, tutorial)
-│       ├── input.js        # Teclado, touch buttons, pinch-zoom
-│       ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
-│       └── game.js         # Lógica del juego
+│       ├── constants.js        # Constantes (dificultad, power-ups, UFO, BGM, achievements, skins, tutorial)
+│       ├── domain/             # ship, asteroid, bullets, ufo, powerups, hyperspace, collision, difficulty, skins, achievements, scores, game
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas renderer (SpriteLoader), DOM UI, keyboard, touch, pinch-zoom, effects, repository, clock, sound
+│       └── game.js             # Composition root
 ├── tetris/
 │   ├── index.html
 │   ├── css/style.css
 │   └── js/
-│       ├── constants.js    # Constantes (tamaño, colores, scoring)
-│       ├── tetriminos.js   # Definición de piezas
-│       ├── input.js        # Captura de teclado
-│       ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
-│       └── game.js         # Lógica del juego
-└── space-invaders/
+│       ├── constants.js        # Constantes (tamaño, colores, scoring)
+│       ├── domain/             # pieces, board, scoring, highScores, das, tetris (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas, DOM UI, input, sound, repository, clock
+│       └── game.js             # Composition root
+├── space-invaders/
+│   ├── index.html
+│   ├── favicon.svg
+│   ├── css/style.css
+│   ├── sprites/                # player.svg, alien-{small,medium,large}.svg, ufo.svg, bullet.svg, alien-bullet.svg
+│   └── js/
+│       ├── constants.js        # Constantes (tablero, dificultad, partículas)
+│       ├── domain/             # invaders, aliens, ufo, particles, highscores (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas renderer (SpriteLoader), DOM HUD, input, keyboard, touch, sound, frame loop, repository
+│       └── game.js             # Composition root
+├── minesweeper/
+│   ├── index.html
+│   ├── favicon.svg
+│   ├── css/style.css
+│   └── js/
+│       ├── constants.js        # Constantes (dificultades, celdas, scoring, storage keys)
+│       ├── domain/             # board, game (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas, DOM UI, keyboard, touch, sound, repository, clock
+│       └── game.js             # Composition root
+├── chalk-tic-tac-toe/
+│   ├── index.html
+│   ├── styles.css
+│   └── js/
+│       ├── constants.js        # Constantes (líneas ganadoras, dificultades, timing del gato)
+│       ├── domain/             # board, ai, game (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # DOM UI, input, sound, repository
+│       └── game.js             # Composition root
+└── una-pregunta-rara/
     ├── index.html
-    ├── favicon.svg
     ├── css/style.css
     └── js/
-        ├── constants.js    # Constantes (tablero, dificultad, partículas)
-        ├── input.js        # Captura de teclado + touch buttons
-        ├── sound.js        # Sonido y música (SoundManager + MusicPlayer)
-        └── game.js         # Lógica del juego
+        └── app.js              # Lógica privada (sin almacenamiento)
 ```
 
 Desarrollado por Dezcor Games.
