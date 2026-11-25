@@ -13,16 +13,21 @@ const Bird = {
         };
     },
 
-    /** Flap: reset vertical velocity to the flap impulse. */
+    /** Flap: start rising at the climb speed. */
     flap(bird) {
         bird.vy = FLAP_VELOCITY;
+    },
+
+    /** Release: cut the lift immediately so the bird starts falling right away. */
+    stopRise(bird) {
+        if (bird.vy < 0) bird.vy = 0;
     },
 
     /**
      * One physics step. `dt` is in seconds (1/60 = one frame at 60 Hz), so the
      * simulation runs at the same speed on 60 Hz and 144 Hz displays.
-     * While `thrusting` (the flap control is held) the bird rises at a constant
-     * speed; otherwise gravity takes over.
+     * While `thrusting` (the flap control is held) the bird climbs at a constant
+     * speed; as soon as it is released gravity takes over with no leftover lift.
      */
     step(bird, dt = 1 / 60, thrusting = false) {
         const frames = dt * 60;

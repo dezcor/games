@@ -45,7 +45,7 @@ npx serve .
   - Pure domain in `js/domain/` (`bird.js`, `pipes.js`, `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer, DOM UI, keyboard, touch, sound, frame loop, repository, random); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 360×480 canvas
-  - Pipes spawn every ~180 frames (~3 s at 60 Hz), gap ~110px, base speed 2.5 px/frame (increases with score). Simulation is delta-time based, with a 3 s countdown before each round.
+  - Pipes spawn every ~180 frames (~3 s at 60 Hz), gap ~110px, base speed 2.5 px/frame (increases with score). Simulation is delta-time based, with a 3 s countdown before each round; the bird then hovers until the first flap (hold to rise, release to fall).
 - `space-invaders/` — Space Invaders with levels, hexagonal layout in `js/`
   - Pure domain in `js/domain/` (`invaders.js` state machine, `aliens.js`, `ufo.js`, `particles.js`, `highscores.js`; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM HUD, input, keyboard, touch, sound, frame loop, repository); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
@@ -64,7 +64,7 @@ npx serve .
 
 **Space Invaders:** ← → or A/D to move, Space/Enter to shoot, P / Escape pause, R restart, Enter start.
 
-**Flappy:** Space / FLAP cap / tap or click on the board to flap (hold to rise, up to a maximum; a short press falls sooner), P / Escape pause, R restart, Enter start. Each round begins with a 3-second countdown; tapping the board also starts and restarts a round.
+**Flappy:** Space / FLAP cap / tap or click on the board to flap (hold to rise up to a maximum; a short press falls sooner and releasing cuts the lift). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
 
 ## Audio
 

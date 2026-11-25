@@ -26,7 +26,8 @@ class FlappyGame {
         this.pipeSpawnTimer = 0;
         this.countdown = 0;
         this.flapHeld = false;
-        this.flapHoldTime = 0;
+        this.flapStartY = 0;
+        this.awaitingFirstFlap = false;
     }
 
     // �� Setup ��
@@ -67,7 +68,8 @@ class FlappyGame {
         this.pipeSpawnTimer = 0;
         this.countdown = 0;
         this.flapHeld = false;
-        this.flapHoldTime = 0;
+        this.flapStartY = 0;
+        this.awaitingFirstFlap = false;
         this.updateUI();
     }
 
@@ -89,6 +91,7 @@ class FlappyGame {
         this.gameOver = true;
         this.isPaused = true;
         this.flapHeld = false;
+        Bird.stopRise(this.bird);
 
         this.hud.setOverlayVisible(true);
         this.hud.setStartButtonVisible(false);
@@ -116,7 +119,8 @@ class FlappyGame {
         this.pipeSpawnTimer = 0;
         this.countdown = COUNTDOWN_SECONDS;
         this.flapHeld = false;
-        this.flapHoldTime = 0;
+        this.flapStartY = 0;
+        this.awaitingFirstFlap = false;
 
         this.hud.setOverlayVisible(false);
         this.hud.setStartButtonVisible(false);
@@ -130,21 +134,20 @@ class FlappyGame {
         this.sound.startBgm();
     }
 
-    /** Called once the countdown reaches zero: real play begins. */
+    /** Called once the countdown reaches zero: the bird hovers until the first flap. */
     beginPlay() {
         this.hud.setOverlayVisible(false);
         this.hud.setOverlayTitle(this.northTheme ? 'NORTH' : 'FLAPPY');
-        // Small starting hop so the round does not begin with a dead drop.
         this.flapHeld = false;
-        this.flapHoldTime = 0;
-        Bird.flap(this.bird);
-        this.sound.playFlap();
+        this.bird.vy = 0;
+        this.awaitingFirstFlap = true;
     }
 
     togglePause() {
         if (!this.gameStarted || this.gameOver || this.countdown > 0) return;
         this.isPaused = !this.isPaused;
         this.flapHeld = false;
+        Bird.stopRise(this.bird);
         this.hud.setOverlayVisible(this.isPaused);
         if (!this.isPaused) {
             this.hud.setOverlayTitle(this.northTheme ? 'NORTH' : 'FLAPPY');
@@ -211,18 +214,24 @@ class FlappyGame {
 
     // �� Input handling ��
 
-    /** Press: start a flap burst. Holding keeps the bird rising for FLAP_HOLD_MAX. */
+    /**
+     * Press: hold to climb. A quick tap barely lifts; the longer it is held,
+     * the higher the bird goes, up to MAX_FLAP_RISE pixels from the press point.
+     */
     startFlap() {
         if (!this.gameStarted || this.isPaused || this.gameOver || this.countdown > 0) return;
+        this.awaitingFirstFlap = false;
         this.flapHeld = true;
-        this.flapHoldTime = 0;
-        this.bird.vy = FLAP_VELOCITY;
+        this.flapStartY = this.bird.y;
+        Bird.flap(this.bird);
         this.sound.playFlap();
     }
 
-    /** Release: stop the lift now; gravity resumes on the next tick. */
+    /** Release: cut the lift now, so the bird starts falling instead of coasting up. */
     stopFlap() {
+        if (!this.flapHeld) return;
         this.flapHeld = false;
+        Bird.stopRise(this.bird);
     }
 
     /** One simulation step. `dt` is the elapsed seconds since the previous frame. */
@@ -236,17 +245,21 @@ class FlappyGame {
             return;
         }
 
-        if (!this.isPaused && !this.gameOver && this.gameStarted) {
-            let thrusting = false;
-            if (this.flapHeld) {
-                thrusting = this.flapHoldTime < FLAP_HOLD_MAX;
-                this.flapHoldTime += dt;
-                if (this.flapHoldTime >= FLAP_HOLD_MAX) this.flapHeld = false;
+        // After the countdown the bird hovers until the player's first flap.
+        if (this.awaitingFirstFlap || this.isPaused || this.gameOver || !this.gameStarted) return;
+
+        let thrusting = false;
+        if (this.flapHeld) {
+            if (this.flapStartY - this.bird.y >= MAX_FLAP_RISE) {
+                this.stopFlap();
+            } else {
+                thrusting = true;
             }
-            Bird.step(this.bird, dt, thrusting);
-            this.updatePipes(dt);
-            this.checkCollisions();
         }
+
+        Bird.step(this.bird, dt, thrusting);
+        this.updatePipes(dt);
+        this.checkCollisions();
     }
 
     // �� Inbound commands (the InputPort surface used by adapters) ��

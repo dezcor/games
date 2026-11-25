@@ -105,7 +105,8 @@ Flappy clásico con pipes neon, bird glowing y tema synthwave.
 - Velocidad base 2.5 px/frame que aumenta con la puntuación (simulación por delta-time: igual en 60 Hz y 144 Hz)
 - Cuenta atrás de 3 segundos al empezar cada partida
 - Se puede jugar tocando o haciendo clic en el tablero
-- Mantener presionado el flap hace subir más alto, hasta un máximo de ~180px; una pulsación corta cae antes
+- Mantener presionado el flap hace subir hasta un máximo de ~180px; soltar corta el vuelo y una pulsación corta cae enseguida
+- Después de la cuenta atrás el pájaro queda flotando hasta el primer flap
 - Scoring: 1 punto por pipe superado
 - Volumen SFX, BGM y mute persistentes
 - Top 5 high scores persistentes con nombre de jugador
@@ -193,13 +194,13 @@ Una pequeña experiencia privada de preguntas. Las respuestas existen solo en me
 ### Flappy
 | Tecla | Acción |
 |-------|--------|
-| Espacio / FLAP | Flap (mantener para subir más alto) |
+| Espacio / FLAP | Mantener para subir (máx. ~180px); soltar corta el vuelo |
 | Toque / clic en el tablero | Flap (mantener para subir), empezar o reiniciar |
 | P / Escape | Pausa |
 | R | Reiniciar |
 | Enter | Empezar partida |
 
-Cada partida empieza con una cuenta atrás de 3 segundos.
+Cada partida empieza con una cuenta atrás de 3 segundos y el pájaro flota hasta el primer flap.
 
 ### Una pregunta rara
 | Tecla | Acción |
