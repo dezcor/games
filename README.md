@@ -96,6 +96,23 @@ Tris de tiza sobre pizarra contra un gato que juega con la O.
 - Marcador de victorias/derrotas/empates, ronda y racha persistentes
 - Sonido persistente
 
+### 🐦 Flappy
+
+Flappy clásico con pipes neon, bird glowing y tema synthwave.
+
+- Tablero 360×480 canvas
+- Pipes que aparecen cada ~180 frames (~3 s) con gap de ~110px
+- Velocidad base 2.5 px/frame que aumenta con la puntuación (simulación por delta-time: igual en 60 Hz y 144 Hz)
+- Cuenta atrás de 3 segundos al empezar cada partida
+- Se puede jugar tocando o haciendo clic en el tablero
+- Mantener presionado el flap hace subir hasta un máximo de ~180px; soltar corta el vuelo y una pulsación corta cae enseguida
+- Dos modos de flap: **hold** (mantener para subir) y **classic** (impulso fijo); se alternan con el botón MODE o la tecla M y se recuerdan entre partidas
+- Después de la cuenta atrás el pájaro queda flotando hasta el primer flap
+- Scoring: 1 punto por pipe superado
+- Volumen SFX, BGM y mute persistentes
+- Top 5 high scores persistentes con nombre de jugador
+- **Easter egg:** ingresá "JonSnow" / "Jon" / "JSnow" como nombre para activar el tema "North" (Game of Thrones)
+
 ### 🌙 Una pregunta rara
 
 Una pequeña experiencia privada de preguntas. Las respuestas existen solo en memoria y se descartan al avanzar; no hay historial ni almacenamiento.
@@ -174,6 +191,18 @@ Una pequeña experiencia privada de preguntas. Las respuestas existen solo en me
 | N | Nueva ronda |
 | M | Sonido |
 | B | Borrar marcador |
+
+### Flappy
+| Tecla | Acción |
+|-------|--------|
+| Espacio / FLAP | Mantener para subir (máx. ~180px); soltar corta el vuelo |
+| Toque / clic en el tablero | Flap (mantener para subir), empezar o reiniciar |
+| M / botón MODE | Alternar modo hold / clásico |
+| P / Escape | Pausa |
+| R | Reiniciar |
+| Enter | Empezar partida |
+
+Cada partida empieza con una cuenta atrás de 3 segundos y el pájaro flota hasta el primer flap.
 
 ### Una pregunta rara
 | Tecla | Acción |
@@ -273,6 +302,16 @@ Todos los juegos generan sonido y música sintetizada mediante Web Audio API (os
 │       ├── domain/             # board, ai, game (sin DOM, localStorage ni audio)
 │       ├── ports/              # Contratos
 │       ├── adapters/           # DOM UI, input, sound, repository
+│       └── game.js             # Composition root
+├── flappy/
+│   ├── index.html
+│   ├── favicon.svg
+│   ├── css/style.css
+│   └── js/
+│       ├── constants.js        # Constantes (tablero, bird, pipes, scoring)
+│       ├── domain/             # bird, pipes, game (sin DOM, localStorage ni audio)
+│       ├── ports/              # Contratos
+│       ├── adapters/           # Canvas, DOM UI, keyboard, touch, sound, repository, clock, random
 │       └── game.js             # Composition root
 └── una-pregunta-rara/
     ├── index.html

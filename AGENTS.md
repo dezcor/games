@@ -1,6 +1,6 @@
 # Games Hub
 
-Static HTML/JS/CSS games collection (Snake, Tetris, Arkanoid, Asteroids, Space Invaders). No build tools, no dependencies, no tests.
+Static HTML/JS/CSS games collection (Snake, Tetris, Arkanoid, Asteroids, Space Invaders, Minesweeper, El Gato, Una pregunta rara, Flappy). No build tools, no dependencies, no tests.
 
 ## Serve locally
 
@@ -41,6 +41,11 @@ npx serve .
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 800×600 canvas
   - 4 difficulty presets, ship skins, 5 achievements, tutorial
+- `flappy/` — Flappy, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`bird.js`, `pipes.js`, `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer, DOM UI, keyboard, touch, sound, frame loop, repository, random); composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
+  - Board: 360×480 canvas
+  - Pipes spawn every ~180 frames (~3 s at 60 Hz), gap ~110px, base speed 2.5 px/frame (increases with score). Simulation is delta-time based, with a 3 s countdown before each round; the bird then hovers until the first flap (hold to rise, release to fall).
 - `space-invaders/` — Space Invaders with levels, hexagonal layout in `js/`
   - Pure domain in `js/domain/` (`invaders.js` state machine, `aliens.js`, `ufo.js`, `particles.js`, `highscores.js`; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM HUD, input, keyboard, touch, sound, frame loop, repository); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
@@ -59,13 +64,15 @@ npx serve .
 
 **Space Invaders:** ← → or A/D to move, Space/Enter to shoot, P / Escape pause, R restart, Enter start.
 
+**Flappy:** Space / FLAP cap / tap or click on the board to flap. MODE cap or M switches between hold-to-rise and classic impulse modes (persisted in `flappy_flap_mode`). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
+
 ## Audio
 
 All games use Web Audio API with synthesized oscillators (no audio files). `SoundManager` handles SFX, `MusicPlayer` handles BGM via scheduler. Each game has its own duplicated copy.
 
 Audio requires a user gesture to start (browser autoplay policy). All games call `SoundManager.ensureAudio()` on first sound play.
 
-Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for all 5 games.
+Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for all 9 games.
 
 ## localStorage keys
 
@@ -87,12 +94,18 @@ Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for 
 - `asteroid_achievements` — Asteroids achievements map (JSON `{ id: { unlocked, date } }`)
 - `asteroid_tutorial_dismissed` — Asteroids tutorial "do not show again" flag
 - `gatoState` — El Gato state (JSON `{ diff, score, round, soundOn }`)
+- `flappy_highscores` — Flappy top 5 (JSON array)
+- `flappy_player_name` — Flappy player name (string)
+- `flappy_flap_mode` — Flappy flap mode (`hold` / `classic`, defaults to `hold`)
+- `flappy_audio_volume` / `flappy_sfx_muted` / `flappy_bgm_volume` / `flappy_bgm_muted` — Flappy audio prefs
 
 ## Easter egg
 
 Tetris player name `JonSnow` / `Jon` / `JSnow` (case-insensitive, whitespace-stripped) activates a "North theme": GoT-flavored game over messages, blue accent color (`#88ccff`), and darker CSS theme.
 
 In Asteroids, the same aliases (`jsnow` / `jonsnow` / `jon` / legacy `jsnof`) also grant a gold medal in the high scores table.
+
+In Flappy, the same aliases (`jonsnow` / `jon` / `jsnow`) activate a "North theme": GoT-flavored game over messages, blue accent color (`#88ccff`), and darker CSS theme.
 
 ## Touch controls
 
@@ -111,7 +124,7 @@ The 6 ship skins in Asteroids share a single white `ship.svg` and are tinted per
 
 ## Design system
 
-Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids and Minesweeper use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
+Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids, Minesweeper and Flappy use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
 
 Shared across games:
 - Sound controls (mute SFX, mute BGM, volume slider) in a popover opened by the ♪ button in the top bar (`shared/sound-menu.js`), with persisted settings
@@ -129,5 +142,6 @@ Per-game identity:
 - Minesweeper: olive field plates, hazard tape and stencil titles (Saira Stencil One); canvas numbers still use Press Start 2P
 - El Gato: chalkboard and wooden frame (Caveat + Nunito)
 - Una pregunta rara: midnight letter, serif type and ruled paper (Instrument Serif + Caveat)
+- Flappy: sunset synthwave (Chakra Petch + Inter), neon orange pipes and a glowing bird
 
 ## No tests, no CI, no linting, no formatting config
