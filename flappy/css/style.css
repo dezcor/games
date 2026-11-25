@@ -1,0 +1,484 @@
+/* ═══════════════════════════════════════════════════════════════
+   Flappy · Sunset synthwave
+   Deep indigo sky, neon orange pipes, glowing bird, scanlines.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --bg: #0b0714;
+    --ink: #f4e9ff;
+    --indigo: #1a0f2e;
+    --violet: #2b1240;
+    --orange: #ff5e3a;
+    --orange-hi: #ff8a5a;
+    --yellow: #ffd60a;
+    --cyan: #63e6ff;
+    --deck: #14101f;
+    --deck-edge: #2c1f3a;
+    --deck-lo: #05070b;
+    --bezel-hi: #d9e1ea;
+    --bezel-lo: #566270;
+    --label: #c5cfda;
+    --focus: #ffd60a;
+    --label-font: 'Chakra Petch', sans-serif;
+
+    --pipe: #ff5e3a;
+    --pipe-hi: #ff8a5a;
+    --bird: #ffd60a;
+    --bird-hi: #ffea8a;
+
+    /* Responsive layout (shared/layout.css) */
+    --board-ar: 0.75;
+    --board-px: 28px;
+    --board-py: 34px;
+    --board-cap: 440px;
+    --slot-min: 300px;
+}
+
+/* Amber cap for the FLAP button (shared/arcade.css has no .c-amber). */
+.c-amber {
+    --cap: #ffd166;
+    --cap-hi: #fff1cc;
+    --cap-lo: #8a6211;
+    --cap-ink: #2a1d04;
+}
+
+/* ── Base ── */
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 44px),
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 94, 58, 0.12), transparent 70%),
+        var(--bg);
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Barrido ligero */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 4px);
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 14px 12px 24px;
+    text-align: center;
+    animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Menú ── */
+#menu-btn {
+    align-self: flex-start;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    font-family: var(--label-font);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--orange);
+    text-decoration: none;
+    border: 1px solid var(--orange);
+    border-radius: 2px;
+    background: #0d131c;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+#menu-btn:hover {
+    color: var(--yellow);
+    border-color: var(--yellow);
+}
+
+#menu-btn:focus-visible {
+    outline: 2px solid var(--yellow);
+    outline-offset: 3px;
+}
+
+/* ── Marcadores ── */
+#top-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+#info-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 14px;
+    width: 100%;
+}
+
+#score,
+#best-score {
+    font-family: var(--label-font);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+#score {
+    color: var(--orange);
+    text-shadow: 0 0 10px rgba(255, 94, 58, 0.5);
+}
+
+#best-score {
+    color: var(--label);
+}
+
+#best-score-value {
+    color: var(--ink);
+}
+
+/* ── Nombre ── */
+#name-input-container {
+    display: flex;
+    align-items: center;
+}
+
+#player-name {
+    width: 96px;
+    padding: 5px 8px;
+    font-family: var(--label-font);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: var(--ink);
+    background: #0d131c;
+    border: 1px solid var(--deck-edge);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.2s;
+}
+
+#player-name::placeholder {
+    color: #4b5866;
+}
+
+#player-name:focus {
+    border-color: var(--cyan);
+}
+
+/* ── Sonido ── */
+#sound-controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+#sound-controls .arcade-label {
+    font-size: 7px;
+}
+
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 64px;
+    height: 6px;
+    margin-top: 17px;
+    background: #0d131c;
+    border: 1px solid var(--deck-edge);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 14px;
+    border: 0;
+    border-radius: 1px;
+    background: var(--cyan);
+    box-shadow: 0 0 8px rgba(99, 230, 255, 0.6);
+    cursor: pointer;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 10px;
+    height: 14px;
+    border: 0;
+    border-radius: 1px;
+    background: var(--cyan);
+    box-shadow: 0 0 8px rgba(99, 230, 255, 0.6);
+    cursor: pointer;
+}
+
+/* ── Tablero: marco synthwave con franja de peligro ── */
+#board-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    padding: 12px 12px 18px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #2b1240, #1a0f2e 62%, #0b0714);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 0 1px #05080d,
+        0 18px 30px -16px rgba(0, 0, 0, 0.9);
+}
+
+#board-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 4px 4px, #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at calc(100% - 4px) 4px, #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at 4px calc(100% - 4px), #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px);
+    opacity: 0.8;
+}
+
+/* Franja de peligro justo bajo el campo de juego */
+#board-wrapper::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 7px;
+    pointer-events: none;
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 9px, #15120a 9px 18px);
+}
+
+#flappy {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 2px solid #2c1f3a;
+    background-color: #0b0714;
+    cursor: pointer;
+    box-shadow:
+        0 0 0 1px #000,
+        0 0 22px rgba(255, 94, 58, 0.12),
+        inset 0 0 40px rgba(0, 0, 0, 0.85);
+}
+
+/* ── Overlay ── */
+#pause-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    bottom: 18px;
+    left: 12px;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    border-radius: 4px;
+    background: rgba(11, 7, 20, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+#pause-overlay h1,
+#pause-overlay button,
+#high-scores-table {
+    pointer-events: auto;
+}
+
+#overlay-title {
+    margin: 0;
+    font-family: var(--label-font);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    text-shadow: 0 0 18px rgba(255, 94, 58, 0.55);
+}
+
+#start-btn {
+    margin-top: 6px;
+}
+
+/* ── Récords ── */
+#high-scores-table {
+    margin-top: 6px;
+    width: 90%;
+    max-width: 230px;
+}
+
+#high-scores-table h3 {
+    margin: 0 0 10px;
+    font-family: var(--label-font);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--yellow);
+}
+
+#high-scores-list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#high-scores-list td {
+    padding: 5px 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 94, 58, 0.18);
+}
+
+.hs-rank {
+    width: 34px;
+    font-family: var(--label-font);
+    font-size: 12px;
+    color: var(--orange);
+}
+
+.hs-name {
+    max-width: 90px;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--label);
+}
+
+.hs-score {
+    font-family: var(--label-font);
+    font-size: 11px;
+    text-align: right;
+    color: var(--ink);
+}
+
+.hs-date {
+    font-size: 11px;
+    color: #5f6b78;
+}
+
+.hs-row-1 .hs-score { color: var(--yellow); }
+.hs-row-2 .hs-score { color: #d7dde4; }
+.hs-row-3 .hs-score { color: #d28a55; }
+
+/* ── Panel de control: franja de peligro arriba ── */
+#touch-controls {
+    justify-content: space-around;
+    max-width: 340px;
+}
+
+#touch-controls::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 8px;
+    border-radius: 24px 24px 0 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 9px, #15120a 9px 18px);
+    opacity: 0.85;
+}
+
+#touch-controls .arcade-label {
+    font-size: 8px;
+}
+
+/* ── Easter egg: tema North (Jon Snow) ── */
+body.north-theme {
+    --bg: #060c1a;
+    --ink: #e4f0ff;
+    --indigo: #0c1530;
+    --violet: #152746;
+    --orange: #88ccff;
+    --orange-hi: #b7d6f2;
+    --yellow: #cfe9ff;
+    --cyan: #88ccff;
+    --deck-edge: #22406a;
+    --label: #b7d6f2;
+    --focus: #88ccff;
+    --pipe: #5f8fd0;
+    --pipe-hi: #b7d6f2;
+    --bird: #cfe9ff;
+    --bird-hi: #ffffff;
+    background:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(136, 204, 255, 0.14), transparent 70%),
+        linear-gradient(180deg, #0c1530 0%, #060c1a 60%, #040814 100%);
+}
+
+body.north-theme .c-orange { --cap: #5f8fd0; --cap-hi: #c4dcf4; --cap-lo: #22406a; --cap-ink: #0a1224; }
+body.north-theme .c-yellow { --cap: #cfe9ff; --cap-hi: #ffffff; --cap-lo: #5e7f9e; --cap-ink: #0a1224; }
+body.north-theme .c-cyan   { --cap: #88ccff; --cap-hi: #e4f4ff; --cap-lo: #2f5e8f; --cap-ink: #0a1224; }
+body.north-theme .c-amber  { --cap: #cfe9ff; --cap-hi: #ffffff; --cap-lo: #5e7f9e; --cap-ink: #0a1224; }
+
+body.north-theme #board-wrapper {
+    background: linear-gradient(180deg, #152746, #0c1530 62%, #060c1a);
+}
+
+body.north-theme #pause-overlay {
+    background: rgba(6, 12, 26, 0.9);
+}
+
+/* ── Pantallas estrechas ── */
+@media (max-width: 500px) {
+    #score,
+    #best-score {
+        font-size: 9px;
+    }
+    #player-name {
+        width: 110px;
+    }
+    #overlay-title {
+        font-size: 18px;
+    }
+}
+
+@media (max-height: 600px) {
+    #top-ui {
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+    #overlay-title {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 500px) {
+    #game-container {
+        max-width: 460px;
+    }
+    #board-wrapper {
+        max-width: 440px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

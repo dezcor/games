@@ -193,6 +193,12 @@
             --cap: #e9a6b9; --cap-hi: #fbe0ea; --cap-lo: #8a4a5c; --cap-ink: #2b1520;
         }
 
+        .game-card.flappy {
+            --card-glow: linear-gradient(135deg, #ff5e3a, #ffd60a);
+            --card-shadow: rgba(255, 94, 58, 0.14);
+            --cap: #ff5e3a; --cap-hi: #ffd6b0; --cap-lo: #7a2c05; --cap-ink: #2a0f02;
+        }
+
         /* ── Icon ── */
         .game-icon {
             font-size: 56px;
@@ -394,6 +400,12 @@
                 <div class="game-icon">🌙</div>
                 <div class="game-title">Una pregunta rara</div>
                 <div class="game-desc">A private little game of questions. Answers vanish.</div>
+                <span class="play-btn">PLAY</span>
+            </a>
+            <a class="game-card flappy" href="flappy/index.html">
+                <div class="game-icon">🐦</div>
+                <div class="game-title">Flappy</div>
+                <div class="game-desc">Flap through the pipes, beat your record.</div>
                 <span class="play-btn">PLAY</span>
             </a>
         </div>
