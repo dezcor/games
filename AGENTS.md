@@ -64,7 +64,7 @@ npx serve .
 
 **Space Invaders:** ← → or A/D to move, Space/Enter to shoot, P / Escape pause, R restart, Enter start.
 
-**Flappy:** Space / FLAP cap / tap or click on the board to flap (hold to rise up to a maximum; a short press falls sooner and releasing cuts the lift). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
+**Flappy:** Space / FLAP cap / tap or click on the board to flap. MODE cap or M switches between hold-to-rise and classic impulse modes (persisted in `flappy_flap_mode`). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
 
 ## Audio
 
@@ -96,6 +96,7 @@ Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for 
 - `gatoState` — El Gato state (JSON `{ diff, score, round, soundOn }`)
 - `flappy_highscores` — Flappy top 5 (JSON array)
 - `flappy_player_name` — Flappy player name (string)
+- `flappy_flap_mode` — Flappy flap mode (`hold` / `classic`, defaults to `hold`)
 - `flappy_audio_volume` / `flappy_sfx_muted` / `flappy_bgm_volume` / `flappy_bgm_muted` — Flappy audio prefs
 
 ## Easter egg

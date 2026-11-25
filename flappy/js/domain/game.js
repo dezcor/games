@@ -22,6 +22,7 @@ class FlappyGame {
         this.gameStarted = false;
         this.playerName = '';
         this.northTheme = false;
+        this.flapMode = MODE_HOLD;
 
         this.pipeSpawnTimer = 0;
         this.countdown = 0;
@@ -38,6 +39,8 @@ class FlappyGame {
         this.hud.setPlayerName(this.playerName);
         this.northTheme = this.isNorthTheme(this.playerName);
         this.hud.setNorthTheme(this.northTheme);
+        this.flapMode = this.repository.loadMode() === MODE_CLASSIC ? MODE_CLASSIC : MODE_HOLD;
+        this.hud.setFlapMode(this.flapMode);
         this.initGame();
         this.hud.setOverlayVisible(true);
         this.hud.setOverlayTitle(this.northTheme ? 'NORTH' : 'FLAPPY');
@@ -215,23 +218,35 @@ class FlappyGame {
     // �� Input handling ��
 
     /**
-     * Press: hold to climb. A quick tap barely lifts; the longer it is held,
-     * the higher the bird goes, up to MAX_FLAP_RISE pixels from the press point.
+     * Press: in hold mode the bird climbs while held, up to MAX_FLAP_RISE pixels
+     * from the press point. In classic mode it is a single fixed impulse and the
+     * duration does not matter (the bird coasts upward after the tap).
      */
     startFlap() {
         if (!this.gameStarted || this.isPaused || this.gameOver || this.countdown > 0) return;
         this.awaitingFirstFlap = false;
-        this.flapHeld = true;
-        this.flapStartY = this.bird.y;
         Bird.flap(this.bird);
         this.sound.playFlap();
+        if (this.flapMode === MODE_HOLD) {
+            this.flapHeld = true;
+            this.flapStartY = this.bird.y;
+        }
     }
 
-    /** Release: cut the lift now, so the bird starts falling instead of coasting up. */
+    /** Release: hold mode cuts the lift; classic mode keeps the impulse. */
     stopFlap() {
         if (!this.flapHeld) return;
         this.flapHeld = false;
         Bird.stopRise(this.bird);
+    }
+
+    /** Switch between the hold-to-rise and classic impulse flap modes. */
+    toggleFlapMode() {
+        this.flapMode = this.flapMode === MODE_HOLD ? MODE_CLASSIC : MODE_HOLD;
+        this.repository.saveMode(this.flapMode);
+        this.hud.setFlapMode(this.flapMode);
+        this.flapHeld = false;
+        if (this.flapMode === MODE_HOLD) Bird.stopRise(this.bird);
     }
 
     /** One simulation step. `dt` is the elapsed seconds since the previous frame. */
@@ -249,7 +264,7 @@ class FlappyGame {
         if (this.awaitingFirstFlap || this.isPaused || this.gameOver || !this.gameStarted) return;
 
         let thrusting = false;
-        if (this.flapHeld) {
+        if (this.flapMode === MODE_HOLD && this.flapHeld) {
             if (this.flapStartY - this.bird.y >= MAX_FLAP_RISE) {
                 this.stopFlap();
             } else {
@@ -281,6 +296,10 @@ class FlappyGame {
     }
 
     onKey(key) {
+        if (key === 'm' || key === 'M') {
+            this.toggleFlapMode();
+            return;
+        }
         if (!this.gameStarted) {
             if (key === 'Enter') {
                 this.startGame();
@@ -310,6 +329,10 @@ class FlappyGame {
 
     onTogglePause() {
         this.togglePause();
+    }
+
+    onToggleMode() {
+        this.toggleFlapMode();
     }
 
     onRestart() {

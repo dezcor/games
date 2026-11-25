@@ -16,6 +16,8 @@ const InputPort = {
     onTogglePause() {},
     /** RESTART cap (or R). */
     onRestart() {},
+    /** MODE cap (or M): switch hold / classic flap. */
+    onToggleMode() {},
     /** Player name field changed. @param {string} name */
     setPlayerName(name) {},
 };

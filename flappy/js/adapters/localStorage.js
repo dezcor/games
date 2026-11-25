@@ -5,6 +5,7 @@
 const LocalStorageAdapter = {
     HIGHSCORES_KEY: 'flappy_highscores',
     NAME_KEY: 'flappy_player_name',
+    MODE_KEY: 'flappy_flap_mode',
 
     loadHighScores() {
         try {
@@ -34,5 +35,14 @@ const LocalStorageAdapter = {
 
     saveName(name) {
         localStorage.setItem(this.NAME_KEY, name);
+    },
+
+    loadMode() {
+        const mode = localStorage.getItem(this.MODE_KEY);
+        return mode === MODE_CLASSIC ? MODE_CLASSIC : MODE_HOLD;
+    },
+
+    saveMode(mode) {
+        localStorage.setItem(this.MODE_KEY, mode === MODE_CLASSIC ? MODE_CLASSIC : MODE_HOLD);
     },
 };

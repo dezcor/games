@@ -21,4 +21,6 @@ const HudPort = {
     setPlayerName(name) {},
     /** Toggle the North easter-egg theme. @param {boolean} on */
     setNorthTheme(on) {},
+    /** Reflect the active flap mode on the MODE cap. @param {string} mode 'hold' or 'classic' */
+    setFlapMode(mode) {},
 };

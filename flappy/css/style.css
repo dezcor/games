@@ -42,6 +42,14 @@
     --cap-ink: #2a1d04;
 }
 
+/* MODE cap switches from cyan (hold) to amber (classic). */
+[data-action="mode"][data-mode="classic"] {
+    --cap: #ffd166;
+    --cap-hi: #fff1cc;
+    --cap-lo: #8a6211;
+    --cap-ink: #2a1d04;
+}
+
 /* ── Base ── */
 body {
     margin: 0;

@@ -79,6 +79,17 @@ const DomHudAdapter = {
     setNorthTheme(on) {
         document.body.classList.toggle('north-theme', on);
     },
+
+    setFlapMode(mode) {
+        const btn = document.querySelector('[data-action="mode"]');
+        if (!btn) return;
+        const classic = mode === MODE_CLASSIC;
+        btn.dataset.mode = mode;
+        btn.title = classic ? 'Switch to hold-to-rise mode' : 'Switch to classic flap mode';
+        btn.setAttribute('aria-label', btn.title);
+        const label = btn.parentElement && btn.parentElement.querySelector('.arcade-label');
+        if (label) label.textContent = classic ? 'MODE · CLASSIC' : 'MODE · HOLD';
+    },
 };
 
 const DomControlsAdapter = {

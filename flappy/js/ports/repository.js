@@ -12,4 +12,8 @@ const RepositoryPort = {
     loadName() { return ''; },
     /** @param {string} name */
     saveName(name) {},
+    /** @returns {string} 'hold' or 'classic' (defaults to 'hold') */
+    loadMode() { return MODE_HOLD; },
+    /** @param {string} mode 'hold' or 'classic' */
+    saveMode(mode) {},
 };

@@ -106,6 +106,7 @@ Flappy clásico con pipes neon, bird glowing y tema synthwave.
 - Cuenta atrás de 3 segundos al empezar cada partida
 - Se puede jugar tocando o haciendo clic en el tablero
 - Mantener presionado el flap hace subir hasta un máximo de ~180px; soltar corta el vuelo y una pulsación corta cae enseguida
+- Dos modos de flap: **hold** (mantener para subir) y **classic** (impulso fijo); se alternan con el botón MODE o la tecla M y se recuerdan entre partidas
 - Después de la cuenta atrás el pájaro queda flotando hasta el primer flap
 - Scoring: 1 punto por pipe superado
 - Volumen SFX, BGM y mute persistentes
@@ -196,6 +197,7 @@ Una pequeña experiencia privada de preguntas. Las respuestas existen solo en me
 |-------|--------|
 | Espacio / FLAP | Mantener para subir (máx. ~180px); soltar corta el vuelo |
 | Toque / clic en el tablero | Flap (mantener para subir), empezar o reiniciar |
+| M / botón MODE | Alternar modo hold / clásico |
 | P / Escape | Pausa |
 | R | Reiniciar |
 | Enter | Empezar partida |

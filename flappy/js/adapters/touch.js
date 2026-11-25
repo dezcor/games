@@ -14,6 +14,10 @@ const TouchAdapter = {
                 onStart: () => input.onRestart(),
                 onEnd: null,
             },
+            mode: {
+                onStart: () => input.onToggleMode(),
+                onEnd: null,
+            },
         };
 
         document.querySelectorAll('.touch-btn[data-action]').forEach((btn) => {

@@ -58,9 +58,9 @@ const CanvasRendererAdapter = {
         this.drawGround(context, canvas, palette);
 
         if (game.countdown > 0) {
-            this.drawCountdown(context, canvas, Math.ceil(game.countdown), palette);
+            this.drawCountdown(context, canvas, Math.ceil(game.countdown), palette, game.flapMode);
         } else if (game.awaitingFirstFlap && !game.gameOver && !game.isPaused) {
-            this.drawReadyPrompt(context, canvas, palette);
+            this.drawReadyPrompt(context, canvas, palette, game.flapMode);
         }
     },
 
@@ -142,7 +142,7 @@ const CanvasRendererAdapter = {
         context.fillRect(0, canvas.height - 12, canvas.width, 2);
     },
 
-    drawCountdown(context, canvas, value, p) {
+    drawCountdown(context, canvas, value, p, mode) {
         const cx = canvas.width / 2;
         const cy = canvas.height * 0.36;
 
@@ -159,12 +159,12 @@ const CanvasRendererAdapter = {
         context.shadowBlur = 0;
         context.font = '600 15px "Chakra Petch", sans-serif';
         context.fillStyle = p.countSub;
-        context.fillText('GET READY · HOLD TO RISE', cx, cy + 62);
+        context.fillText(mode === MODE_CLASSIC ? 'GET READY · TAP TO FLAP' : 'GET READY · HOLD TO RISE', cx, cy + 62);
         context.restore();
     },
 
     /** Prompt shown after the countdown until the player's first flap. */
-    drawReadyPrompt(context, canvas, p) {
+    drawReadyPrompt(context, canvas, p, mode) {
         const cx = canvas.width / 2;
         const cy = canvas.height * 0.36;
 
@@ -181,7 +181,7 @@ const CanvasRendererAdapter = {
         context.shadowBlur = 0;
         context.font = '600 13px "Chakra Petch", sans-serif';
         context.fillStyle = p.countSub;
-        context.fillText('HOLD TO RISE', cx, cy + 34);
+        context.fillText(mode === MODE_CLASSIC ? 'TAP TO FLAP' : 'HOLD TO RISE', cx, cy + 34);
         context.restore();
     },
 };
