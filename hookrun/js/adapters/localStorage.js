@@ -6,9 +6,30 @@ const LocalStorageAdapter = {
     HIGHSCORES_KEY: 'hookrun_highscores',
     NAME_KEY: 'hookrun_player_name',
 
+    /** Values that could not be persisted; they last for this session. */
+    session: {},
+
+    read(key) {
+        if (key in this.session) return this.session[key];
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    },
+
+    write(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            delete this.session[key];
+        } catch (e) {
+            this.session[key] = value;
+        }
+    },
+
     loadHighScores() {
         try {
-            const data = localStorage.getItem(this.HIGHSCORES_KEY);
+            const data = this.read(this.HIGHSCORES_KEY);
             return data ? JSON.parse(data) : [];
         } catch (e) {
             return [];
@@ -25,14 +46,14 @@ const LocalStorageAdapter = {
         });
         highScores.sort((a, b) => b.score - a.score);
         const top5 = highScores.slice(0, 5);
-        localStorage.setItem(this.HIGHSCORES_KEY, JSON.stringify(top5));
+        this.write(this.HIGHSCORES_KEY, JSON.stringify(top5));
     },
 
     loadName() {
-        return localStorage.getItem(this.NAME_KEY) || '';
+        return this.read(this.NAME_KEY) || '';
     },
 
     saveName(name) {
-        localStorage.setItem(this.NAME_KEY, name);
+        this.write(this.NAME_KEY, name);
     },
 };

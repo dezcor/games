@@ -148,13 +148,15 @@ class HookrunGame {
         return false;
     }
 
-    /** Released the hold mid-hook (fly/latch/hoist): cancel — the hunter drops straight down. */
+    /** Released the hold mid-hook: cancel — the hunter drops straight down. */
     cancelHook() {
         const p = this.player;
-        if (p.phase === 'fly' || p.phase === 'latch' || p.phase === 'hoist') {
-            // Keep the obstacle so the player can re-hook it.
-            if (this.world.hookedObstacle) {
-                this.world.hookedObstacle.hooked = false;
+        if (p.phase === 'fly' || p.phase === 'latch' || p.phase === 'hoist' || p.phase === 'swing') {
+            // Keep an obstacle not yet crossed so the player can re-hook it;
+            // a crossed one stays committed and is removed on landing.
+            const ob = this.world.hookedObstacle;
+            if (ob && p.x <= ob.worldX - this.world.distance + ob.width) {
+                ob.hooked = false;
                 this.world.hookedObstacle = null;
             }
             Player.cancelHook(p);
@@ -181,6 +183,7 @@ class HookrunGame {
     }
 
     firePellet() {
+        if (!this.gameStarted || this.gameOver || this.isPaused || this.countdown > 0) return;
         if (this.player.phase !== 'ground' || this.pelletCooldown > 0) return;
         World.fire(this.world, this.player.x, GROUND_Y);
         this.pelletCooldown = PELLET_FIRE_COOLDOWN;
@@ -223,12 +226,10 @@ class HookrunGame {
     onHookStart() {
         if (!this.gameStarted) {
             this.startGame();
-            return;
-        }
-        if (this.gameOver) {
+        } else if (this.gameOver) {
             this.resetGame();
-            return;
         }
+        // Set after (re)starting, which clears it: a held control carries into the round.
         this.hookHeld = true;
         if (!this.isPaused && this.countdown <= 0) {
             this.tryHookTrigger();
@@ -332,13 +333,14 @@ class HookrunGame {
 
         const frozen = Player.isHooking(this.player);
         World.step(this.world, dt, this.random, frozen);
+        // Score first: a collision saves it as part of ending the round.
+        this.score = Math.floor(this.world.distance / DISTANCE_PER_POINT) + this.world.kills * SCORE_PER_KILL;
         this.checkCollisions();
 
         if (this.world.kills > killsBefore) {
             this.sound.playKill();
         }
 
-        this.score = Math.floor(this.world.distance / DISTANCE_PER_POINT) + this.world.kills * SCORE_PER_KILL;
         this.updateUI();
     }
 }

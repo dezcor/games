@@ -4,6 +4,8 @@ const HOOKRUN_SFX_MUTED = 'hookrun_sfx_muted';
 const HOOKRUN_BGM_VOLUME = 'hookrun_bgm_volume';
 const HOOKRUN_BGM_MUTED = 'hookrun_bgm_muted';
 
+const BGM_CHANNEL_GAIN = 0.7;
+
 function getStoredNumber(key, fallback) {
     try {
         const value = Number.parseFloat(localStorage.getItem(key));
@@ -31,16 +33,21 @@ function saveAudioSetting(key, value) {
 
 const SoundManager = {
     audioCtx: null,
-    masterGain: null,
+    sfxGain: null,
+    bgmGain: null,
     isMuted: false,
     volume: 0.7,
 
     ensureAudio() {
         if (!this.audioCtx) {
             this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            this.masterGain = this.audioCtx.createGain();
-            this.masterGain.gain.value = this.volume;
-            this.masterGain.connect(this.audioCtx.destination);
+            this.sfxGain = this.audioCtx.createGain();
+            this.sfxGain.gain.value = this.isMuted ? 0 : this.volume;
+            this.sfxGain.connect(this.audioCtx.destination);
+            // Music has its own channel: the effects mute and volume leave it alone.
+            this.bgmGain = this.audioCtx.createGain();
+            this.bgmGain.gain.value = BGM_CHANNEL_GAIN;
+            this.bgmGain.connect(this.audioCtx.destination);
         }
         if (this.audioCtx.state === 'suspended') {
             this.audioCtx.resume();
@@ -56,7 +63,7 @@ const SoundManager = {
         gain.gain.value = volume;
         gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
         osc.connect(gain);
-        gain.connect(this.masterGain);
+        gain.connect(this.sfxGain);
         osc.start(this.audioCtx.currentTime);
         osc.stop(this.audioCtx.currentTime + duration);
     },
@@ -71,7 +78,7 @@ const SoundManager = {
         gain.gain.value = volume;
         gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
         osc.connect(gain);
-        gain.connect(this.masterGain);
+        gain.connect(this.sfxGain);
         osc.start(this.audioCtx.currentTime);
         osc.stop(this.audioCtx.currentTime + duration);
     },
@@ -103,16 +110,16 @@ const SoundManager = {
 
     setVolume(value) {
         this.volume = Math.max(0, Math.min(1, value));
-        if (this.masterGain) {
-            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
+        if (this.sfxGain) {
+            this.sfxGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
         saveAudioSetting(HOOKRUN_SFX_VOLUME, this.volume);
     },
 
     toggleMute() {
         this.isMuted = !this.isMuted;
-        if (this.masterGain) {
-            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
+        if (this.sfxGain) {
+            this.sfxGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.audioCtx.currentTime);
         }
         saveAudioSetting(HOOKRUN_SFX_MUTED, this.isMuted);
     },
@@ -148,6 +155,7 @@ SoundManager.isMuted = getStoredBoolean(HOOKRUN_SFX_MUTED);
 const MusicPlayer = {
     isPlaying: false,
     schedulerTimer: null,
+    fadeTimer: null,
     currentStep: 0,
     nextNoteTime: 0,
     tempo: 96,
@@ -194,7 +202,7 @@ const MusicPlayer = {
 
     scheduleNote(step, time) {
         const ctx = SoundManager.audioCtx;
-        const master = SoundManager.masterGain;
+        const master = SoundManager.bgmGain;
         const beatDuration = 60 / this.tempo;
         const stepDuration = beatDuration / this.stepsPerBeat;
 
@@ -289,7 +297,14 @@ const MusicPlayer = {
         return this.bgmMuted;
     },
 
+    cancelFade() {
+        clearTimeout(this.fadeTimer);
+        this.fadeTimer = null;
+    },
+
     start() {
+        // A new round must not be silenced by the previous game over.
+        this.cancelFade();
         SoundManager.ensureAudio();
         const ctx = SoundManager.audioCtx;
         if (ctx.state === 'suspended') {
@@ -345,7 +360,8 @@ const MusicPlayer = {
     fadeOut(duration) {
         if (!this.isPlaying) return;
         duration = duration || 0.8;
-        setTimeout(() => this.stop(), duration * 1000);
+        this.cancelFade();
+        this.fadeTimer = setTimeout(() => this.stop(), duration * 1000);
     },
 
     toggleMute() {

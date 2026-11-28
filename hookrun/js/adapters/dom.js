@@ -116,11 +116,5 @@ const DomControlsAdapter = {
             if (e.cancelable) e.preventDefault();
             input.onShoot();
         }, { passive: false });
-
-        // Releasing anywhere (or losing focus) ends the hook hold.
-        window.addEventListener('mouseup', () => input.onHookEnd());
-        window.addEventListener('touchend', () => input.onHookEnd());
-        window.addEventListener('touchcancel', () => input.onHookEnd());
-        window.addEventListener('blur', () => input.onHookEnd());
     },
 };
