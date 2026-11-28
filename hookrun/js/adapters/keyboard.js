@@ -12,8 +12,8 @@ const KeyboardAdapter = {
         document.addEventListener('keydown', (e) => {
             // Typing the player name must not drive the game.
             if (isFrom(e, 'input[type="text"], textarea, [contenteditable="true"]')) return;
-            // A focused button handles Enter through its own click.
-            if (e.key === 'Enter' && isFrom(e, 'button')) return;
+            // A focused button handles Enter and Space through its own click.
+            if ((e.key === 'Enter' || e.code === 'Space') && isFrom(e, 'button')) return;
             if (e.code === 'ArrowUp' || e.code === 'KeyW') {
                 if (!e.repeat) {
                     e.preventDefault();

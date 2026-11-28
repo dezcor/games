@@ -26,7 +26,8 @@ const TouchAdapter = {
             if (!binding) return;
             this.bindButton(btn, binding.onStart, binding.onEnd);
             // Keyboard activation (detail 0); pointers are handled by bindButton.
-            if (btn.dataset.action === 'restart') {
+            // GANCHO is a hold control, so a click means nothing to it.
+            if (!binding.onEnd) {
                 btn.addEventListener('click', (e) => {
                     if (e.detail === 0) binding.onStart();
                 });
