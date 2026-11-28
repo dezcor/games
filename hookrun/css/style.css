@@ -1,0 +1,459 @@
+/* ═══════════════════════════════════════════════════════════════
+   Hook Run · Gothic night
+   Midnight navy sky, bone glow, rust and toxic green.
+   Stencil titles, hazard tape and a riveted steel bezel.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --bg: #05080f;
+    --ink: #e6e2d4;
+    --slate: #10172a;
+    --slate-dk: #0a0f1c;
+    --bone: #e6e2d4;
+    --rust: #b4582e;
+    --rust-hi: #e89470;
+    --toxic: #4ade80;
+    --toxic-hi: #d6ffc7;
+    --hazard: #ffd60a;
+    --hazard-ink: #14120a;
+    --label: #8d8378;
+    --deck: #101826;
+    --deck-edge: #1b2434;
+    --deck-lo: #05080f;
+    --bezel-hi: #9fb0c4;
+    --bezel-lo: #2b3948;
+    --focus: #ffd60a;
+    --label-font: 'Saira Stencil One', 'Chakra Petch', sans-serif;
+
+    --hook: #b4582e;
+    --hook-hi: #e89470;
+    --accent: #4ade80;
+
+    /* Responsive layout (shared/layout.css) */
+    --board-ar: 1.333;
+    --board-px: 28px;
+    --board-py: 34px;
+    --board-cap: 520px;
+    --slot-min: 300px;
+}
+
+/* Amber cap for the GANCHO button (shared/arcade.css has no .c-amber). */
+.c-amber {
+    --cap: #ffd60a;
+    --cap-hi: #fff6c0;
+    --cap-lo: #b07e0e;
+    --cap-ink: #14120a;
+}
+
+/* ── Base ── */
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 44px),
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(180, 88, 46, 0.14), transparent 70%),
+        var(--bg);
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Barrido ligero */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 4px);
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    padding: 14px 12px 24px;
+    text-align: center;
+    animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Menú ── */
+#menu-btn {
+    align-self: flex-start;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    font-family: var(--label-font);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--rust-hi);
+    text-decoration: none;
+    border: 1px solid var(--rust);
+    border-radius: 2px;
+    background: #0d1420;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+#menu-btn:hover {
+    color: var(--hazard);
+    border-color: var(--hazard);
+}
+
+#menu-btn:focus-visible {
+    outline: 2px solid var(--hazard);
+    outline-offset: 3px;
+}
+
+/* ── Marcadores ── */
+#top-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+#info-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 14px;
+    width: 100%;
+}
+
+#score,
+#best-score {
+    font-family: var(--label-font);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+#score {
+    color: var(--toxic);
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.45);
+}
+
+#best-score {
+    color: var(--label);
+}
+
+#best-score-value {
+    color: var(--bone);
+}
+
+/* ── Nombre ── */
+#name-input-container {
+    display: flex;
+    align-items: center;
+}
+
+#player-name {
+    width: 96px;
+    padding: 5px 8px;
+    font-family: var(--label-font);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: var(--ink);
+    background: #0d1420;
+    border: 1px solid var(--deck-edge);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.2s;
+}
+
+#player-name::placeholder {
+    color: #47556b;
+}
+
+#player-name:focus {
+    border-color: var(--rust);
+}
+
+/* ── Sonido ── */
+#sound-controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+#sound-controls .arcade-label {
+    font-size: 7px;
+}
+
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 64px;
+    height: 6px;
+    margin-top: 17px;
+    background: #0d1420;
+    border: 1px solid var(--deck-edge);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 14px;
+    border: 0;
+    border-radius: 1px;
+    background: var(--toxic);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+    cursor: pointer;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 10px;
+    height: 14px;
+    border: 0;
+    border-radius: 1px;
+    background: var(--toxic);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+    cursor: pointer;
+}
+
+/* ── Tablero: hierro remachado y cinta de peligro ── */
+#board-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    padding: 12px 12px 18px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #101826, #0a0f1c 62%, #05080f);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 0 0 1px #01040a,
+        0 18px 30px -16px rgba(0, 0, 0, 0.9);
+}
+
+#board-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 4px 4px, #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at calc(100% - 4px) 4px, #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at 4px calc(100% - 4px), #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px),
+        radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), #d6dde6 0 1.2px, #3b4553 2.2px, transparent 3px);
+    opacity: 0.8;
+}
+
+/* Franja de peligro justo bajo el campo de juego */
+#board-wrapper::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 7px;
+    pointer-events: none;
+    background: repeating-linear-gradient(-45deg, var(--hazard) 0 9px, #15120a 9px 18px);
+}
+
+#hookrun {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 2px solid #1b2434;
+    background-color: #05080f;
+    cursor: pointer;
+    box-shadow:
+        0 0 0 1px #000,
+        0 0 22px rgba(180, 88, 46, 0.14),
+        inset 0 0 40px rgba(0, 0, 0, 0.85);
+}
+
+/* ── Overlay ── */
+#pause-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    bottom: 18px;
+    left: 12px;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    border-radius: 4px;
+    background: rgba(5, 8, 15, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+#pause-overlay h1,
+#pause-overlay button,
+#high-scores-table {
+    pointer-events: auto;
+}
+
+#overlay-title {
+    margin: 0;
+    font-family: var(--label-font);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--bone);
+    text-shadow: 0 0 18px rgba(180, 88, 46, 0.55);
+}
+
+#start-btn {
+    margin-top: 6px;
+}
+
+/* ── Récords ── */
+#high-scores-table {
+    margin-top: 6px;
+    width: 90%;
+    max-width: 250px;
+}
+
+#high-scores-table h3 {
+    margin: 0 0 10px;
+    font-family: var(--label-font);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--hazard);
+}
+
+#high-scores-list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#high-scores-list td {
+    padding: 5px 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(180, 88, 46, 0.2);
+}
+
+.hs-rank {
+    width: 34px;
+    font-family: var(--label-font);
+    font-size: 12px;
+    color: var(--rust-hi);
+}
+
+.hs-name {
+    max-width: 96px;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--label);
+}
+
+.hs-score {
+    font-family: var(--label-font);
+    font-size: 11px;
+    text-align: right;
+    color: var(--bone);
+}
+
+.hs-date {
+    font-size: 11px;
+    color: #5d6675;
+}
+
+.hs-row-1 .hs-score { color: var(--hazard); }
+.hs-row-2 .hs-score { color: #d7dddd; }
+.hs-row-3 .hs-score { color: #d28a55; }
+
+/* ── Panel de control ── */
+#touch-controls {
+    justify-content: space-around;
+    max-width: 400px;
+}
+
+#touch-controls::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 8px;
+    border-radius: 24px 24px 0 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(-45deg, var(--hazard) 0 9px, #15120a 9px 18px);
+    opacity: 0.85;
+}
+
+#touch-controls .arcade-label {
+    font-size: 8px;
+}
+
+/* La palabra de disparo larga debe caber dentro del cap (no desbordar). */
+.cap[data-action="shoot"] {
+    font-size: 12px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+/* ── Puntos frágiles en pantallas pequeñas ── */
+@media (max-width: 500px) {
+    #score,
+    #best-score {
+        font-size: 11px;
+    }
+    #player-name {
+        width: 110px;
+    }
+    #overlay-title {
+        font-size: 18px;
+    }
+}
+
+@media (max-height: 600px) {
+    #top-ui {
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+    #overlay-title {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 500px) {
+    #game-container {
+        max-width: 560px;
+    }
+    #board-wrapper {
+        max-width: 540px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

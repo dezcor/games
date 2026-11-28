@@ -1,6 +1,6 @@
 # Games Hub
 
-Static HTML/JS/CSS games collection (Snake, Tetris, Arkanoid, Asteroids, Space Invaders, Minesweeper, El Gato, Una pregunta rara, Flappy). No build tools, no dependencies, no tests.
+Static HTML/JS/CSS games collection (Snake, Tetris, Arkanoid, Asteroids, Space Invaders, Minesweeper, El Gato, Una pregunta rara, Flappy, Hook Run). No build tools, no dependencies, no tests.
 
 ## Serve locally
 
@@ -14,7 +14,7 @@ npx serve .
 
 - `index.html` — games hub listing (links to all games)
 - `shared/arcade.css` — cabinet kit used by the games: round caps (`.cap`), joystick (`.joystick`), control deck (`.deck`), printed labels (`.arcade-key`), top bar (`.top-bar`) with the sound popover. Each game sets its palette and fonts as `:root` tokens.
-- `shared/layout.css` — responsive layout for the six arcade games, loaded AFTER each game's own stylesheet. The board lives in a `.board-slot` (a size container) and is sized with container units so it always fits. Three layouts: column (portrait), short landscape (stick left, board centre, buttons right; `.top-bar` and `.deck` dissolve with `display: contents`) and wide desktop (board plus a side column with HUD, `.key-help` keyboard legend and deck). Each game declares `--board-ar`, `--board-px`, `--board-py`, `--board-cap` and `--slot-min` in its `:root`; Minesweeper updates `--board-ar` from JS because its board ratio changes per difficulty.
+- `shared/layout.css` — responsive layout for the arcade games, loaded AFTER each game's own stylesheet. The board lives in a `.board-slot` (a size container) and is sized with container units so it always fits. Three layouts: column (portrait), short landscape (stick left, board centre, buttons right; `.top-bar` and `.deck` dissolve with `display: contents`) and wide desktop (board plus a side column with HUD, `.key-help` keyboard legend and deck). Each game declares `--board-ar`, `--board-px`, `--board-py`, `--board-cap` and `--slot-min` in its `:root`; Minesweeper updates `--board-ar` from JS because its board ratio changes per difficulty.
 - `shared/sound-menu.js` — toggles the sound popover (`#sound-controls`) opened by the `.sound-toggle` button.
 - `shared/key-press.js` — mirrors the keyboard on the on-screen controls: while a key listed in a control's `data-keys` (space-separated `KeyboardEvent.code` values) is held, the control gets the `pressed` class. Visual only; keep `data-keys` in sync with each game's keyboard adapter.
 - `snake/` — self-contained Snake game (shared files: `../shared/arcade.css`, `../shared/sound-menu.js`), hexagonal layout in `js/`
@@ -46,6 +46,11 @@ npx serve .
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 360×480 canvas
   - Pipes spawn every ~180 frames (~3 s at 60 Hz), gap ~110px, base speed 2.5 px/frame (increases with score). Simulation is delta-time based, with a 3 s countdown before each round; the bird then hovers until the first flap (hold to rise, release to fall).
+- `hookrun/` — Hook Run, hexagonal layout in `js/`
+  - Pure domain in `js/domain/` (`player.js` hook state machine, `world.js` obstacles/zombies/pellets/particles, `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer, DOM UI, keyboard, touch, sound, frame loop, repository, random); composition root in `js/game.js`
+  - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
+  - Board: 480×360 canvas
+  - Auto-run runner: walls and pits scroll in and are hooked over with ↑/W (hold) — the hunter swings like a pendulum, releasing at the obstacle gate — while zombies (route + pursuer) walk in and are dropped by Space-fired pellets; 3 s countdown, max 3 s hang, world freezes while the hook is engaged.
 - `space-invaders/` — Space Invaders with levels, hexagonal layout in `js/`
   - Pure domain in `js/domain/` (`invaders.js` state machine, `aliens.js`, `ufo.js`, `particles.js`, `highscores.js`; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM HUD, input, keyboard, touch, sound, frame loop, repository); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
@@ -66,13 +71,15 @@ npx serve .
 
 **Flappy:** Space / FLAP cap / tap or click on the board to flap. MODE cap or M switches between hold-to-rise and classic impulse modes (persisted in `flappy_flap_mode`). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
 
+**Hook Run:** Hold ↑/W (or the GANCHO cap) to hook — the hunter swings over the obstacle — release to let go early. Space / the DISPARAR cap fires a pellet (both directions, ~0.45 s cooldown); tapping the board also fires. P / Escape pause, R restart, Enter start.
+
 ## Audio
 
 All games use Web Audio API with synthesized oscillators (no audio files). `SoundManager` handles SFX, `MusicPlayer` handles BGM via scheduler. Each game has its own duplicated copy.
 
 Audio requires a user gesture to start (browser autoplay policy). All games call `SoundManager.ensureAudio()` on first sound play.
 
-Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for all 9 games.
+Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for all 10 games.
 
 ## localStorage keys
 
@@ -98,6 +105,9 @@ Volume (SFX + BGM) and mute states are persisted per game in `localStorage` for 
 - `flappy_player_name` — Flappy player name (string)
 - `flappy_flap_mode` — Flappy flap mode (`hold` / `classic`, defaults to `hold`)
 - `flappy_audio_volume` / `flappy_sfx_muted` / `flappy_bgm_volume` / `flappy_bgm_muted` — Flappy audio prefs
+- `hookrun_highscores` — Hook Run top 5 (JSON array)
+- `hookrun_player_name` — Hook Run player name (string)
+- `hookrun_audio_volume` / `hookrun_sfx_muted` / `hookrun_bgm_volume` / `hookrun_bgm_muted` — Hook Run audio prefs
 
 ## Easter egg
 
@@ -124,7 +134,7 @@ The 6 ship skins in Asteroids share a single white `ship.svg` and are tinted per
 
 ## Design system
 
-Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids, Minesweeper and Flappy use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
+Each game is an arcade cabinet with its own identity. Palette, fonts and board frame live in that game's stylesheet (`:root` tokens plus overrides). The physical parts come from `shared/arcade.css`: round caps with a barrel (`.cap` with `.c-*` colors, `.is-xl`/`.is-lg`/`.is-sm`, `.is-ring`, `.is-lit`), the metal bezel and printed label (`.arcade-key`), the joystick and the control deck (`.deck`). Snake, Tetris, Arkanoid, Space Invaders, Asteroids, Minesweeper, Flappy and Hook Run use it. El Gato loads it for its caps. Una pregunta rara has no arcade controls on purpose.
 
 Shared across games:
 - Sound controls (mute SFX, mute BGM, volume slider) in a popover opened by the ♪ button in the top bar (`shared/sound-menu.js`), with persisted settings
@@ -143,5 +153,6 @@ Per-game identity:
 - El Gato: chalkboard and wooden frame (Caveat + Nunito)
 - Una pregunta rara: midnight letter, serif type and ruled paper (Instrument Serif + Caveat)
 - Flappy: sunset synthwave (Chakra Petch + Inter), neon orange pipes and a glowing bird
+- Hook Run: gothic night (Saira Stencil One + Chakra Petch + Inter), bone moon and rust/toxic-green accents
 
 ## No tests, no CI, no linting, no formatting config
