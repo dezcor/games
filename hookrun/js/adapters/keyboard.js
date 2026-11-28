@@ -1,7 +1,7 @@
 /**
  * KeyboardAdapter — feeds keyboard input into the domain.
- * Hold ↑ / W (or GANCHO) to hook, Space to fire the pellet; flow keys (Enter, R, P, Escape)
- * go to onKey.
+ * Hold ↑ / W (or GANCHO) to hook, Space to jump, X to fire the pellet; flow keys
+ * (Enter, R, P, Escape) go to onKey.
  */
 const KeyboardAdapter = {
     attach(input) {
@@ -20,9 +20,12 @@ const KeyboardAdapter = {
                     input.onHookStart();
                 }
             }
+            if (e.code === 'KeyX' && !e.repeat) {
+                input.onShoot();
+            }
             if (e.code === 'Space' && !e.repeat) {
                 e.preventDefault();
-                input.onShoot();
+                input.onJump();
             }
             input.onKey(e.key);
         });

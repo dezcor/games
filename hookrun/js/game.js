@@ -6,6 +6,9 @@
 const soundPort = {
     playShoot: () => SoundManager.playShoot(),
     playHook: () => SoundManager.playHook(),
+    playJump: () => SoundManager.playJump(),
+    playPower: () => SoundManager.playPower(),
+    playShield: () => SoundManager.playShield(),
     playLand: () => SoundManager.playLand(),
     playKill: () => SoundManager.playKill(),
     playGameOver: () => SoundManager.playGameOver(),

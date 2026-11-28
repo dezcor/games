@@ -1,5 +1,5 @@
 /**
- * TouchAdapter — on-screen deck controls (GANCHO + DISPARAR + RESTART caps).
+ * TouchAdapter — on-screen deck controls (GANCHO + SALTAR + DISPARAR + RESTART caps).
  * Only elements matching .touch-btn[data-action] are game controls.
  * The ♪ and mute buttons carry .touch-btn for styling; preventing their touchstart
  * would break their click.
@@ -10,6 +10,10 @@ const TouchAdapter = {
             gancho: {
                 onStart: () => input.onHookStart(),
                 onEnd: () => input.onHookEnd(),
+            },
+            jump: {
+                onStart: () => input.onJump(),
+                onEnd: null,
             },
             shoot: {
                 onStart: () => input.onShoot(),

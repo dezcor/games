@@ -12,6 +12,8 @@ const World = {
             distance: 0,
             nextObstacleWorldX: OBSTACLE_FIRST_DISTANCE,
             nextZombieWorldX: ZOMBIE_FIRST_DISTANCE,
+            nextPowerWorldX: POWER_FIRST_DISTANCE,
+            powers: [],             // pickups, in world coordinates
             obstacles: [],
             zombies: [],
             pellets: [],
@@ -43,39 +45,41 @@ const World = {
         World.prune(world);
     },
 
+    /** Weighted pick among the table entries unlocked at this distance. */
+    pickKind(table, distance, random, allowed = () => true) {
+        const kinds = Object.keys(table).filter((kind) => distance >= table[kind].from && allowed(kind));
+        let roll = random.next() * kinds.reduce((sum, kind) => sum + table[kind].weight, 0);
+        for (const kind of kinds) {
+            roll -= table[kind].weight;
+            if (roll < 0) return kind;
+        }
+        return kinds[kinds.length - 1];
+    },
+
     /** Spawn obstacles ahead of the right edge of the screen. */
     spawnObstacles(world, random) {
         const horizon = world.distance + BOARD_WIDTH + 60;
         while (horizon >= world.nextObstacleWorldX) {
-            const isWall = random.next() < 0.55;
-            const width = isWall
-                ? WALL_MIN_WIDTH + random.next() * (WALL_MAX_WIDTH - WALL_MIN_WIDTH)
-                : PIT_MIN_WIDTH + random.next() * (PIT_MAX_WIDTH - PIT_MIN_WIDTH);
-            const height = isWall
-                ? WALL_MIN_HEIGHT + random.next() * (WALL_MAX_HEIGHT - WALL_MIN_HEIGHT)
-                : 0;
-            world.obstacles.push({
-                type: isWall ? 'wall' : 'pit',
-                worldX: world.nextObstacleWorldX,
-                width: width,
-                height: height,
-                hooked: false,
-            });
+            const kind = World.pickKind(OBSTACLE_TYPES, world.distance, random);
+            const type = OBSTACLE_TYPES[kind];
+            const width = type.minWidth + random.next() * (type.maxWidth - type.minWidth);
+            const height = type.minHeight + random.next() * (type.maxHeight - type.minHeight);
+            const worldX = world.nextObstacleWorldX;
+            world.obstacles.push({ type: kind, worldX: worldX, width: width, height: height, hooked: false });
+            if (kind === 'anchor') {
+                World.spawnHorde(world, worldX - world.distance, random);
+            }
             const spacing = OBSTACLE_MIN_SPACING + random.next() * (OBSTACLE_MAX_SPACING - OBSTACLE_MIN_SPACING);
-            world.nextObstacleWorldX = world.nextObstacleWorldX + width + spacing;
+            World.spawnPower(world, worldX + width + spacing / 2, random);
+            world.nextObstacleWorldX = worldX + width + spacing;
         }
     },
 
-    /** Weighted pick among the variants unlocked at this distance. */
-    pickZombieKind(distance, random, allowBrute) {
-        const kinds = Object.keys(ZOMBIE_TYPES).filter((kind) =>
-            distance >= ZOMBIE_TYPES[kind].from && (allowBrute || kind !== 'brute'));
-        let roll = random.next() * kinds.reduce((sum, kind) => sum + ZOMBIE_TYPES[kind].weight, 0);
-        for (const kind of kinds) {
-            roll -= ZOMBIE_TYPES[kind].weight;
-            if (roll < 0) return kind;
-        }
-        return kinds[kinds.length - 1];
+    /** Drops a pickup halfway to the next obstacle once enough road has passed. */
+    spawnPower(world, worldX, random) {
+        if (worldX < world.nextPowerWorldX) return;
+        world.powers.push({ kind: World.pickKind(POWER_TYPES, world.distance, random), worldX: worldX });
+        world.nextPowerWorldX = worldX + POWER_MIN_SPACING + random.next() * (POWER_MAX_SPACING - POWER_MIN_SPACING);
     },
 
     createZombie(kind, x, random) {
@@ -90,20 +94,34 @@ const World = {
         };
     },
 
-    /** Spawn packs from the right edge; packs grow with distance, one brute at most. */
+    /** A row of zombies starting at x, one brute at most. */
+    spawnPack(world, random, x, size, minGap, maxGap, leadExcluded = []) {
+        let hasBrute = false;
+        for (let i = 0; i < size; i++) {
+            const kind = World.pickKind(ZOMBIE_TYPES, world.distance, random, (candidate) =>
+                !(candidate === 'brute' && hasBrute) && !(i === 0 && leadExcluded.includes(candidate)));
+            hasBrute = hasBrute || kind === 'brute';
+            world.zombies.push(World.createZombie(kind, x, random));
+            x += minGap + random.next() * (maxGap - minGap);
+        }
+    },
+
+    /** The crowd under a free beam; ordinary packs hold off for a while. */
+    spawnHorde(world, beamX, random) {
+        const size = HORDE_MIN_SIZE + Math.floor(random.next() * (HORDE_MAX_SIZE - HORDE_MIN_SIZE + 1));
+        // A runner in front would reach the hunter before the beam does.
+        World.spawnPack(world, random, beamX + HORDE_LEAD, size, HORDE_MIN_GAP, HORDE_MAX_GAP, ['runner']);
+        world.nextZombieWorldX = Math.max(world.nextZombieWorldX, world.distance + HORDE_QUIET);
+    },
+
+    /** Spawn packs from the right edge; packs grow with distance. */
     spawnZombies(world, random) {
         if (world.distance + BOARD_WIDTH + 80 < world.nextZombieWorldX) return;
         const maxSize = Math.min(ZOMBIE_PACK_MAX,
             ZOMBIE_PACK_START + Math.floor(world.distance / ZOMBIE_PACK_GROWTH));
         const size = 1 + Math.floor(random.next() * maxSize);
-        let x = BOARD_WIDTH + 20 + random.next() * 40;
-        let hasBrute = false;
-        for (let i = 0; i < size; i++) {
-            const kind = World.pickZombieKind(world.distance, random, !hasBrute);
-            hasBrute = hasBrute || kind === 'brute';
-            world.zombies.push(World.createZombie(kind, x, random));
-            x += ZOMBIE_PACK_MIN_GAP + random.next() * (ZOMBIE_PACK_MAX_GAP - ZOMBIE_PACK_MIN_GAP);
-        }
+        const x = BOARD_WIDTH + 20 + random.next() * 40;
+        World.spawnPack(world, random, x, size, ZOMBIE_PACK_MIN_GAP, ZOMBIE_PACK_MAX_GAP);
         world.nextZombieWorldX += ZOMBIE_MIN_SPACING + random.next() * (ZOMBIE_MAX_SPACING - ZOMBIE_MIN_SPACING);
     },
 
@@ -118,9 +136,9 @@ const World = {
         }
     },
 
-    /** Fire one pellet forward; pellets travel in screen space. */
-    fire(world, x, y) {
-        world.pellets.push({ x: x, y: y - 22, vx: PELLET_SPEED, traveled: 0 });
+    /** Fire one pellet forward; pellets travel in screen space and stop after `hits` zombies. */
+    fire(world, x, y, hits = 1) {
+        world.pellets.push({ x: x, y: y - 22, vx: PELLET_SPEED, traveled: 0, hits: hits, struck: [] });
         return world.pellets;
     },
 
@@ -130,6 +148,13 @@ const World = {
         world.kills++;
         world.killScore += ZOMBIE_TYPES[z.kind].score;
         World.burstParticles(world, z.x, GROUND_Y - 20, random);
+    },
+
+    /** The bomb: every zombie on the road, up to just past the screen edge. */
+    clearZombies(world, random) {
+        for (let i = world.zombies.length - 1; i >= 0; i--) {
+            if (world.zombies[i].x <= BOARD_WIDTH + 30) World.killZombie(world, i, random);
+        }
     },
 
     /** A landing hunter crushes the zombies right around the landing spot. */
@@ -147,6 +172,7 @@ const World = {
         let target = -1;
         for (let j = 0; j < world.zombies.length; j++) {
             const z = world.zombies[j];
+            if (pellet.struck.includes(z)) continue;
             if (Math.abs(pellet.x - z.x) >= ZOMBIE_TYPES[z.kind].hitRadius) continue;
             if (target < 0 || z.x < world.zombies[target].x) target = j;
         }
@@ -167,8 +193,12 @@ const World = {
                 } else {
                     z.flash = ZOMBIE_HIT_FLASH;
                 }
-                world.pellets.splice(i, 1);
-                continue;
+                p.struck.push(z);
+                p.hits--;
+                if (p.hits <= 0) {
+                    world.pellets.splice(i, 1);
+                    continue;
+                }
             }
             if (p.traveled >= PELLET_RANGE || p.x > BOARD_WIDTH + 30) {
                 world.pellets.splice(i, 1);
@@ -205,5 +235,6 @@ const World = {
 
     prune(world) {
         world.obstacles = world.obstacles.filter((ob) => ob.worldX + ob.width - world.distance > -60);
+        world.powers = world.powers.filter((power) => power.worldX - world.distance > -60);
     },
 };

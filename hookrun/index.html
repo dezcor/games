@@ -61,9 +61,15 @@
                 <button class="touch-btn cap is-xl c-amber" data-action="gancho" data-keys="ArrowUp KeyW" title="Gancho (hold to swing)" aria-label="Gancho">GANCHO</button>
                 <span class="arcade-label">GANCHO · HOLD</span>
             </div>
-            <div class="arcade-key is-lg">
-                <button class="touch-btn cap c-red" data-action="shoot" data-keys="Space" title="Disparar" aria-label="Disparar">DISPARAR</button>
-                <span class="arcade-label">DISPARAR</span>
+            <div class="action-pair">
+                <div class="arcade-key">
+                    <button class="touch-btn cap c-green" data-action="jump" data-keys="Space" title="Saltar" aria-label="Saltar">SALTAR</button>
+                    <span class="arcade-label">SALTAR</span>
+                </div>
+                <div class="arcade-key is-lg">
+                    <button class="touch-btn cap c-red" data-action="shoot" data-keys="KeyX" title="Disparar" aria-label="Disparar">DISPARAR</button>
+                    <span class="arcade-label">DISPARAR</span>
+                </div>
             </div>
             <div class="arcade-key">
                 <button class="touch-btn cap is-sm c-yellow" data-action="restart" data-keys="KeyR" title="Restart" aria-label="Restart">↻</button>
@@ -72,7 +78,8 @@
         </div>
         <dl class="key-help" aria-label="Keyboard controls">
             <dt><kbd>↑</kbd></dt><dd>Hold · gancho</dd>
-            <dt><kbd>Space</kbd></dt><dd>Fire</dd>
+            <dt><kbd>Space</kbd></dt><dd>Jump</dd>
+            <dt><kbd>X</kbd></dt><dd>Fire</dd>
             <dt><kbd>Enter</kbd></dt><dd>Start</dd>
             <dt><kbd>P</kbd></dt><dd>Pause</dd>
             <dt><kbd>R</kbd></dt><dd>Restart</dd>
@@ -83,6 +90,7 @@
     <script src="js/constants.js"></script>
     <script src="js/domain/player.js"></script>
     <script src="js/domain/world.js"></script>
+    <script src="js/domain/powers.js"></script>
     <script src="js/domain/game.js"></script>
     <script src="js/ports/repository.js"></script>
     <script src="js/ports/clock.js"></script>

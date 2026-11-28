@@ -22,7 +22,11 @@ class HookrunGame {
         this.playerName = '';
         this.countdown = 0;
         this.hookHeld = false;
+        this.hookArmed = false;     // the current press has not thrown its hook yet
         this.pelletCooldown = 0;
+        this.powers = null;
+        this.invulnerable = 0;      // grace seconds after the shield breaks
+        this.notice = null;         // last pickup, shown for a moment
     }
 
     // ── Setup ──
@@ -47,7 +51,11 @@ class HookrunGame {
         this.gameStarted = false;
         this.countdown = 0;
         this.hookHeld = false;
+        this.hookArmed = false;
         this.pelletCooldown = 0;
+        this.powers = Powers.create();
+        this.invulnerable = 0;
+        this.notice = null;
         this.updateUI();
     }
 
@@ -70,6 +78,7 @@ class HookrunGame {
         this.gameOver = true;
         this.isPaused = true;
         this.hookHeld = false;
+        this.hookArmed = false;
 
         this.hud.setOverlayVisible(true);
         this.hud.setOverlayTitle('GAME OVER');
@@ -112,6 +121,7 @@ class HookrunGame {
         if (!this.gameStarted || this.gameOver || this.countdown > 0) return;
         this.isPaused = !this.isPaused;
         this.hookHeld = false;
+        this.hookArmed = false;
         this.hud.setOverlayVisible(this.isPaused);
         if (this.isPaused) {
             this.hud.setOverlayTitle('PAUSED');
@@ -131,13 +141,16 @@ class HookrunGame {
 
     // ── Hook mechanics ──
 
-    /** Finds the nearest unhooked obstacle in the trigger window and hooks it. */
+    /** Throws this press's hook at the first beam inside its trigger window. */
     tryHookTrigger() {
-        if (this.player.phase !== 'ground') return false;
+        if (Player.isHooking(this.player)) return false;
         for (const ob of this.world.obstacles) {
-            if (ob.hooked) continue;
+            if (ob.hooked || !OBSTACLE_TYPES[ob.type].hookable) continue;
             const sx = ob.worldX - this.world.distance;
-            if (sx >= HOOK_TRIGGER_MIN && sx <= HOOK_TRIGGER_MAX) {
+            const min = ob.type === 'anchor' ? ANCHOR_TRIGGER_MIN : HOOK_TRIGGER_MIN;
+            if (sx >= min && sx <= HOOK_TRIGGER_MAX) {
+                // One hook per press: release and press again for the next one.
+                this.hookArmed = false;
                 ob.hooked = true;
                 this.world.hookedObstacle = ob;
                 Player.startHook(this.player, sx + ob.width / 2);
@@ -175,8 +188,9 @@ class HookrunGame {
     firePellet() {
         if (!this.gameStarted || this.gameOver || this.isPaused || this.countdown > 0) return;
         if (this.player.phase !== 'ground' || this.pelletCooldown > 0) return;
-        World.fire(this.world, this.player.x, GROUND_Y);
-        this.pelletCooldown = PELLET_FIRE_COOLDOWN;
+        const hits = Powers.isActive(this.powers, 'pierce') ? PIERCE_HITS : 1;
+        World.fire(this.world, this.player.x, GROUND_Y, hits);
+        this.pelletCooldown = Powers.isActive(this.powers, 'rapid') ? RAPID_FIRE_COOLDOWN : PELLET_FIRE_COOLDOWN;
         this.sound.playShoot();
     }
 
@@ -189,28 +203,64 @@ class HookrunGame {
         this.sound.playLand();
     }
 
+    /** Picks up every power-up the hunter's body touches. */
+    collectPowers() {
+        const p = this.player;
+        for (let i = this.world.powers.length - 1; i >= 0; i--) {
+            const power = this.world.powers[i];
+            const x = power.worldX - this.world.distance;
+            if (Math.abs(x - p.x) >= PLAYER_HALF_WIDTH + POWER_RADIUS) continue;
+            if (p.feetY <= POWER_Y - POWER_RADIUS || p.feetY - PLAYER_BODY_HEIGHT >= POWER_Y + POWER_RADIUS) continue;
+            this.world.powers.splice(i, 1);
+            Powers.grant(this.powers, power.kind);
+            if (power.kind === 'bomb') World.clearZombies(this.world, this.random);
+            this.notice = { kind: power.kind, time: POWER_NOTICE_TIME };
+            this.sound.playPower();
+        }
+    }
+
+    /** A hit: the shield takes it if there is one, otherwise the run ends. @returns {boolean} survived */
+    absorbHit() {
+        if (!Powers.useShield(this.powers)) {
+            this.handleGameOver();
+            return false;
+        }
+        this.invulnerable = SHIELD_GRACE;
+        this.sound.playShield();
+        return true;
+    }
+
     checkCollisions() {
+        if (this.invulnerable > 0) return;
         const p = this.player;
 
-        // Obstacles are solid in every phase: the hook has to lift the hunter clear.
+        // Obstacles are solid in every phase: the hook or the jump has to clear them.
         for (const ob of this.world.obstacles) {
+            if (ob.type === 'anchor') continue; // just a beam over open road
             const sx = ob.worldX - this.world.distance;
-            const hit = ob.type === 'wall'
-                ? p.x + PLAYER_HALF_WIDTH > sx && p.x - PLAYER_HALF_WIDTH < sx + ob.width
-                    && p.feetY > GROUND_Y - ob.height
-                : p.x > sx && p.x < sx + ob.width && p.feetY >= GROUND_Y;
+            let hit;
+            if (ob.type === 'pit') {
+                hit = p.x > sx && p.x < sx + ob.width && p.feetY >= GROUND_Y;
+            } else {
+                const inset = ob.type === 'wall' ? 0 : TRAP_INSET;
+                hit = p.x + PLAYER_HALF_WIDTH > sx + inset
+                    && p.x - PLAYER_HALF_WIDTH < sx + ob.width - inset
+                    && p.feetY > GROUND_Y - ob.height;
+            }
             if (hit) {
-                this.handleGameOver();
+                this.absorbHit();
                 return;
             }
         }
 
         // Zombie body contact; a hunter dropping from the rope lands on top of them.
         if (p.phase === 'fall' && p.fallHeight >= STOMP_MIN_HEIGHT) return;
-        for (const z of this.world.zombies) {
+        for (let i = 0; i < this.world.zombies.length; i++) {
+            const z = this.world.zombies[i];
             const type = ZOMBIE_TYPES[z.kind];
             if (Math.abs(z.x - p.x) < type.contact && p.feetY > GROUND_Y - type.height) {
-                this.handleGameOver();
+                // A shield also knocks out the zombie that hit it.
+                if (this.absorbHit()) World.killZombie(this.world, i, this.random);
                 return;
             }
         }
@@ -219,20 +269,23 @@ class HookrunGame {
     // ── Input handling ──
 
     onHookStart() {
+        const newPress = !this.hookHeld;
         if (!this.gameStarted) {
             this.startGame();
         } else if (this.gameOver) {
             this.resetGame();
         }
-        // Set after (re)starting, which clears it: a held control carries into the round.
+        // Set after (re)starting, which clears them: a held control carries into the round.
         this.hookHeld = true;
-        if (!this.isPaused && this.countdown <= 0) {
+        if (newPress) this.hookArmed = true;
+        if (this.hookArmed && !this.isPaused && this.countdown <= 0) {
             this.tryHookTrigger();
         }
     }
 
     onHookEnd() {
         this.hookHeld = false;
+        this.hookArmed = false;
         this.cancelHook();
     }
 
@@ -246,6 +299,23 @@ class HookrunGame {
             return;
         }
         this.firePellet();
+    }
+
+    onJump() {
+        if (!this.gameStarted) {
+            this.startGame();
+            return;
+        }
+        if (this.gameOver) {
+            this.resetGame();
+            return;
+        }
+        if (this.isPaused || this.countdown > 0) return;
+        const p = this.player;
+        const doubleJump = p.phase === 'jump' && !p.airJumpUsed && Powers.isActive(this.powers, 'doubleJump');
+        if (p.phase !== 'ground' && !doubleJump) return;
+        Player.jump(p);
+        this.sound.playJump();
     }
 
     onKey(key) {
@@ -308,16 +378,23 @@ class HookrunGame {
 
         if (this.isPaused || this.gameOver || !this.gameStarted) return;
 
-        const wasHooking = Player.isHooking(this.player);
         const killsBefore = this.world.kills;
 
-        // Hold triggers fire asynchronously: while held, try each frame.
-        if (this.hookHeld) {
+        // A press made early waits, while held, for a beam to come into reach.
+        if (this.hookArmed) {
             this.tryHookTrigger();
         }
 
         if (this.pelletCooldown > 0) this.pelletCooldown = Math.max(0, this.pelletCooldown - dt);
+        if (this.invulnerable > 0) this.invulnerable = Math.max(0, this.invulnerable - dt);
+        if (this.notice) {
+            this.notice.time -= dt;
+            if (this.notice.time <= 0) this.notice = null;
+        }
+        Powers.step(this.powers, dt);
 
+        const wasHooking = Player.isHooking(this.player);
+        const wasAirborne = this.player.phase !== 'ground';
         Player.step(this.player, dt, this.hookGateX());
         World.step(this.world, dt, this.random);
 
@@ -327,9 +404,12 @@ class HookrunGame {
             this.player.anchorX = hooked.worldX - this.world.distance + hooked.width / 2;
         }
 
-        if (wasHooking && !Player.isHooking(this.player)) {
-            this.land();
+        if (wasAirborne && this.player.phase === 'ground') {
+            if (wasHooking) this.land();
+            else this.sound.playLand();
         }
+
+        this.collectPowers();
 
         // Score first: a collision saves it as part of ending the round.
         this.score = Math.floor(this.world.distance / DISTANCE_PER_POINT) + this.world.killScore;

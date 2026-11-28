@@ -6,6 +6,7 @@
  * stops: hooking lifts the hunter, who hangs from the obstacle's plank while it
  * scrolls underneath, then drops once it is behind.
  *
+ * Jump: ground → jump → ground. The hook can be thrown from the ground or mid-jump.
  * Hook phases:
  *   fly → latch → hoist → swing → fall → ground
  * The hoist lifts the hunter straight up at PLAYER_X; during the swing the plank
@@ -24,14 +25,26 @@ const Player = {
             anchorX: 0,             // plank x on screen (follows the obstacle)
             theta: 0,               // body tilt toward the plank (rad)
             fallVY: 0,              // fall vertical velocity (px/s, positive down)
+            jumpVY: 0,              // jump vertical velocity (px/s, positive down)
+            airJumpUsed: false,     // the double jump of the current flight is spent
+            liftFrom: GROUND_Y,     // feet height where the hoist starts
             fallHeight: 0,          // height above ground where the last fall began
             runPhase: 0,
         };
     },
 
+    /** Leave the ground, or jump again in mid-air (double jump). */
+    jump(player) {
+        player.airJumpUsed = player.phase === 'jump';
+        player.phase = 'jump';
+        player.phaseTime = 0;
+        player.jumpVY = -JUMP_VELOCITY;
+    },
+
     /** Throw the hook at the plank. */
     startHook(player, anchorX) {
         player.anchorX = anchorX;
+        player.liftFrom = player.feetY;
         player.holdTime = 0;
         player.theta = 0;
         player.phase = 'fly';
@@ -54,13 +67,23 @@ const Player = {
     /** One physics step. dt in seconds. gateX is the plank-side release line. */
     step(player, dt, gateX) {
         player.phaseTime += dt;
-        if (player.phase !== 'ground' && player.phase !== 'fall') player.holdTime += dt;
+        if (Player.isHooking(player) && player.phase !== 'fall') player.holdTime += dt;
 
         switch (player.phase) {
             case 'ground': {
                 player.x = PLAYER_X;
                 player.feetY = GROUND_Y;
                 player.runPhase += dt * 8;
+                break;
+            }
+            case 'jump': {
+                player.feetY += player.jumpVY * dt + 0.5 * JUMP_GRAVITY * dt * dt;
+                player.jumpVY += JUMP_GRAVITY * dt;
+                if (player.feetY >= GROUND_Y) {
+                    player.feetY = GROUND_Y;
+                    player.phase = 'ground';
+                    player.phaseTime = 0;
+                }
                 break;
             }
             case 'fly': {
@@ -81,7 +104,7 @@ const Player = {
                 const progress = Math.min(1, player.phaseTime / HOOK_HOIST_TIME);
                 // Ease-out lift: fast off the ground so the obstacle is cleared early.
                 const eased = 1 - (1 - progress) * (1 - progress);
-                player.feetY = GROUND_Y + (HOIST_END_FEET_Y - GROUND_Y) * eased;
+                player.feetY = player.liftFrom + (HOIST_END_FEET_Y - player.liftFrom) * eased;
                 player.theta = Player.ropeTilt(player) * progress;
                 if (progress >= 1) {
                     player.phase = 'swing';
@@ -113,7 +136,7 @@ const Player = {
                 break;
             }
         }
-        if (player.holdTime >= HOOK_MAX_HANG && player.phase !== 'fall' && player.phase !== 'ground') {
+        if (Player.isHooking(player) && player.phase !== 'fall' && player.holdTime >= HOOK_MAX_HANG) {
             // Safety net: never hang longer than the max hang.
             Player.release(player);
         }
@@ -122,6 +145,6 @@ const Player = {
 
     /** @returns {boolean} true while the hook is engaged (fly..fall) */
     isHooking(player) {
-        return player.phase !== 'ground';
+        return player.phase !== 'ground' && player.phase !== 'jump';
     },
 };

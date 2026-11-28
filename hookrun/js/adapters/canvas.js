@@ -58,9 +58,12 @@ const CanvasRendererAdapter = {
         this.drawFog(context, canvas);
         this.drawGround(context, canvas, game.world, game.world.distance);
         this.drawWalls(context, canvas, game.world, game.world.distance);
+        this.drawTraps(context, canvas, game.world, game.world.distance);
         this.drawPlanks(context, canvas, game.world, game.world.distance);
+        this.drawPowers(context, game.world);
         this.drawZombies(context, game.world);
         this.drawHunter(context, game);
+        this.drawShield(context, game);
         this.drawPellets(context, game.world);
         this.drawParticles(context, game.world);
 
@@ -69,6 +72,98 @@ const CanvasRendererAdapter = {
         } else if (!game.gameOver && !game.isPaused && game.gameStarted) {
             this.drawVignette(context, canvas);
         }
+        if (game.gameStarted && !game.gameOver) {
+            this.drawPowerHud(context, canvas, game);
+        }
+    },
+
+    // ── Power-ups ──
+
+    powerStyles: {
+        rapid: { color: '#ffd60a', icon: '»' },
+        doubleJump: { color: '#4ade80', icon: '⇈' },
+        shield: { color: '#5ee7ff', icon: '◆' },
+        pierce: { color: '#ff9f43', icon: '➤' },
+        bomb: { color: '#ff5e5e', icon: '✸' },
+    },
+
+    drawPowers(context, world) {
+        const t = performance.now() * 0.001;
+        for (const power of world.powers) {
+            const x = power.worldX - world.distance;
+            if (x < -20 || x > BOARD_WIDTH + 20) continue;
+            const style = this.powerStyles[power.kind];
+            const y = POWER_Y + Math.sin(t * 4 + power.worldX) * 2;
+            context.save();
+            context.shadowColor = style.color;
+            context.shadowBlur = 14;
+            context.fillStyle = '#0a1220';
+            context.strokeStyle = style.color;
+            context.lineWidth = 2.5;
+            context.beginPath();
+            context.arc(x, y, POWER_RADIUS, 0, Math.PI * 2);
+            context.fill();
+            context.stroke();
+            context.shadowBlur = 0;
+            context.fillStyle = style.color;
+            context.font = '700 15px "Chakra Petch", "Inter", sans-serif';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(style.icon, x, y + 1);
+            context.restore();
+        }
+    },
+
+    /** Bubble around the hunter: steady with a shield, blinking while it breaks. */
+    drawShield(context, game) {
+        const blinking = game.invulnerable > 0 && Math.floor(game.invulnerable * 10) % 2 === 0;
+        if (!game.powers.shield && !blinking) return;
+        context.save();
+        context.shadowColor = '#5ee7ff';
+        context.shadowBlur = 12;
+        context.strokeStyle = 'rgba(94, 231, 255, 0.85)';
+        context.fillStyle = 'rgba(94, 231, 255, 0.1)';
+        context.lineWidth = 2;
+        context.beginPath();
+        context.arc(game.player.x + 2, game.player.feetY - 19, 26, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.restore();
+    },
+
+    /** Active powers with their seconds left, plus the name of the last pickup. */
+    drawPowerHud(context, canvas, game) {
+        context.save();
+        context.textBaseline = 'middle';
+        context.font = '700 11px "Chakra Petch", "Inter", sans-serif';
+        context.textAlign = 'left';
+
+        let row = 0;
+        for (const kind of Object.keys(POWER_TYPES)) {
+            if (!Powers.isActive(game.powers, kind)) continue;
+            const type = POWER_TYPES[kind];
+            const style = this.powerStyles[kind];
+            const left = game.powers.timers[kind];
+            const text = `${style.icon} ${type.label}${left ? ` ${Math.ceil(left)}s` : ''}`;
+            const y = 16 + row * 18;
+            context.fillStyle = 'rgba(5, 8, 15, 0.7)';
+            context.fillRect(8, y - 8, 118, 16);
+            context.fillStyle = style.color;
+            context.fillText(text, 13, y + 1);
+            if (left) {
+                context.fillRect(8, y + 6, 118 * (left / type.duration), 2);
+            }
+            row++;
+        }
+
+        if (game.notice) {
+            context.textAlign = 'center';
+            context.font = '700 22px "Saira Stencil One", "Arial Narrow", sans-serif';
+            context.globalAlpha = Math.min(1, game.notice.time * 2);
+            context.fillStyle = this.powerStyles[game.notice.kind].color;
+            context.fillText(`¡${POWER_TYPES[game.notice.kind].label}!`, canvas.width / 2, canvas.height * 0.3);
+        }
+        context.restore();
     },
 
     // ── Background ──
@@ -254,15 +349,18 @@ const CanvasRendererAdapter = {
 
     drawPlanks(context, canvas, world, distance) {
         for (const ob of world.obstacles) {
+            if (!OBSTACLE_TYPES[ob.type].hookable) continue;
             const sx = ob.worldX - distance;
-            if (sx + ob.width < -10 || sx > canvas.width + 10) continue;
+            if (sx + ob.width < -20 || sx > canvas.width + 20) continue;
+            // Free beams glow green so they read as a way over the crowd.
+            const free = ob.type === 'anchor';
             const cx = sx + ob.width / 2;
             const plankW = Math.max(64, ob.width + 24);
 
             // Beam
-            context.fillStyle = '#223048';
+            context.fillStyle = free ? '#1f5a39' : '#223048';
             context.fillRect(cx - plankW / 2, PLANK_Y - 5, plankW, 8);
-            context.fillStyle = '#31456b';
+            context.fillStyle = free ? '#4ade80' : '#31456b';
             context.fillRect(cx - plankW / 2, PLANK_Y - 6, plankW, 2);
 
             // Rivets
@@ -274,10 +372,108 @@ const CanvasRendererAdapter = {
             }
 
             // Anchor ring below the center
-            context.strokeStyle = '#d8d2c4';
+            context.strokeStyle = free ? '#d6ffc7' : '#d8d2c4';
             context.lineWidth = 2;
+            context.save();
+            if (free) {
+                context.shadowColor = '#4ade80';
+                context.shadowBlur = 10;
+            }
             context.beginPath();
-            context.arc(cx, PLANK_Y + 8, 3.5, 0, Math.PI * 2);
+            context.arc(cx, PLANK_Y + 8, free ? 5 : 3.5, 0, Math.PI * 2);
+            context.stroke();
+            context.restore();
+        }
+    },
+
+    // ── Traps (jump over them) ──
+
+    drawTraps(context, canvas, world, distance) {
+        const t = performance.now() * 0.001;
+        for (const ob of world.obstacles) {
+            if (OBSTACLE_TYPES[ob.type].hookable) continue;
+            const sx = ob.worldX - distance;
+            if (sx + ob.width < -10 || sx > canvas.width + 10) continue;
+            context.save();
+            context.translate(sx, GROUND_Y);
+            if (ob.type === 'fire') this.drawFire(context, ob.width, ob.height, t);
+            else if (ob.type === 'spikes') this.drawSpikes(context, ob.width, ob.height);
+            else this.drawElectricFence(context, ob.width, ob.height, t);
+            context.restore();
+        }
+    },
+
+    /** Flickering flames over a bed of logs; drawn from the ground up. */
+    drawFire(context, width, height, t) {
+        context.shadowColor = '#ff7a1a';
+        context.shadowBlur = 14;
+        const layers = [
+            { color: '#e2431e', scale: 1, tongues: 4 },
+            { color: '#ff9f1c', scale: 0.72, tongues: 3 },
+            { color: '#ffe66d', scale: 0.45, tongues: 2 },
+        ];
+        layers.forEach((layer, n) => {
+            const step = width / layer.tongues;
+            context.fillStyle = layer.color;
+            context.beginPath();
+            context.moveTo(0, 0);
+            for (let i = 0; i < layer.tongues; i++) {
+                const flicker = 0.82 + 0.18 * Math.sin(t * 13 + i * 2.1 + n);
+                context.lineTo(step * (i + 0.5) + Math.sin(t * 9 + i + n) * 3, -height * layer.scale * flicker);
+                context.lineTo(step * (i + 1), -height * layer.scale * 0.28);
+            }
+            context.lineTo(width, 0);
+            context.closePath();
+            context.fill();
+        });
+        context.shadowBlur = 0;
+        context.fillStyle = '#4a2b18';
+        context.fillRect(-2, -4, width + 4, 4);
+    },
+
+    /** Spiked fence: two rails and sharp pickets. */
+    drawSpikes(context, width, height) {
+        context.fillStyle = '#6d7787';
+        context.fillRect(0, -height * 0.55, width, 3);
+        context.fillRect(0, -height * 0.2, width, 3);
+        const count = Math.max(3, Math.round(width / 9));
+        const step = width / count;
+        for (let i = 0; i < count; i++) {
+            const x = step * i + step * 0.5;
+            context.fillStyle = '#9aa5b5';
+            context.fillRect(x - 1.5, -height + 9, 3, height - 9);
+            context.fillStyle = '#e6ebf2';
+            context.beginPath();
+            context.moveTo(x - 4, -height + 10);
+            context.lineTo(x, -height);
+            context.lineTo(x + 4, -height + 10);
+            context.closePath();
+            context.fill();
+        }
+    },
+
+    /** Two posts with live arcs between them. */
+    drawElectricFence(context, width, height, t) {
+        context.fillStyle = '#5b6475';
+        context.fillRect(0, -height, 4, height);
+        context.fillRect(width - 4, -height, 4, height);
+        context.fillStyle = '#ffd60a';
+        context.fillRect(-1, -height, 6, 5);
+        context.fillRect(width - 5, -height, 6, 5);
+
+        context.shadowColor = '#5ee7ff';
+        context.shadowBlur = 10;
+        context.strokeStyle = '#b8f4ff';
+        context.lineWidth = 1.6;
+        for (let wire = 1; wire <= 3; wire++) {
+            const y = -height * (wire / 3.4);
+            context.beginPath();
+            context.moveTo(3, y);
+            for (let i = 1; i < 4; i++) {
+                const jitter = Math.sin(t * 31 + wire * 5 + i * 7) * 4;
+                context.lineTo(3 + ((width - 6) * i) / 4, y + jitter);
+            }
+            context.lineTo(width - 3, y);
             context.stroke();
         }
     },
@@ -306,7 +502,7 @@ const CanvasRendererAdapter = {
             if (type.hp > 1) {
                 for (let i = 0; i < type.hp; i++) {
                     context.fillStyle = i < z.hp ? '#ff5e5e' : '#3a3f52';
-                    context.fillRect(z.x - type.hp * 4 + i * 8, GROUND_Y - type.height - 8, 6, 4);
+                    context.fillRect(z.x - type.hp * 4 + i * 8, GROUND_Y - type.height - 18, 6, 4);
                 }
             }
         }
@@ -401,7 +597,8 @@ const CanvasRendererAdapter = {
         context.rotate(player.theta);
 
         const swinging = player.phase === 'swing' || player.phase === 'hoist';
-        const running = !swinging && player.phase !== 'fall';
+        const airborne = player.phase === 'jump' || player.phase === 'fall';
+        const running = !swinging && !airborne;
         const legSwing = running ? Math.sin(player.runPhase) * 7 : 0;
         const bodyBob = running ? bob : (swinging ? Math.sin(game.world.distance * 0.02) * 2 : 0);
 
@@ -416,7 +613,7 @@ const CanvasRendererAdapter = {
             context.lineTo(-3, 0);
             context.moveTo(0, -16);
             context.lineTo(3, -2);
-        } else if (player.phase === 'fall') {
+        } else if (airborne) {
             context.moveTo(0, -16);
             context.lineTo(-7, -2);
             context.moveTo(0, -16);
@@ -533,10 +730,11 @@ const CanvasRendererAdapter = {
     drawPellets(context, world) {
         for (const p of world.pellets) {
             const dir = p.vx > 0 ? 1 : -1;
+            const color = p.hits > 1 || p.struck.length > 0 ? '#ff9f43' : '#ffd60a';
             context.save();
-            context.shadowColor = '#ffd60a';
+            context.shadowColor = color;
             context.shadowBlur = 8;
-            context.strokeStyle = '#ffd60a';
+            context.strokeStyle = color;
             context.lineWidth = 2.5;
             context.beginPath();
             context.moveTo(p.x - dir * PELLET_HALF_LENGTH * 2, p.y);
@@ -577,7 +775,7 @@ const CanvasRendererAdapter = {
         context.shadowBlur = 0;
         context.font = '600 13px "Chakra Petch", "Inter", sans-serif';
         context.fillStyle = 'rgba(230, 226, 212, 0.85)';
-        context.fillText('HOLD GANCHO · SWING OVER THE WALL', cx, cy + 58);
+        context.fillText('PRESS GANCHO PER BEAM · JUMP THE TRAPS', cx, cy + 58);
         context.restore();
     },
 
