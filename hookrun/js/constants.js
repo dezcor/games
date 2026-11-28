@@ -29,37 +29,48 @@ const PIT_MAX_WIDTH = 88;
 const PLANK_Y = 60;
 
 // Hook
-const HOOK_FLY_TIME = 0.16;
-const HOOK_LATCH_TIME = 0.1;
+const HOOK_FLY_TIME = 0.08;
+const HOOK_LATCH_TIME = 0.02;
 const HOOK_HOIST_TIME = 0.22;
-const SWING_OMEGA0 = 3.8;
-const SWING_DAMPING = 0.6;
-const SWING_GRAVITY = 1100;
 const HOOK_MAX_HANG = 3.0;
-const HOOK_TRIGGER_MIN = 160; // obstacle left edge window (x) where the hook fires
-const HOOK_TRIGGER_MAX = 220;
+// Obstacle left edge window (x) where the hook fires. The minimum still leaves
+// time to rise above the tallest wall at top speed.
+const HOOK_TRIGGER_MIN = 205;
+const HOOK_TRIGGER_MAX = 270;
 const HOIST_END_FEET_Y = 130;  // figure feet at the end of the hoist (swing starts here)
+const SWING_DIP = 22;          // how far the swing sags under the plank (px)
+const SWING_BLEND_TIME = 0.25;
+const SWING_TILT = 0.4;        // body tilt per radian of rope angle
 const GATE_MARGIN = 15;
 
-// Zombies
-const ZOMBIE_FIRST_DISTANCE = 1300;
-const ZOMBIE_MIN_SPACING = 900;
-const ZOMBIE_MAX_SPACING = 1900;
-const ZOMBIE_MIN_SPEED = 16;  // relative walk speed (px/s, slower than the auto-run)
-const ZOMBIE_MAX_SPEED = 34;
-const PURSUER_FIRST_DISTANCE = 17000;
-const PURSUER_MIN_SPACING = 12000;
-const PURSUER_MAX_SPACING = 23000;
-const PURSUER_SPEED = 68;     // screen-space walk speed toward the player
+// Zombies. Speeds are relative to the auto-run (px/s); `from` is the distance
+// at which a variant starts to appear.
+const ZOMBIE_TYPES = {
+    walker: { hp: 1, minSpeed: 16, maxSpeed: 34, height: 38, hitRadius: 18, contact: 22, score: 10, weight: 5, from: 0 },
+    crawler: { hp: 1, minSpeed: 30, maxSpeed: 55, height: 24, hitRadius: 18, contact: 22, score: 15, weight: 2.5, from: 1200 },
+    runner: { hp: 1, minSpeed: 75, maxSpeed: 105, height: 38, hitRadius: 18, contact: 20, score: 15, weight: 3, from: 1800 },
+    brute: { hp: 3, minSpeed: 0, maxSpeed: 8, height: 54, hitRadius: 22, contact: 26, score: 30, weight: 1.5, from: 3000 },
+};
+const ZOMBIE_FIRST_DISTANCE = 700;
+const ZOMBIE_MIN_SPACING = 420;  // between packs
+const ZOMBIE_MAX_SPACING = 760;
+const ZOMBIE_PACK_START = 2;     // largest pack at the start of a run
+const ZOMBIE_PACK_MAX = 4;
+const ZOMBIE_PACK_GROWTH = 3000; // distance per extra zombie in the largest pack
+const ZOMBIE_PACK_MIN_GAP = 70;
+const ZOMBIE_PACK_MAX_GAP = 110;
+const ZOMBIE_HIT_FLASH = 0.12;
+const STOMP_MIN_HEIGHT = 40;     // a lower drop does not crush anything
+const STOMP_REACH_BACK = 30;
+const STOMP_REACH_FRONT = 110;
 
 // Pellets
 const PELLET_SPEED = 430;
-const PELLET_RANGE = 240;
-const PELLET_FIRE_COOLDOWN = 0.45;
+const PELLET_RANGE = 360;
+const PELLET_FIRE_COOLDOWN = 0.28;
 const PELLET_HALF_LENGTH = 7;
 
 // Flow
 const COUNTDOWN_SECONDS = 3;
 
-const SCORE_PER_KILL = 10;
 const DISTANCE_PER_POINT = 100;

@@ -50,7 +50,7 @@ npx serve .
   - Pure domain in `js/domain/` (`player.js` hook state machine, `world.js` obstacles/zombies/pellets/particles, `game.js` state machine; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer, DOM UI, keyboard, touch, sound, frame loop, repository, random); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
   - Board: 480×360 canvas
-  - Auto-run runner: walls and pits scroll in and are hooked over with ↑/W (hold) — the hunter swings like a pendulum, releasing at the obstacle gate — while zombies (route + pursuer) walk in and are dropped by Space-fired pellets; 3 s countdown, max 3 s hang, world freezes while the hook is engaged.
+  - Auto-run runner: walls and pits scroll in and are hooked over with ↑/W (hold) — the hunter hangs from the obstacle's plank while it scrolls underneath and drops once it is behind; the world never stops, so obstacles stay solid and a late or early release crashes. Zombie packs (walker, crawler, runner, 3-hit brute; up to 4, unlocked by distance) come from the front and are dropped by Space-fired pellets or crushed by landing on them; 3 s countdown, max 3 s hang.
 - `space-invaders/` — Space Invaders with levels, hexagonal layout in `js/`
   - Pure domain in `js/domain/` (`invaders.js` state machine, `aliens.js`, `ufo.js`, `particles.js`, `highscores.js`; no DOM, no localStorage, no audio); port contracts in `js/ports/`; adapters in `js/adapters/` (canvas renderer with `SpriteLoader`, DOM HUD, input, keyboard, touch, sound, frame loop, repository); composition root in `js/game.js`
   - Script load order: `js/constants.js` → `js/domain/*` → `js/ports/*` → `js/adapters/*` → `js/game.js` (domain files in the order listed in `index.html`)
@@ -71,7 +71,7 @@ npx serve .
 
 **Flappy:** Space / FLAP cap / tap or click on the board to flap. MODE cap or M switches between hold-to-rise and classic impulse modes (persisted in `flappy_flap_mode`). Each round begins with a 3-second countdown and the bird hovers until the first flap; tapping the board also starts and restarts a round. P / Escape pause, R restart, Enter start.
 
-**Hook Run:** Hold ↑/W (or the GANCHO cap) to hook — the hunter swings over the obstacle — release to let go early. Space / the DISPARAR cap fires a pellet (both directions, ~0.45 s cooldown); tapping the board also fires. P / Escape pause, R restart, Enter start.
+**Hook Run:** Hold ↑/W (or the GANCHO cap) to hook — the hunter swings over the obstacle — release to let go early. Space / the DISPARAR cap fires a pellet (forward only, ~0.28 s cooldown); tapping the board also fires. P / Escape pause, R restart, Enter start.
 
 ## Audio
 

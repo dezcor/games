@@ -286,21 +286,43 @@ const CanvasRendererAdapter = {
 
     drawZombies(context, world) {
         for (const z of world.zombies) {
-            const palette = z.pursuer
-                ? { body: '#18362a', head: '#214732', eye: '#a8ff4d' }
-                : { body: '#152c19', head: '#1c3623', eye: '#8ff54d' };
-            this.drawZombieFigure(context, z.x, palette, z.phase);
+            const type = ZOMBIE_TYPES[z.kind];
+            const style = this.zombieStyles[z.kind];
+            const palette = z.flash > 0
+                ? { body: '#e6e2d4', head: '#ffffff', eye: '#ff5e3a' }
+                : style;
+
+            context.save();
+            context.translate(z.x, GROUND_Y + Math.sin(z.phase * 2) * 0.7);
+            context.scale(-style.scale, style.scale); // they face the hunter
+            if (z.kind === 'crawler') {
+                this.drawCrawlerFigure(context, palette, z.phase);
+            } else {
+                this.drawZombieFigure(context, palette, z.phase, style.lean);
+            }
+            context.restore();
+
+            // Remaining hits, for the variants that take more than one
+            if (type.hp > 1) {
+                for (let i = 0; i < type.hp; i++) {
+                    context.fillStyle = i < z.hp ? '#ff5e5e' : '#3a3f52';
+                    context.fillRect(z.x - type.hp * 4 + i * 8, GROUND_Y - type.height - 8, 6, 4);
+                }
+            }
         }
     },
 
-    drawZombieFigure(context, x, palette, phase) {
-        const bob = Math.sin(phase * 2) * 2;
-        const feetY = GROUND_Y;
-        context.save();
-        context.translate(x, feetY + bob * 0.35);
+    zombieStyles: {
+        walker: { body: '#3f7a45', head: '#5a9a5c', eye: '#c8ff6a', scale: 1, lean: 4 },
+        runner: { body: '#9a4234', head: '#c4604e', eye: '#ffd60a', scale: 1, lean: 11 },
+        crawler: { body: '#4a6496', head: '#7590c0', eye: '#7ff3ff', scale: 1, lean: 0 },
+        brute: { body: '#6f4a86', head: '#9569ac', eye: '#ff5e5e', scale: 1.4, lean: 3 },
+    },
+
+    /** Upright zombie, drawn around its feet and facing +x. */
+    drawZombieFigure(context, palette, phase, lean) {
         context.rotate(Math.sin(phase) * 0.07);
 
-        // Limbs and body — dark hunched silhouette
         context.strokeStyle = palette.body;
         context.lineWidth = 5;
         context.lineCap = 'round';
@@ -317,19 +339,42 @@ const CanvasRendererAdapter = {
         // Torso (hunched forward)
         context.beginPath();
         context.moveTo(0, -14);
-        context.lineTo(4, -26);
+        context.lineTo(lean, -26);
         context.stroke();
 
         // Arm reaching toward the player
         context.beginPath();
-        context.moveTo(4, -25);
-        context.lineTo(14, -20);
+        context.moveTo(lean, -25);
+        context.lineTo(lean + 10, -20);
         context.stroke();
 
-        // Head
+        this.drawZombieHead(context, palette, lean + 2, -30);
+    },
+
+    /** Low zombie dragging itself along the road. */
+    drawCrawlerFigure(context, palette, phase) {
+        const reach = Math.sin(phase) * 4;
+
+        context.strokeStyle = palette.body;
+        context.lineWidth = 5;
+        context.lineCap = 'round';
+        context.beginPath();
+        // Trailing legs, back, and the two arms pulling forward
+        context.moveTo(-16, -2);
+        context.lineTo(-8, -8);
+        context.lineTo(5, -12);
+        context.lineTo(14 + reach, -1);
+        context.moveTo(2, -11);
+        context.lineTo(8 - reach, -1);
+        context.stroke();
+
+        this.drawZombieHead(context, palette, 10, -17);
+    },
+
+    drawZombieHead(context, palette, x, y) {
         context.fillStyle = palette.head;
         context.beginPath();
-        context.arc(6, -30, 5.5, 0, Math.PI * 2);
+        context.arc(x, y, 5.5, 0, Math.PI * 2);
         context.fill();
 
         // Glowing eyes
@@ -338,11 +383,9 @@ const CanvasRendererAdapter = {
         context.shadowBlur = 6;
         context.fillStyle = palette.eye;
         context.beginPath();
-        context.arc(8, -32, 1.4, 0, Math.PI * 2);
-        context.arc(10, -28.5, 1.4, 0, Math.PI * 2);
+        context.arc(x + 2, y - 2, 1.4, 0, Math.PI * 2);
+        context.arc(x + 4, y + 1.5, 1.4, 0, Math.PI * 2);
         context.fill();
-        context.restore();
-
         context.restore();
     },
 
@@ -355,11 +398,7 @@ const CanvasRendererAdapter = {
 
         context.save();
         context.translate(player.x, player.feetY);
-        if (player.phase === 'swing') {
-            context.rotate(player.theta);
-        } else if (player.phase === 'fall') {
-            context.rotate(0.15 * Math.min(1, player.fallVY / 600));
-        }
+        context.rotate(player.theta);
 
         const swinging = player.phase === 'swing' || player.phase === 'hoist';
         const running = !swinging && player.phase !== 'fall';
@@ -435,7 +474,7 @@ const CanvasRendererAdapter = {
         const hookY = PLANK_Y + 9;
 
         const phase = player.phase;
-        const theta = phase === 'swing' ? player.theta : 0;
+        const theta = player.theta;
 
         // Hunter head in absolute coordinates (figure rotates about the feet)
         const headX = player.x + 2 * Math.cos(theta) + 33 * Math.sin(theta);
@@ -469,7 +508,7 @@ const CanvasRendererAdapter = {
         // Hook tip — small claw drawn at the active tip
         context.save();
         context.translate(clawX, clawY);
-        context.rotate(phase === 'swing' ? player.theta : 0);
+        context.rotate(theta);
         context.beginPath();
         context.arc(0, 0, 3, 0.3, Math.PI - 0.3);
         context.stroke();
