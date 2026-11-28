@@ -410,11 +410,89 @@ body::after {
     font-size: 8px;
 }
 
-/* La palabra de disparo larga debe caber dentro del cap (no desbordar). */
-.cap[data-action="shoot"] {
+/* Las palabras largas deben caber dentro del cap (no desbordar). */
+.cap[data-action="shoot"],
+.cap[data-action="jump"] {
     font-size: 12px;
     letter-spacing: 0;
     white-space: nowrap;
+}
+
+.cap[data-action="jump"] {
+    font-size: 10px;
+}
+
+/* Salto y disparo van juntos, bajo el mismo pulgar */
+.action-pair {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+/* Móvil vertical: botones compactos para que el panel quepa en una fila */
+@media (orientation: portrait) and (max-width: 420px) {
+    #touch-controls {
+        gap: 12px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    #touch-controls .cap.is-xl {
+        --cap-size: 70px;
+    }
+    .action-pair {
+        gap: 18px;
+    }
+    .action-pair .arcade-key {
+        --cap-size: 50px;
+    }
+    .action-pair .arcade-key.is-lg {
+        --cap-size: 60px;
+    }
+    .action-pair .cap[data-action] {
+        font-size: 9px;
+    }
+}
+
+@media (orientation: portrait) and (max-width: 340px) {
+    #touch-controls {
+        gap: 6px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    #touch-controls .cap.is-xl {
+        --cap-size: 58px;
+    }
+    .action-pair {
+        gap: 16px;
+    }
+    .action-pair .arcade-key {
+        --cap-size: 42px;
+    }
+    .action-pair .arcade-key.is-lg {
+        --cap-size: 50px;
+    }
+    .action-pair .cap[data-action],
+    #touch-controls .cap.is-xl {
+        font-size: 8px;
+        letter-spacing: 0;
+    }
+}
+
+/* Apaisado bajo: la pareja se apila en la columna derecha */
+@media (orientation: landscape) and (max-height: 560px) {
+    .action-pair {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 340px) {
+    .action-pair .arcade-key {
+        --cap-size: 46px;
+    }
+    .action-pair .cap[data-action] {
+        font-size: 8px;
+    }
 }
 
 /* ── Puntos frágiles en pantallas pequeñas ── */

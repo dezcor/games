@@ -6,6 +6,9 @@
 const SoundPort = {
     playShoot() {},
     playHook() {},
+    playJump() {},
+    playPower() {},
+    playShield() {},
     playKill() {},
     playLand() {},
     playGameOver() {},

@@ -8,9 +8,11 @@ const InputPort = {
     onHookStart() {},
     /** GANCHO hold released (arrow keys / ↑). */
     onHookEnd() {},
-    /** DISPARAR / Space pressed. */
+    /** SALTAR / Space pressed. */
+    onJump() {},
+    /** DISPARAR / X pressed. */
     onShoot() {},
-    /** Flow keys (Enter, R, P, Escape). Space is handled by onShoot. @param {string} key */
+    /** Flow keys (Enter, R, P, Escape). Space and X are handled by onJump and onShoot. @param {string} key */
     onKey(key) {},
     /** START button. */
     onStart() {},

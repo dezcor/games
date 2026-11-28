@@ -4,7 +4,7 @@ const HOOKRUN_SFX_MUTED = 'hookrun_sfx_muted';
 const HOOKRUN_BGM_VOLUME = 'hookrun_bgm_volume';
 const HOOKRUN_BGM_MUTED = 'hookrun_bgm_muted';
 
-const BGM_CHANNEL_GAIN = 0.7;
+const BGM_CHANNEL_GAIN = 0.42;   // keeps the music under the effects
 
 function getStoredNumber(key, fallback) {
     try {
@@ -46,7 +46,7 @@ const SoundManager = {
             this.sfxGain.connect(this.audioCtx.destination);
             // Music has its own channel: the effects mute and volume leave it alone.
             this.bgmGain = this.audioCtx.createGain();
-            this.bgmGain.gain.value = BGM_CHANNEL_GAIN;
+            this.bgmGain.gain.value = MusicPlayer.bgmMuted ? 0 : BGM_CHANNEL_GAIN;
             this.bgmGain.connect(this.audioCtx.destination);
         }
         if (this.audioCtx.state === 'suspended') {
@@ -90,6 +90,19 @@ const SoundManager = {
     playHook() {
         this.playSweep(240, 620, 0.16, 'sawtooth', 0.07);
         setTimeout(() => this.playOscillator(980, 0.05, 'square', 0.05), 160);
+    },
+
+    playJump() {
+        this.playSweep(220, 520, 0.14, 'square', 0.07);
+    },
+
+    playPower() {
+        this.playSweep(520, 1040, 0.18, 'square', 0.08);
+        setTimeout(() => this.playOscillator(1320, 0.1, 'triangle', 0.08), 120);
+    },
+
+    playShield() {
+        this.playSweep(900, 200, 0.3, 'triangle', 0.14);
     },
 
     playKill() {
@@ -152,145 +165,242 @@ const SoundManager = {
 SoundManager.volume = getStoredNumber(HOOKRUN_SFX_VOLUME, SoundManager.volume);
 SoundManager.isMuted = getStoredBoolean(HOOKRUN_SFX_MUTED);
 
+/**
+ * "Midnight Hunt": a 16-bar action-horror loop in D minor, all synthesized.
+ * Four chords (Dm, B♭, Gm, A) repeat; each 4-bar section adds a layer:
+ * 0 build-up · 1 theme · 2 arpeggio and answer · 3 full band with a drum fill.
+ */
+const MUSIC_STEPS_PER_BAR = 16;
+const MUSIC_BARS_PER_SECTION = 4;
+const MUSIC_SONG_STEPS = MUSIC_STEPS_PER_BAR * MUSIC_BARS_PER_SECTION * 4;
+const MUSIC_REFERENCE_VOLUME = 0.12; // stored volume that plays the mix at unity
+
+// MIDI notes per bar of the progression
+const MUSIC_BASS_ROOTS = [50, 46, 43, 45];
+const MUSIC_CHORDS = [[62, 65, 69], [58, 62, 65], [55, 58, 62], [57, 61, 64]];
+// Eighth-note bass line, in semitones above the root
+const MUSIC_BASS_LINE = [0, 0, 12, 0, 0, 0, 12, 7];
+// Sixteenth-note arpeggio over [root, third, fifth, octave]
+const MUSIC_ARPEGGIO = [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 2, 1, 3];
+// Melodies as [step, note, length in steps] for each bar
+const MUSIC_THEME = [
+    [[0, 74, 3], [3, 77, 3], [6, 76, 2], [8, 74, 4], [12, 69, 4]],
+    [[0, 70, 3], [3, 74, 3], [6, 77, 2], [8, 76, 4], [12, 74, 4]],
+    [[0, 79, 3], [3, 77, 3], [6, 74, 2], [8, 70, 4], [12, 74, 4]],
+    [[0, 73, 6], [6, 76, 2], [8, 81, 4], [12, 73, 2], [14, 76, 2]],
+];
+const MUSIC_ANSWER = [
+    [[0, 81, 6], [6, 79, 2], [8, 77, 2], [10, 76, 2], [12, 77, 4]],
+    [[0, 82, 6], [6, 81, 2], [8, 79, 2], [10, 77, 2], [12, 74, 4]],
+    [[0, 79, 4], [4, 82, 4], [8, 81, 4], [12, 79, 4]],
+    [[0, 81, 4], [4, 76, 4], [8, 73, 4], [12, 69, 4]],
+];
+
 const MusicPlayer = {
     isPlaying: false,
     schedulerTimer: null,
     fadeTimer: null,
     currentStep: 0,
     nextNoteTime: 0,
-    tempo: 96,
+    tempo: 132,
     lookahead: 25,
-    scheduleAheadTime: 0.1,
+    scheduleAheadTime: 0.12,
     bgmMuted: false,
-    bgmVolume: 0.12,
-    stepsPerBeat: 4,
-    totalSteps: 64,
+    bgmVolume: MUSIC_REFERENCE_VOLUME,
+    bus: null,          // this playback's output; dropping it silences ringing notes
+    echo: null,         // input of the lead's delay line
+    noise: null,
 
-    melodyPattern: [
-        0, 0, 7, 0, 10, 7, 0, -1,
-        0, 0, 5, 0, 7, 5, 0, -1,
-        0, 0, 7, 0, 10, 7, 5, -1,
-        0, 0, 5, 0, 0, 0, 0, -1,
-    ],
-
-    bassPattern: [
-        0, 0, 0, 0, 0, 0, 5, 0,
-        0, 0, 0, 0, 3, 3, 0, 0,
-        0, 0, 0, 0, 0, 0, 5, 0,
-        0, 0, 0, 0, 3, 3, 0, 0,
-    ],
-
-    kickPattern: [
-        1, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0,
-        1, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0,
-    ],
-
-    snarePattern: [
-        0, 0, 0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 0, 0, 0, 1,
-        0, 0, 0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 0, 0, 0, 1,
-    ],
-
-    noteToFreq(semitones) {
-        const baseFreq = 146.83; // D3
-        if (semitones <= 0) return 0;
-        return baseFreq * Math.pow(2, semitones / 12);
+    stepDuration() {
+        return 60 / this.tempo / 4;
     },
 
-    scheduleNote(step, time) {
+    midiToFreq(note) {
+        return 440 * Math.pow(2, (note - 69) / 12);
+    },
+
+    openBus() {
         const ctx = SoundManager.audioCtx;
-        const master = SoundManager.bgmGain;
-        const beatDuration = 60 / this.tempo;
-        const stepDuration = beatDuration / this.stepsPerBeat;
+        this.bus = ctx.createGain();
+        this.bus.gain.value = this.bgmVolume / MUSIC_REFERENCE_VOLUME;
+        this.bus.connect(SoundManager.bgmGain);
 
-        const melodyIndex = step % this.melodyPattern.length;
-        const melodySemitones = this.melodyPattern[melodyIndex];
-        if (melodySemitones > 0) {
-            const freq = this.noteToFreq(melodySemitones);
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.12;
-            gain.gain.setValueAtTime(0.001, time);
-            gain.gain.linearRampToValueAtTime(vol, time + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 1.8);
-            osc.connect(gain);
-            gain.connect(master);
-            osc.start(time);
-            osc.stop(time + stepDuration * 1.8);
-        }
+        // Dotted-eighth echo with a dark tail
+        this.echo = ctx.createDelay(1);
+        this.echo.delayTime.value = this.stepDuration() * 3;
+        const damp = ctx.createBiquadFilter();
+        damp.type = 'lowpass';
+        damp.frequency.value = 2400;
+        const feedback = ctx.createGain();
+        feedback.gain.value = 0.32;
+        this.echo.connect(damp);
+        damp.connect(feedback);
+        feedback.connect(this.echo);
+        damp.connect(this.bus);
+    },
 
-        const bassIndex = step % this.bassPattern.length;
-        const bassSemitones = this.bassPattern[bassIndex];
-        if (bassSemitones > 0) {
-            const freq = this.noteToFreq(bassSemitones);
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.32;
-            gain.gain.setValueAtTime(0.001, time);
-            gain.gain.linearRampToValueAtTime(vol, time + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 3.2);
-            osc.connect(gain);
-            gain.connect(master);
-            osc.start(time);
-            osc.stop(time + stepDuration * 3.2);
-        }
+    closeBus() {
+        const bus = this.bus;
+        if (!bus) return;
+        this.bus = null;
+        this.echo = null;
+        bus.gain.setTargetAtTime(0, SoundManager.audioCtx.currentTime, 0.015);
+        setTimeout(() => bus.disconnect(), 120);
+    },
 
-        if (this.kickPattern[step % this.kickPattern.length]) {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(110, time);
-            osc.frequency.exponentialRampToValueAtTime(28, time + 0.16);
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.22;
-            gain.gain.setValueAtTime(0.001, time);
-            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
-            osc.connect(gain);
-            gain.connect(master);
-            osc.start(time);
-            osc.stop(time + 0.16);
-        }
+    /** One enveloped oscillator note. */
+    tone({ note, time, length, volume, type, attack = 0.005, cutoff = 0, detune = 0, echo = 0 }) {
+        const ctx = SoundManager.audioCtx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = this.midiToFreq(note);
+        osc.detune.value = detune;
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.linearRampToValueAtTime(volume, time + attack);
+        gain.gain.setValueAtTime(volume, time + Math.max(attack, length * 0.5));
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
 
-        if (this.snarePattern[step % this.snarePattern.length]) {
-            const bufferSize = Math.floor(ctx.sampleRate * 0.09);
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / bufferSize);
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
+        let source = osc;
+        if (cutoff) {
             const filter = ctx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 2200;
-            const gain = ctx.createGain();
-            const vol = (this.bgmMuted ? 0 : this.bgmVolume) * 0.1;
-            gain.gain.setValueAtTime(0.001, time);
-            gain.gain.linearRampToValueAtTime(vol, time + 0.005);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.11);
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(master);
-            noise.start(time);
+            filter.Q.value = 4;
+            filter.frequency.setValueAtTime(cutoff, time);
+            filter.frequency.exponentialRampToValueAtTime(cutoff * 0.35, time + length);
+            osc.connect(filter);
+            source = filter;
+        }
+        source.connect(gain);
+        gain.connect(this.bus);
+        if (echo) {
+            const send = ctx.createGain();
+            send.gain.value = echo;
+            gain.connect(send);
+            send.connect(this.echo);
+        }
+        osc.start(time);
+        osc.stop(time + length + 0.02);
+    },
+
+    /** Filtered noise burst for snare and hats. */
+    noiseHit(time, length, volume, filterType, frequency) {
+        const ctx = SoundManager.audioCtx;
+        if (!this.noise || this.noise.sampleRate !== ctx.sampleRate) {
+            this.noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+            const data = this.noise.getChannelData(0);
+            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = this.noise;
+        const filter = ctx.createBiquadFilter();
+        filter.type = filterType;
+        filter.frequency.value = frequency;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(volume, time);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.bus);
+        source.start(time);
+        source.stop(time + length + 0.02);
+    },
+
+    /** Pitch-dropping sine: kick drum and toms. */
+    drum(time, from, to, length, volume) {
+        const ctx = SoundManager.audioCtx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(from, time);
+        osc.frequency.exponentialRampToValueAtTime(to, time + length * 0.8);
+        gain.gain.setValueAtTime(volume, time);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
+        osc.connect(gain);
+        gain.connect(this.bus);
+        osc.start(time);
+        osc.stop(time + length + 0.02);
+    },
+
+    /** Church bell: inharmonic partials with long decays. */
+    bell(time, note) {
+        [[0, 0.07, 2.6], [12, 0.03, 1.8], [19.1, 0.02, 1.2], [28.7, 0.012, 0.7]].forEach(([interval, volume, length]) => {
+            this.tone({ note: note + interval, time, length, volume, type: 'sine' });
+        });
+    },
+
+    scheduleStep(step, time) {
+        const beat = step % MUSIC_STEPS_PER_BAR;
+        const barNumber = Math.floor(step / MUSIC_STEPS_PER_BAR);
+        const bar = barNumber % MUSIC_BARS_PER_SECTION;
+        const section = Math.floor(barNumber / MUSIC_BARS_PER_SECTION);
+        const length = this.stepDuration();
+        const chord = MUSIC_CHORDS[bar];
+        const fill = section === 3 && bar === 3 && beat >= 10;
+
+        if (beat === 0) {
+            // Organ pad: two slightly detuned voices per chord note
+            chord.forEach((note) => {
+                [-6, 6].forEach((detune) => this.tone({
+                    note, time, detune, type: 'triangle', attack: 0.25,
+                    length: length * MUSIC_STEPS_PER_BAR, volume: 0.016,
+                }));
+            });
+            if (bar === 0 && (section === 0 || section === 2)) this.bell(time, 62);
+        }
+
+        if (beat % 2 === 0) {
+            this.tone({
+                note: MUSIC_BASS_ROOTS[bar] + MUSIC_BASS_LINE[beat / 2], time,
+                length: length * 1.8, volume: 0.085, type: 'sawtooth', cutoff: 900,
+            });
+        }
+
+        // Drums
+        const kick = section === 3 ? beat % 4 === 0 : (beat === 0 || beat === 8 || beat === 10);
+        if (kick && !fill) this.drum(time, 150, 45, 0.16, 0.22);
+        if (section > 0 && (beat === 4 || beat === 12) && !fill) {
+            this.noiseHit(time, 0.14, 0.09, 'bandpass', 1900);
+            this.drum(time, 220, 140, 0.08, 0.06);
+        }
+        if (section >= 2 || beat % 2 === 0) {
+            this.noiseHit(time, 0.035, beat % 4 === 2 ? 0.035 : 0.018, 'highpass', 7500);
+        }
+        if (fill) this.drum(time, 260 - (beat - 10) * 28, 70, 0.14, 0.14);
+
+        // Melody
+        if (section > 0) {
+            const phrase = section === 2 ? MUSIC_ANSWER : MUSIC_THEME;
+            phrase[bar].filter(([at]) => at === beat).forEach(([, note, steps]) => {
+                this.tone({
+                    note, time, length: length * steps, volume: 0.034,
+                    type: 'square', attack: 0.012, echo: 0.4,
+                });
+                // The last section doubles the theme an octave down
+                if (section === 3) {
+                    this.tone({ note: note - 12, time, length: length * steps, volume: 0.035, type: 'sawtooth', cutoff: 1800 });
+                }
+            });
+        }
+
+        if (section >= 2) {
+            const tones = [...chord, chord[0] + 12];
+            this.tone({
+                note: tones[MUSIC_ARPEGGIO[beat]] + 12, time, length: length * 0.9,
+                volume: 0.022, type: 'triangle', echo: 0.25,
+            });
         }
     },
 
     scheduler() {
         const ctx = SoundManager.audioCtx;
+        // After a stall (hidden tab) carry on from now instead of bursting the backlog.
+        if (this.nextNoteTime < ctx.currentTime) this.nextNoteTime = ctx.currentTime + 0.05;
         while (this.nextNoteTime < ctx.currentTime + this.scheduleAheadTime) {
-            this.scheduleNote(this.currentStep, this.nextNoteTime);
-            const beatDuration = 60 / this.tempo;
-            this.nextNoteTime += (beatDuration / this.stepsPerBeat);
-            this.currentStep = (this.currentStep + 1) % this.totalSteps;
+            this.scheduleStep(this.currentStep, this.nextNoteTime);
+            this.nextNoteTime += this.stepDuration();
+            this.currentStep = (this.currentStep + 1) % MUSIC_SONG_STEPS;
         }
-        this.schedulerTimer = setTimeout(this.scheduler.bind(this), this.lookahead);
+        this.schedulerTimer = setTimeout(() => this.scheduler(), this.lookahead);
     },
 
     getBgmMuteState() {
@@ -302,70 +412,56 @@ const MusicPlayer = {
         this.fadeTimer = null;
     },
 
-    start() {
-        // A new round must not be silenced by the previous game over.
-        this.cancelFade();
+    /** Starts (or keeps) the playback from the current step. */
+    begin() {
         SoundManager.ensureAudio();
-        const ctx = SoundManager.audioCtx;
-        if (ctx.state === 'suspended') {
-            ctx.resume().then(() => {
-                if (this.isPlaying) return;
-                this.isPlaying = true;
-                this.currentStep = 0;
-                this.nextNoteTime = ctx.currentTime + 0.1;
-                this.scheduler();
-            });
-            return;
-        }
-        if (this.isPlaying) return;
+        this.openBus();
         this.isPlaying = true;
-        this.currentStep = 0;
-        this.nextNoteTime = ctx.currentTime + 0.1;
+        this.nextNoteTime = SoundManager.audioCtx.currentTime + 0.08;
         this.scheduler();
     },
 
+    start() {
+        // A new round during the game-over fade restarts the song from the top.
+        if (this.isPlaying && !this.fadeTimer) return;
+        this.stop();
+        this.currentStep = 0;
+        this.begin();
+    },
+
     stop() {
-        if (this.schedulerTimer) {
-            clearTimeout(this.schedulerTimer);
-            this.schedulerTimer = null;
-        }
+        this.cancelFade();
+        clearTimeout(this.schedulerTimer);
+        this.schedulerTimer = null;
+        this.closeBus();
         this.isPlaying = false;
     },
 
+    /** Silences the music and keeps its place. */
     pause() {
-        if (this.schedulerTimer) {
-            clearTimeout(this.schedulerTimer);
-            this.schedulerTimer = null;
-        }
-        this.isPlaying = false;
+        this.stop();
     },
 
     resume() {
-        if (!this.isPlaying) {
-            const ctx = SoundManager.audioCtx;
-            if (ctx.state === 'suspended') {
-                ctx.resume().then(() => {
-                    this.isPlaying = true;
-                    this.nextNoteTime = ctx.currentTime + 0.1;
-                    this.scheduler();
-                });
-                return;
-            }
-            this.isPlaying = true;
-            this.nextNoteTime = ctx.currentTime + 0.1;
-            this.scheduler();
-        }
+        if (!this.isPlaying) this.begin();
     },
 
     fadeOut(duration) {
         if (!this.isPlaying) return;
         duration = duration || 0.8;
         this.cancelFade();
+        const now = SoundManager.audioCtx.currentTime;
+        this.bus.gain.setValueAtTime(this.bus.gain.value, now);
+        this.bus.gain.linearRampToValueAtTime(0.0001, now + duration);
         this.fadeTimer = setTimeout(() => this.stop(), duration * 1000);
     },
 
     toggleMute() {
         this.bgmMuted = !this.bgmMuted;
+        if (SoundManager.bgmGain) {
+            SoundManager.bgmGain.gain.setValueAtTime(
+                this.bgmMuted ? 0 : BGM_CHANNEL_GAIN, SoundManager.audioCtx.currentTime);
+        }
         saveAudioSetting(HOOKRUN_BGM_MUTED, this.bgmMuted);
     },
 

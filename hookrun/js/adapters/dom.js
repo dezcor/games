@@ -82,7 +82,7 @@ const DomHudAdapter = {
 const DomControlsAdapter = {
     attach(input) {
         // A pointer click must not leave a button focused, or the next Space would
-        // press it again instead of firing. Keyboard clicks (detail 0) keep focus.
+        // press it again instead of jumping. Keyboard clicks (detail 0) keep focus.
         document.addEventListener('click', (e) => {
             if (e.detail === 0 || !e.target.closest) return;
             const button = e.target.closest('button');
